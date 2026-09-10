@@ -2,7 +2,17 @@ import https from "node:https";
 
 const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2103.com";
 const HOME_URL = `${BASE_URL}/home.php?domain=&options=`;
+const SEARCH_TEAM = "fener";
 
+function containsTeam(value, team) {
+  try {
+    return JSON.stringify(value)
+      .toLocaleLowerCase("tr-TR")
+      .includes(team.toLocaleLowerCase("tr-TR"));
+  } catch {
+    return false;
+  }
+}
 // Betist HAR'ında görünen spor ID'leri.
 const TARGET_SPORTS = [
   { name: "FUTBOL", sportId: "3" },
@@ -263,6 +273,9 @@ async function fetchSport(sport, menuInfo) {
   }
 
   const records = uniqueByOutcomeId(allRecords);
+  const matchingRecords = records.filter((record) =>
+    containsTeam(record, SEARCH_TEAM)
+  );
   const eventIds = [...new Set(records.map((x) => String(x.mid)))];
 
   const result = {
@@ -278,21 +291,23 @@ async function fetchSport(sport, menuInfo) {
     records,
   };
 
-  console.log("");
-  console.log("##############################################");
-  console.log(`############### ${sport.name} ###############`);
-  console.log("##############################################");
-  console.log("");
+  if (matchingRecords.length > 0) {
+    console.log("");
+    console.log("##############################################");
+    console.log(`############### ${sport.name} ###############`);
+    console.log("##############################################");
 
-  // depth: 1 => records içindekileri [Object] şeklinde gösterir.
-  console.dir(result, {
-    depth: 1,
-    colors: true,
-    maxArrayLength: null,
-  });
+    console.log(`ARAMA: ${SEARCH_TEAM}`);
+    console.log(`BULUNAN RECORD: ${matchingRecords.length}`);
 
-  console.log("");
-  console.log("----------------------------------------------");
+    console.dir(matchingRecords, {
+      depth: null,
+      colors: true,
+      maxArrayLength: null,
+    });
+
+    console.log("----------------------------------------------");
+  }
 }
 
 async function main() {

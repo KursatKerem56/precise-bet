@@ -1,14 +1,24 @@
-const WebSocket = require("ws");
-const crypto = require("crypto");
+import WebSocket from "ws";
+import crypto from "crypto";
 
-const wsUrl = process.env.WS_URL || "wss://sportsapi.mavibet998.com/v2";
+const wsUrl = process.env.WS_URL || "wss://sportsapi.mavibet1005.com/v2";
+const SEARCH_TEAM = "fener";
 
+function containsTeam(value, team) {
+  try {
+    return JSON.stringify(value)
+      .toLocaleLowerCase("tr-TR")
+      .includes(team.toLocaleLowerCase("tr-TR"));
+  } catch {
+    return false;
+  }
+}
 const sports = [
   {
     name: "FUTBOL",
 
     pageUrl:
-      "https://www.mavibet998.com/sports/spor/futbol/1/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
+      "https://www.mavibet1005.com/sports/spor/futbol/1/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
 
     sportId: 1,
 
@@ -20,7 +30,7 @@ const sports = [
     name: "BASKETBOL",
 
     pageUrl:
-      "https://www.mavibet998.com/sports/spor/basketbol/8/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
+      "https://www.mavibet1005.com/sports/spor/basketbol/8/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
 
     sportId: 8,
 
@@ -31,7 +41,7 @@ const sports = [
     name: "TENIS",
 
     pageUrl:
-      "https://www.mavibet998.com/sports/spor/tenis/3/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
+      "https://www.mavibet1005.com/sports/spor/tenis/3/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
 
     sportId: 3,
 
@@ -42,7 +52,7 @@ const sports = [
     name: "VOLEYBOL",
 
     pageUrl:
-      "https://www.mavibet998.com/sports/spor/voleybol/20/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
+      "https://www.mavibet1005.com/sports/spor/voleybol/20/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
 
     sportId: 20,
 
@@ -54,7 +64,7 @@ const sports = [
     name: "BEYZBOL",
 
     pageUrl:
-      "https://www.mavibet998.com/sports/spor/beyzbol/9/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
+      "https://www.mavibet1005.com/sports/spor/beyzbol/9/tümü/0/lokasyon/yaklaşan-karşılaşmalar",
 
     sportId: 9,
 
@@ -98,7 +108,7 @@ function connectSport(sport, index) {
           ...details,
           ctx: context(),
         },
-      ]),
+      ])
     );
   };
 
@@ -193,31 +203,45 @@ function connectSport(sport, index) {
       console.log(`[${sport.name}] Request ID: ${requestId}`);
 
       console.log(`[${sport.name}] Topic: ${sport.topic}`);
-    },
+    }
   );
 
-  ws.on(
-    "message",
+  ws.on("message", function incoming(raw) {
+    let message;
 
-    function incoming(raw) {
-      let message;
+    try {
+      message = JSON.parse(raw.toString());
+    } catch (error) {
+      console.error(`[${sport.name}] JSON parse error:`, error);
+      return;
+    }
 
-      try {
-        message = JSON.parse(raw.toString());
-      } catch (error) {
-        console.error(`[${sport.name}] JSON parse error:`, error);
+    const data = message[4];
 
-        return;
-      }
+    if (
+      data &&
+      typeof data === "object" &&
+      data.messageType === "INITIAL_DUMP"
+    ) {
+      const records = Array.isArray(data.records) ? data.records : [];
 
-      const data = message[4];
+      const matchingRecords = records.filter((record) =>
+        containsTeam(record, SEARCH_TEAM)
+      );
 
-      if (
-        data &&
-        typeof data === "object" &&
-        data.messageType === "INITIAL_DUMP"
-      ) {
-        console.log("");
+      console.log("");
+      console.log(`[${sport.name}] INITIAL_DUMP GELDİ`);
+
+      console.log(`[${sport.name}] Record sayısı: ${records.length}`);
+
+      console.log(
+        `[${sport.name}] "${SEARCH_TEAM}" eşleşmesi: ${matchingRecords.length}`
+      );
+
+      /*
+       * Aradığımız takım bulunduysa tamamını aç.
+       */
+      if (matchingRecords.length > 0) {
         console.log("");
         console.log("##################################################");
 
@@ -225,25 +249,48 @@ function connectSport(sport, index) {
 
         console.log("##################################################");
 
-        console.log("");
-
-        console.log("Received message:", message);
+        console.dir(matchingRecords, {
+          depth: null,
+          colors: true,
+          maxArrayLength: null,
+        });
 
         console.log("--------------------------------------------------");
+      }
+
+      /*
+       * Fener bulunamadıysa futbol datasından
+       * ilk 2 kaydı göster.
+       *
+       * Böylece gerçek takım isimlerinin nerede
+       * tutulduğunu göreceğiz.
+       */
+      if (
+        sport.name === "FUTBOL" &&
+        matchingRecords.length === 0 &&
+        records.length > 0
+      ) {
+        console.log("");
+        console.log("FENER BULUNAMADI - FUTBOLDAN İLK 2 RECORD:");
+
+        console.dir(records.slice(0, 2), {
+          depth: null,
+          colors: true,
+          maxArrayLength: null,
+        });
 
         console.log("");
       }
-    },
-  );
-
+    }
+  });
   ws.on(
     "close",
 
     function close(code, reason) {
       console.log(
-        `[${sport.name}] Disconnected (${code}): ${reason.toString()}`,
+        `[${sport.name}] Disconnected (${code}): ${reason.toString()}`
       );
-    },
+    }
   );
 
   ws.on(
@@ -251,7 +298,7 @@ function connectSport(sport, index) {
 
     function error(err) {
       console.error(`[${sport.name}] WebSocket error:`, err);
-    },
+    }
   );
 }
 
@@ -261,6 +308,6 @@ sports.forEach((sport, index) => {
       connectSport(sport, index);
     },
 
-    index * 750,
+    index * 750
   );
 });

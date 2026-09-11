@@ -1,6 +1,6 @@
 import https from "node:https";
 
-const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2103.com";
+const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2104.com";
 const HOME_URL = `${BASE_URL}/home.php?domain=&options=`;
 const SEARCH_TEAM = "fener";
 

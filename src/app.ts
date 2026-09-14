@@ -14,7 +14,6 @@ import setupSession from "@Config/Express/Session";
 import connectDB from "@Config/Db";
 import config from "@Config/Environment";
 
-import { serializeUserWithJWT } from "@Middlewares/Auth";
 import { errorMiddleware } from "@Middlewares/Error";
 import setRealUserIP from "@Middlewares/IP";
 
@@ -69,7 +68,6 @@ app.use(
 );
 app.use(requestIp.mw());
 app.use(setRealUserIP);
-app.use(serializeUserWithJWT);
 
 setupSession(app);
 setupRoutes(app);

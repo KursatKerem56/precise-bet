@@ -1,10 +1,11 @@
 import { Application } from "express";
 
 import User from "@Routes/User";
+import Panel from "@Routes/Panel";
 
 const setupRoutes = (app: Application) => {
-  // User
   app.use("/user", User);
+  app.use("/panel", Panel);
 
   app.use("/health-check", (req, res) =>
     res

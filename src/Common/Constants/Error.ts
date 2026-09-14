@@ -1,5 +1,3 @@
-import config from "@Config/Environment";
-
 import { IError } from "@Common/Types";
 
 enum EErrorType {
@@ -20,6 +18,20 @@ const Errors: Record<string, IError> = {
     message: "None",
     locale_key: "api.error.none",
     type: EErrorType.GENERIC,
+    service: EErrorService.NONE,
+    statusCode: 400,
+  },
+  MISSING_PARAMETERS: {
+    message: "Missing parameters",
+    locale_key: "api.error.missingParameters",
+    type: EErrorType.VALIDATION,
+    service: EErrorService.NONE,
+    statusCode: 400,
+  },
+  INVALID_SITE: {
+    message: "Invalid site",
+    locale_key: "api.error.invalid_site",
+    type: EErrorType.VALIDATION,
     service: EErrorService.NONE,
     statusCode: 400,
   },

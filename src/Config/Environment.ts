@@ -160,6 +160,12 @@ const envConfig = {
         value: process.env.JWT_REFRESH_EXPIRE_TIME,
       },
     },
+    token: {
+      type: EEnvFieldTypes.STRING,
+      default: "",
+      isRequired: true,
+      value: process.env.AUTH_TOKEN,
+    },
   },
   site: {},
 };

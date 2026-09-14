@@ -1,0 +1,25 @@
+import { PanelSite } from "@Panel/Models";
+
+import { EPanelSite } from "@Panel/Constants";
+
+import { AppError } from "@Utils/Error";
+
+const saveSiteLink = async (site: EPanelSite, link: string) => {
+  if (!Object.values(EPanelSite).includes(site)) {
+    throw new AppError("INVALID_SITE");
+  }
+
+  let panelSite = await PanelSite.findOneAndUpdate(
+    { site },
+    { link },
+    { new: true }
+  );
+
+  if (!panelSite) {
+    panelSite = await PanelSite.create({ site, link });
+  }
+
+  return panelSite;
+};
+
+export { saveSiteLink };

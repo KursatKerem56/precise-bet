@@ -1,50 +1,84 @@
+import fs from "node:fs/promises";
 import https from "node:https";
 
-const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2104.com";
+const SITE_URL = process.env.BETIST_SITE_URL || "https://betist2105.com";
+
+const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2105.com";
+
 const HOME_URL = `${BASE_URL}/home.php?domain=&options=`;
-const SEARCH_TEAM = "fener";
 
-function containsTeam(value, team) {
-  try {
-    return JSON.stringify(value)
-      .toLocaleLowerCase("tr-TR")
-      .includes(team.toLocaleLowerCase("tr-TR"));
-  } catch {
-    return false;
-  }
-}
-// Betist HAR'ında görünen spor ID'leri.
-const TARGET_SPORTS = [
-  { name: "FUTBOL", sportId: "3" },
-  { name: "BASKETBOL", sportId: "5" },
-  { name: "TENIS", sportId: "9" },
-  { name: "VOLEYBOL", sportId: "10" },
-  { name: "BEYZBOL", sportId: "4" },
-];
+const OUTPUT_FILE = process.env.BETIST_OUTPUT || "betist-matches.json";
 
-// Sitedeki spor seçimi ilk 10 ligi yükleyecek şekilde çalışıyor.
-// "all" yaparsan bütün ligleri 10'arlı gruplar halinde çeker.
-const LEAGUE_MODE = process.env.BETIST_LEAGUE_MODE || "first10";
-const CHUNK_SIZE = 10;
+const CHUNK_SIZE = Number(process.env.BETIST_CHUNK_SIZE || 10);
+
+const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 120);
+
+const TARGET_ORDER = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
 
 const COMMON_HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+
   Accept: "*/*",
+
   "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+
+  Connection: "keep-alive",
 };
+
+const cookieJar = new Map();
+
+function updateCookies(setCookieHeaders = []) {
+  const list = Array.isArray(setCookieHeaders)
+    ? setCookieHeaders
+    : [setCookieHeaders].filter(Boolean);
+
+  for (const line of list) {
+    const firstPart = String(line).split(";", 1)[0];
+
+    const eq = firstPart.indexOf("=");
+
+    if (eq <= 0) {
+      continue;
+    }
+
+    cookieJar.set(
+      firstPart.slice(0, eq).trim(),
+
+      firstPart.slice(eq + 1).trim()
+    );
+  }
+}
+
+function cookieHeader() {
+  return [...cookieJar.entries()]
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
+}
 
 function get(url, extraHeaders = {}, redirectCount = 0) {
   return new Promise((resolve, reject) => {
+    const cookies = cookieHeader();
+
+    const headers = {
+      ...COMMON_HEADERS,
+      ...extraHeaders,
+
+      ...(cookies
+        ? {
+            Cookie: cookies,
+          }
+        : {}),
+    };
+
     const req = https.get(
       url,
       {
-        headers: {
-          ...COMMON_HEADERS,
-          ...extraHeaders,
-        },
+        headers,
       },
       (res) => {
+        updateCookies(res.headers["set-cookie"] || []);
+
         if (
           res.statusCode >= 300 &&
           res.statusCode < 400 &&
@@ -52,11 +86,14 @@ function get(url, extraHeaders = {}, redirectCount = 0) {
         ) {
           if (redirectCount >= 5) {
             res.resume();
+
             reject(new Error("Çok fazla redirect."));
+
             return;
           }
 
           const nextUrl = new URL(res.headers.location, url).toString();
+
           res.resume();
 
           get(nextUrl, extraHeaders, redirectCount + 1)
@@ -68,7 +105,9 @@ function get(url, extraHeaders = {}, redirectCount = 0) {
 
         const chunks = [];
 
-        res.on("data", (chunk) => chunks.push(chunk));
+        res.on("data", (chunk) => {
+          chunks.push(chunk);
+        });
 
         res.on("end", () => {
           const body = Buffer.concat(chunks).toString("utf8");
@@ -82,12 +121,15 @@ function get(url, extraHeaders = {}, redirectCount = 0) {
                 )}`
               )
             );
+
             return;
           }
 
           resolve({
             statusCode: res.statusCode,
+
             headers: res.headers,
+
             body,
           });
         });
@@ -95,72 +137,171 @@ function get(url, extraHeaders = {}, redirectCount = 0) {
     );
 
     req.on("error", reject);
-    req.setTimeout(20000, () => {
+
+    req.setTimeout(25000, () => {
       req.destroy(new Error("Request timeout."));
     });
   });
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function decodeHtmlEntities(value) {
-  return value
+  return String(value)
     .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
     .replace(/&#039;/g, "'")
     .replace(/&#39;/g, "'")
     .replace(/&apos;/g, "'")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
+    .replace(/&gt;/g, ">")
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
+      String.fromCodePoint(parseInt(hex, 16))
+    )
+    .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number(num)));
 }
 
 function stripTags(value) {
   return decodeHtmlEntities(
-    value
+    String(value)
       .replace(/<[^>]*>/g, " ")
       .replace(/\s+/g, " ")
       .trim()
   );
 }
 
-function parseSportMenu(html) {
-  const markers = [];
-  const sportRegex =
-    /<i\s+id="check__(\d+)"\s+class="b-check sport"[^>]*layout="([^"]+)"[^>]*>/g;
+function parseAttributes(tag) {
+  const attrs = {};
+
+  const regex = /([:\w-]+)\s*=\s*(["'])(.*?)\2/g;
 
   let match;
 
-  while ((match = sportRegex.exec(html)) !== null) {
-    const afterMarker = html.slice(
-      sportRegex.lastIndex,
-      sportRegex.lastIndex + 1500
-    );
-    const nameMatch = afterMarker.match(
-      /<span\s+class="sport-name">([\s\S]*?)<\/span>/
+  while ((match = regex.exec(tag)) !== null) {
+    attrs[match[1].toLowerCase()] = decodeHtmlEntities(match[3]);
+  }
+
+  return attrs;
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function canonicalSportName(menuName) {
+  const n = normalizeText(menuName);
+
+  if (n === "futbol" || n === "soccer") {
+    return "FUTBOL";
+  }
+
+  if (n === "basketbol" || n === "basketball") {
+    return "BASKETBOL";
+  }
+
+  if (n === "voleybol" || n === "volleyball") {
+    return "VOLEYBOL";
+  }
+
+  if (n === "tenis" || n === "tennis") {
+    return "TENIS";
+  }
+
+  return null;
+}
+
+function parseSportMenu(html) {
+  const sportMarkers = [];
+
+  const iTagRegex = /<i\b[^>]*>/gi;
+
+  let tagMatch;
+
+  while ((tagMatch = iTagRegex.exec(html)) !== null) {
+    const attrs = parseAttributes(tagMatch[0]);
+
+    const idMatch = String(attrs.id || "").match(/^check__(\d+)$/);
+
+    if (!idMatch) {
+      continue;
+    }
+
+    const classes = new Set(
+      String(attrs.class || "")
+        .split(/\s+/)
+        .filter(Boolean)
     );
 
-    markers.push({
-      sportId: match[1],
-      layoutSchemaCode: match[2],
-      name: nameMatch ? stripTags(nameMatch[1]) : `SPORT_${match[1]}`,
-      start: match.index,
+    if (!classes.has("b-check") || !classes.has("sport")) {
+      continue;
+    }
+
+    const after = html.slice(iTagRegex.lastIndex, iTagRegex.lastIndex + 2000);
+
+    const nameMatch = after.match(
+      /<span\b[^>]*class=["'][^"']*\bsport-name\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i
+    );
+
+    sportMarkers.push({
+      sportId: idMatch[1],
+
+      name: nameMatch ? stripTags(nameMatch[1]) : `SPORT_${idMatch[1]}`,
+
+      layoutSchemaCode: attrs.layout || "",
+
+      start: tagMatch.index,
     });
   }
 
-  return markers.map((sport, index) => {
+  return sportMarkers.map((sport, index) => {
     const end =
-      index + 1 < markers.length ? markers[index + 1].start : html.length;
+      index + 1 < sportMarkers.length
+        ? sportMarkers[index + 1].start
+        : html.length;
 
     const block = html.slice(sport.start, end);
-    const leagueRegex = /<i\s+id="check__(\d+)"\s+class="b-check stage"[^>]*>/g;
 
     const leagueIds = [];
-    const seen = new Set();
-    let leagueMatch;
 
-    while ((leagueMatch = leagueRegex.exec(block)) !== null) {
-      const id = leagueMatch[1];
+    const seen = new Set();
+
+    const tagRegex = /<i\b[^>]*>/gi;
+
+    let match;
+
+    while ((match = tagRegex.exec(block)) !== null) {
+      const attrs = parseAttributes(match[0]);
+
+      const idMatch = String(attrs.id || "").match(/^check__(\d+)$/);
+
+      if (!idMatch) {
+        continue;
+      }
+
+      const classes = new Set(
+        String(attrs.class || "")
+          .split(/\s+/)
+          .filter(Boolean)
+      );
+
+      if (!classes.has("b-check") || !classes.has("stage")) {
+        continue;
+      }
+
+      const id = idMatch[1];
 
       if (!seen.has(id)) {
         seen.add(id);
+
         leagueIds.push(id);
       }
     }
@@ -176,6 +317,7 @@ function buildEventsUrl(leagueIds, layoutSchemaCode) {
   const url = new URL(`${BASE_URL}/getdata.php`);
 
   url.searchParams.set("sec", "ASIAN_LAYOUT");
+
   url.searchParams.set("subsec", "REQUEST_GET_SCHEME_EVENTS");
 
   for (const leagueId of leagueIds) {
@@ -183,16 +325,21 @@ function buildEventsUrl(leagueIds, layoutSchemaCode) {
   }
 
   url.searchParams.set("layout_schema_code", layoutSchemaCode);
+
   url.searchParams.set("start", "");
+
   url.searchParams.set("end", "");
+
   url.searchParams.set("selected_date_period", "null");
 
   return url.toString();
 }
 
-function parseRecords(html) {
-  const records = [];
+function parseEventRecords(html) {
+  const events = new Map();
+
   const revRegex = /\brev="([^"]+)"/g;
+
   let match;
 
   while ((match = revRegex.exec(html)) !== null) {
@@ -205,34 +352,63 @@ function parseRecords(html) {
     try {
       const obj = JSON.parse(decoded);
 
-      // Bahis/maç kaydı olan rev objeleri.
-      if (obj && obj.mid) {
-        records.push(obj);
+      if (!obj?.mid || !obj?.event_start_time || !obj?.lid) {
+        continue;
+      }
+
+      const key = String(obj.mid);
+
+      if (!events.has(key)) {
+        events.set(key, obj);
       }
     } catch {
-      // rev her zaman bahis JSON'u olmak zorunda değil; parse edilemeyeni geç.
+      // rev attribute her zaman
+      // event JSON'u olmayabilir.
     }
   }
 
-  return records;
+  return [...events.values()];
 }
 
-function uniqueByOutcomeId(records) {
-  const map = new Map();
+function splitParticipants(eventName) {
+  const value = String(eventName || "").trim();
 
-  for (const record of records) {
-    const key =
-      record.oid ||
-      `${record.mid || ""}:${record.market_id || ""}:${record.beton || ""}:${
-        record.odds || ""
-      }`;
+  const separator = " - ";
 
-    if (!map.has(key)) {
-      map.set(key, record);
-    }
+  const index = value.indexOf(separator);
+
+  if (index === -1) {
+    return {
+      home: value,
+      away: "",
+    };
   }
 
-  return [...map.values()];
+  return {
+    home: value.slice(0, index).trim(),
+
+    away: value.slice(index + separator.length).trim(),
+  };
+}
+
+function parseStartTime(value) {
+  const match = String(value || "").match(
+    /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})(?::\d{2})?$/
+  );
+
+  if (!match) {
+    return {
+      date: "UNKNOWN_DATE",
+
+      time: "",
+    };
+  }
+
+  return {
+    date: match[1],
+
+    time: match[2],
+  };
 }
 
 function chunkArray(items, size) {
@@ -245,110 +421,204 @@ function chunkArray(items, size) {
   return chunks;
 }
 
-async function fetchSport(sport, menuInfo) {
-  const allLeagueIds = menuInfo.leagueIds;
+async function fetchAllEventsForSport(menuInfo, canonicalName) {
+  const groups = chunkArray(menuInfo.leagueIds, CHUNK_SIZE);
 
-  if (!allLeagueIds.length) {
-    console.log(`\n========== ${sport.name} ==========`);
-    console.log("Bu spor için lig bulunamadı.");
-    return;
-  }
+  const events = new Map();
 
-  const selectedLeagueIds =
-    LEAGUE_MODE === "all" ? allLeagueIds : allLeagueIds.slice(0, 10);
-
-  const groups = chunkArray(selectedLeagueIds, CHUNK_SIZE);
-  const allRecords = [];
+  console.log(
+    `${canonicalName}: sportId=${menuInfo.sportId}, lig=${menuInfo.leagueIds.length}, layout=${menuInfo.layoutSchemaCode}`
+  );
 
   for (let i = 0; i < groups.length; i++) {
     const leagueIds = groups[i];
+
     const url = buildEventsUrl(leagueIds, menuInfo.layoutSchemaCode);
 
+    console.log(`  grup ${i + 1}/${groups.length} -> ${leagueIds.length} lig`);
+
     const response = await get(url, {
-      Referer: HOME_URL,
+      Referer: `${SITE_URL}/betting`,
+
       "X-Requested-With": "XMLHttpRequest",
     });
 
-    allRecords.push(...parseRecords(response.body));
+    for (const event of parseEventRecords(response.body)) {
+      if (String(event.sport_id) !== String(menuInfo.sportId)) {
+        continue;
+      }
+
+      events.set(String(event.mid), event);
+    }
+
+    if (REQUEST_DELAY_MS > 0 && i + 1 < groups.length) {
+      await sleep(REQUEST_DELAY_MS);
+    }
   }
 
-  const records = uniqueByOutcomeId(allRecords);
-  const matchingRecords = records.filter((record) =>
-    containsTeam(record, SEARCH_TEAM)
-  );
-  const eventIds = [...new Set(records.map((x) => String(x.mid)))];
+  console.log(`  benzersiz maç: ${events.size}`);
 
-  const result = {
-    source: "BETIST",
-    sport: sport.name,
-    sportId: sport.sportId,
-    layoutSchemaCode: menuInfo.layoutSchemaCode,
-    leagueCount: selectedLeagueIds.length,
-    leagueIds: selectedLeagueIds,
-    eventCount: eventIds.length,
-    eventIds,
-    recordCount: records.length,
-    records,
-  };
+  return [...events.values()];
+}
 
-  if (matchingRecords.length > 0) {
-    console.log("");
-    console.log("##############################################");
-    console.log(`############### ${sport.name} ###############`);
-    console.log("##############################################");
+function addEventsToOutput(output, canonicalSport, events) {
+  for (const event of events) {
+    const leagueName = String(event.league_name || `LIG_${event.lid}`).trim();
 
-    console.log(`ARAMA: ${SEARCH_TEAM}`);
-    console.log(`BULUNAN RECORD: ${matchingRecords.length}`);
+    const countryName = String(event.country_name || "").trim();
 
-    console.dir(matchingRecords, {
-      depth: null,
-      colors: true,
-      maxArrayLength: null,
+    const leagueKey = countryName
+      ? `${countryName} - ${leagueName}`
+      : leagueName;
+
+    const { date, time } = parseStartTime(event.event_start_time);
+
+    const { home, away } = splitParticipants(event.event);
+
+    output[canonicalSport][leagueKey] ??= {};
+
+    output[canonicalSport][leagueKey][date] ??= [];
+
+    output[canonicalSport][leagueKey][date].push({
+      eventId: String(event.mid),
+
+      leagueId: String(event.lid),
+
+      home,
+      away,
+      time,
     });
-
-    console.log("----------------------------------------------");
   }
 }
 
+function sortOutput(output) {
+  const sorted = {};
+
+  for (const sport of TARGET_ORDER) {
+    sorted[sport] = {};
+
+    const leagueEntries = Object.entries(output[sport] || {}).sort(([a], [b]) =>
+      a.localeCompare(b, "tr")
+    );
+
+    for (const [league, dates] of leagueEntries) {
+      sorted[sport][league] = {};
+
+      for (const date of Object.keys(dates).sort()) {
+        sorted[sport][league][date] = dates[date].sort((a, b) => {
+          const byTime = String(a.time).localeCompare(String(b.time));
+
+          if (byTime !== 0) {
+            return byTime;
+          }
+
+          return `${a.home}-${a.away}`.localeCompare(
+            `${b.home}-${b.away}`,
+            "tr"
+          );
+        });
+      }
+    }
+  }
+
+  return sorted;
+}
+
 async function main() {
-  console.log("Betist ana sayfası çekiliyor...");
+  console.log(`Betist: ${SITE_URL}`);
+
+  console.log(`Data host: ${BASE_URL}`);
+
+  console.log("Spor/lig menüsü çekiliyor...");
 
   const homeResponse = await get(HOME_URL, {
     Accept:
       "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    Referer: "https://betist2103.com/betting",
+
+    Referer: `${SITE_URL}/betting`,
   });
 
   const menu = parseSportMenu(homeResponse.body);
 
   if (!menu.length) {
     throw new Error(
-      "Spor menüsü bulunamadı. Site HTML yapısını değiştirmiş veya anti-bot sayfası dönmüş olabilir."
+      "Spor menüsü bulunamadı. Site HTML yapısı değişmiş veya farklı bir sayfa dönmüş olabilir."
     );
   }
 
-  console.log(`Spor menüsü bulundu: ${menu.length} spor.`);
-  console.log(
-    `Lig modu: ${LEAGUE_MODE === "all" ? "TÜM LİGLER" : "İLK 10 LİG"}`
-  );
+  const targetMenus = new Map();
 
-  for (const sport of TARGET_SPORTS) {
-    const menuInfo = menu.find((item) => item.sportId === sport.sportId);
+  for (const item of menu) {
+    const canonical = canonicalSportName(item.name);
+
+    if (canonical && !targetMenus.has(canonical)) {
+      targetMenus.set(canonical, item);
+    }
+  }
+
+  const output = Object.fromEntries(TARGET_ORDER.map((sport) => [sport, {}]));
+
+  for (const sport of TARGET_ORDER) {
+    const menuInfo = targetMenus.get(sport);
 
     if (!menuInfo) {
-      console.log(`\n${sport.name}: sportId=${sport.sportId} bulunamadı.`);
+      console.warn(`${sport}: menüde bulunamadı; boş bırakılıyor.`);
+
+      continue;
+    }
+
+    if (!menuInfo.layoutSchemaCode) {
+      console.warn(`${sport}: layout_schema_code bulunamadı; boş bırakılıyor.`);
+
+      continue;
+    }
+
+    if (!menuInfo.leagueIds.length) {
+      console.warn(`${sport}: lig bulunamadı; boş bırakılıyor.`);
+
       continue;
     }
 
     try {
-      await fetchSport(sport, menuInfo);
+      const events = await fetchAllEventsForSport(menuInfo, sport);
+
+      addEventsToOutput(output, sport, events);
     } catch (error) {
-      console.error(`\n${sport.name} çekilirken hata:`, error.message);
+      console.error(`${sport} çekilirken hata: ${error.message}`);
     }
+  }
+
+  const finalOutput = sortOutput(output);
+
+  await fs.writeFile(
+    OUTPUT_FILE,
+    `${JSON.stringify(finalOutput, null, 2)}\n`,
+    "utf8"
+  );
+
+  console.log("");
+
+  console.log(`JSON yazıldı: ${OUTPUT_FILE}`);
+
+  for (const sport of TARGET_ORDER) {
+    const leagues = Object.keys(finalOutput[sport]);
+
+    const matchCount = leagues.reduce(
+      (sum, league) =>
+        sum +
+        Object.values(finalOutput[sport][league]).reduce(
+          (dateSum, matches) => dateSum + matches.length,
+          0
+        ),
+      0
+    );
+
+    console.log(`${sport}: ${leagues.length} lig / ${matchCount} maç`);
   }
 }
 
 main().catch((error) => {
-  console.error("\nFatal error:", error);
+  console.error("Fatal error:", error);
+
   process.exitCode = 1;
 });

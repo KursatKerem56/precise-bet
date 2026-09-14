@@ -1,5 +1,6 @@
 import WebSocket from "ws";
 import crypto from "crypto";
+import { writeFileSync } from "node:fs";
 
 /*
 |--------------------------------------------------------------------------
@@ -52,28 +53,28 @@ const sports = [
     topic:
       "/sports/2007/tr/next-matches-aggregator-groups-overview/1/20/2258,2259,2260",
   },
-  {
-    name: "BASKETBOL",
-    sportId: 8,
-    topic: "/sports/2007/tr/next-matches-aggregator-groups-overview/8/10/2390",
-  },
-  {
-    name: "TENIS",
-    sportId: 3,
-    topic: "/sports/2007/tr/next-matches-aggregator-groups-overview/3/10/2384",
-  },
-  {
-    name: "VOLEYBOL",
-    sportId: 20,
-    topic:
-      "/sports/2007/tr/next-matches-aggregator-groups-overview/20/10/2424,2425",
-  },
-  {
-    name: "BEYZBOL",
-    sportId: 9,
-    topic:
-      "/sports/2007/tr/next-matches-aggregator-groups-overview/9/10/2417,2418",
-  },
+  // {
+  //   name: "BASKETBOL",
+  //   sportId: 8,
+  //   topic: "/sports/2007/tr/next-matches-aggregator-groups-overview/8/10/2390",
+  // },
+  // {
+  //   name: "TENIS",
+  //   sportId: 3,
+  //   topic: "/sports/2007/tr/next-matches-aggregator-groups-overview/3/10/2384",
+  // },
+  // {
+  //   name: "VOLEYBOL",
+  //   sportId: 20,
+  //   topic:
+  //     "/sports/2007/tr/next-matches-aggregator-groups-overview/20/10/2424,2425",
+  // },
+  // {
+  //   name: "BEYZBOL",
+  //   sportId: 9,
+  //   topic:
+  //     "/sports/2007/tr/next-matches-aggregator-groups-overview/9/10/2417,2418",
+  // },
 ];
 
 /*
@@ -218,26 +219,26 @@ function connectSport(sport, index) {
      */
     ws.send(JSON.stringify([1, "http://www.mavibet.com"]));
 
-    sendRpc(rpcId++, "/sports#disciplines", {
-      lang: "tr",
-      sportId: sport.sportId,
-    });
+    // sendRpc(rpcId++, "/sports#disciplines", {
+    //   lang: "tr",
+    //   sportId: sport.sportId,
+    // });
 
-    sendRpc(rpcId++, "/sports#locations", {
-      lang: "tr",
-      sportId: sport.sportId,
-      venueId: 0,
-    });
+    // sendRpc(rpcId++, "/sports#locations", {
+    //   lang: "tr",
+    //   sportId: sport.sportId,
+    //   venueId: 0,
+    // });
 
-    sendRpc(rpcId++, "/sports#getSessionInfo", {
-      lang: "tr",
-    });
+    // sendRpc(rpcId++, "/sports#getSessionInfo", {
+    //   lang: "tr",
+    // });
 
-    sendRpc(rpcId++, "/sports#configureFonts", {});
+    // sendRpc(rpcId++, "/sports#configureFonts", {});
 
-    sendRpc(rpcId++, "/sports#initialDump", {
-      topic: "/sports/2007/tr/disciplinesV2/BOTH/BOTH",
-    });
+    // sendRpc(rpcId++, "/sports#initialDump", {
+    //   topic: "/sports/2007/tr/disciplinesV2/BOTH/BOTH",
+    // });
 
     const today = new Date();
 
@@ -249,22 +250,22 @@ function connectSport(sport, index) {
 
     endOfWindow.setDate(endOfWindow.getDate() + 7);
 
-    sendRpc(rpcId++, "/sports#sportsDataInfo", {
-      lang: "tr",
-      sportId: String(sport.sportId),
+    // sendRpc(rpcId++, "/sports#sportsDataInfo", {
+    //   lang: "tr",
+    //   sportId: String(sport.sportId),
 
-      epochSecondsStartDate: Math.floor(startOfDay.getTime() / 1000),
+    //   epochSecondsStartDate: Math.floor(startOfDay.getTime() / 1000),
 
-      epochSecondsStopDate: Math.floor(endOfWindow.getTime() / 1000) - 1,
+    //   epochSecondsStopDate: Math.floor(endOfWindow.getTime() / 1000) - 1,
 
-      userTimezoneOffsetInMinutes: 180,
-    });
+    //   userTimezoneOffsetInMinutes: 180,
+    // });
 
-    sendRpc(rpcId++, "/sports#marketGroupsOverview", {
-      lang: "tr",
-      sportId: String(sport.sportId),
-      liveStatus: "NOT_LIVE",
-    });
+    // sendRpc(rpcId++, "/sports#marketGroupsOverview", {
+    //   lang: "tr",
+    //   sportId: String(sport.sportId),
+    //   liveStatus: "NOT_LIVE",
+    // });
 
     /*
      * Genel spor topic aboneliği.
@@ -273,15 +274,15 @@ function connectSport(sport, index) {
 
     const initialDumpRequestId = rpcId++;
 
-    sendRpc(initialDumpRequestId, "/sports#initialDump", {
-      topic: sport.topic,
-    });
+    // sendRpc(initialDumpRequestId, "/sports#initialDump", {
+    //   topic: sport.topic,
+    // });
 
-    console.log(`[${sport.name}] Sent sports initial-data request.`);
+    // console.log(`[${sport.name}] Sent sports initial-data request.`);
 
-    console.log(`[${sport.name}] Request ID: ${initialDumpRequestId}`);
+    // console.log(`[${sport.name}] Request ID: ${initialDumpRequestId}`);
 
-    console.log(`[${sport.name}] Topic: ${sport.topic}`);
+    // console.log(`[${sport.name}] Topic: ${sport.topic}`);
 
     /*
      * SADECE FUTBOL:
@@ -305,11 +306,11 @@ function connectSport(sport, index) {
       });
 
       console.log("");
-      console.log(`[FUTBOL] ${SUPER_LIG.name} isteği gönderildi.`);
+      // console.log(`[FUTBOL] ${SUPER_LIG.name} isteği gönderildi.`);
 
-      console.log(`[FUTBOL] Süper Lig request ID: ${superLigRequestId}`);
+      // console.log(`[FUTBOL] Süper Lig request ID: ${superLigRequestId}`);
 
-      console.log(`[FUTBOL] tournamentId: ${SUPER_LIG.tournamentId}`);
+      // console.log(`[FUTBOL] tournamentId: ${SUPER_LIG.tournamentId}`);
     }
   });
 
@@ -370,11 +371,15 @@ function connectSport(sport, index) {
       console.log("");
       console.log("NORMALIZE EDİLMİŞ MAÇLAR:");
 
-      console.dir(matches, {
-        depth: null,
-        colors: true,
-        maxArrayLength: null,
-      });
+      writeFileSync("matches.json", JSON.stringify(matches, null, 2), "utf8");
+
+      console.log(matches);
+
+      // console.dir(matches, {
+      //   depth: null,
+      //   colors: true,
+      //   maxArrayLength: null,
+      // });
 
       console.log("");
       console.log("RAW MATCH RECORDS:");

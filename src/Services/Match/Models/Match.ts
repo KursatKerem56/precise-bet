@@ -7,6 +7,7 @@ import { EMatchSport } from "@Match/Constants";
 
 const MatchSchema = new Schema<IMatch>(
   {
+    site: { type: Schema.Types.ObjectId, ref: "Site", required: true },
     sport: { type: String, enum: Object.values(EMatchSport), required: true },
     leagues: [
       {

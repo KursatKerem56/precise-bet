@@ -1,17 +1,23 @@
+import { getSites } from "@Panel";
+
 import { Match } from "@Match/Models";
-import { EMatchSport } from "./Constants";
+
+import { EMatchSport } from "@Match/Constants";
 
 const test = async () => {
   return "Match service is working";
 };
 
 const saveTempMatches = async () => {
+  // const site = (await getSites()).find((site) => site.site === "BETIST");
+  // if (!site) return;
   // const matchesWillBeSaved = [];
   // for (const sportKey of Object.keys(matchesRaw) as Array<
   //   keyof typeof matchesRaw
   // >) {
   //   const sport = matchesRaw[sportKey];
   //   const data = {
+  //     site: site._id.toString(),
   //     sport:
   //       sportKey === "FUTBOL"
   //         ? EMatchSport.FOOTBALL

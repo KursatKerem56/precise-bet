@@ -1,6 +1,9 @@
+import { Document, ObjectId, PopulatedDoc } from "mongoose";
+
 import { EMatchSport } from "@Match/Constants";
 
 interface IMatch extends Document {
+  site: ObjectId | PopulatedDoc<"Site">;
   sport: EMatchSport;
   leagues: IMatchLeague[];
   createdAt: Date;

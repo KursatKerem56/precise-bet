@@ -173,10 +173,7 @@ export function formatInTimeZone(epochMs, timeZone = DEFAULT_TIMEZONE) {
 /** Bir MATCH kaydını sade bir maç nesnesine çevirir. */
 function toMatch(record, timeZone) {
   const startTime = record.startTime != null ? Number(record.startTime) : null;
-  const { date, time } =
-    startTime != null
-      ? formatInTimeZone(startTime, timeZone)
-      : { date: null, time: null };
+  const { date, time } = startTime != null ? formatInTimeZone(startTime, timeZone) : { date: null, time: null };
 
   return {
     eventId: record.id != null ? String(record.id) : null,
@@ -256,10 +253,7 @@ function getOrCreate(map, key, factory) {
   return map.get(key);
 }
 
-const collator = new Intl.Collator("tr", {
-  sensitivity: "base",
-  numeric: true,
-});
+const collator = new Intl.Collator("tr", { sensitivity: "base", numeric: true });
 
 /**
  * Düz maç listesini SPOR -> LİG -> TARİH hiyerarşisinde gruplar.
@@ -343,10 +337,7 @@ export function groupMatches(matches) {
  * @param {string[]} filePaths
  * @param {{timeZone?: string}} [options]
  */
-export async function buildFromHarFiles(
-  filePaths,
-  { timeZone = DEFAULT_TIMEZONE } = {}
-) {
+export async function buildFromHarFiles(filePaths, { timeZone = DEFAULT_TIMEZONE } = {}) {
   const byId = new Map();
   const sources = [];
 
@@ -355,12 +346,7 @@ export async function buildFromHarFiles(
     try {
       har = JSON.parse(await readFile(filePath, "utf8"));
     } catch (error) {
-      sources.push({
-        file: filePath,
-        ok: false,
-        matchCount: 0,
-        error: String(error.message ?? error),
-      });
+      sources.push({ file: filePath, ok: false, matchCount: 0, error: String(error.message ?? error) });
       continue;
     }
 

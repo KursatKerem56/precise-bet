@@ -22,4 +22,8 @@ const saveSiteLink = async (site: EPanelSite, link: string) => {
   return panelSite;
 };
 
-export { saveSiteLink };
+const getSites = async () => {
+  return await PanelSite.find();
+};
+
+export { saveSiteLink, getSites };

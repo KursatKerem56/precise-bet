@@ -68,25 +68,25 @@ import zlib from "node:zlib";
  * AYARLAR
  * ====================================================================== */
 
-const MAVIBET_NUMBER = process.env.MAVIBET_NUMBER || "1006";
+let MAVIBET_NUMBER = process.env.MAVIBET_NUMBER || "1006";
 
-const SITE_URL =
+let SITE_URL =
   process.env.MAVIBET_SITE_URL || `https://www.mavibet${MAVIBET_NUMBER}.com`;
 
 // DİKKAT: WebSocket el sıkışmasındaki Origin, ana site değil SPOR alt alan
 // adıdır (HAR'da bu şekilde doğrulandı). Yanlış Origin sessiz boş sonuç verir.
-const WS_ORIGIN =
+let WS_ORIGIN =
   process.env.MAVIBET_WS_ORIGIN ||
   `https://sports2.mavibet${MAVIBET_NUMBER}.com`;
 
-const WS_URL =
+let WS_URL =
   process.env.MAVIBET_WS_URL ||
   `wss://sportsapi.mavibet${MAVIBET_NUMBER}.com/v2`;
 
 // MAVIBET_DEBUG=1 -> gidip gelen tüm WAMP mesajlarını ekrana bas
 const DEBUG = process.env.MAVIBET_DEBUG === "1";
 
-const OUTPUT_FILE = process.env.MAVIBET_OUTPUT || "mavibet-matches.json";
+const OUTPUT_FILE = process.env.MAVIBET_OUTPUT || "mavi_bet-matches.json";
 
 const TENANT = process.env.MAVIBET_TENANT || "2007";
 
@@ -972,6 +972,7 @@ async function fetchMarketGroupIds(client, sportId) {
         sportId: String(sportId),
         liveStatus: "LIVE",
       })
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
       .catch(() => {});
 
     const data = await client.call("/sports#marketGroupsOverview", {
@@ -1493,7 +1494,21 @@ async function probe(client) {
  * 6) ANA AKIŞ
  * ====================================================================== */
 
-async function main() {
+async function mavibetMatchFetcherMain(siteUrl) {
+  const foundSiteNumber = siteUrl.match(/mavibet(\d+)\.com/);
+
+  if (!foundSiteNumber) return;
+
+  MAVIBET_NUMBER = foundSiteNumber[1];
+
+  SITE_URL = `https://www.mavibet${MAVIBET_NUMBER}.com`;
+
+  // DİKKAT: WebSocket el sıkışmasındaki Origin, ana site değil SPOR alt alan
+  // adıdır (HAR'da bu şekilde doğrulandı). Yanlış Origin sessiz boş sonuç verir.
+  WS_ORIGIN = `https://sports2.mavibet${MAVIBET_NUMBER}.com`;
+
+  WS_URL = `wss://sportsapi.mavibet${MAVIBET_NUMBER}.com/v2`;
+
   console.log(`Mavibet: ${SITE_URL}`);
 
   console.log(`Mavibet WS: ${WS_URL}`);
@@ -1613,8 +1628,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-
-  process.exitCode = 1;
-});
+export { mavibetMatchFetcherMain };

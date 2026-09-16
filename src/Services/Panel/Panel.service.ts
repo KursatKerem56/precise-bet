@@ -1,3 +1,5 @@
+import { getMatches as _getMatches } from "@Match";
+
 import { PanelSite } from "@Panel/Models";
 
 import { EPanelSite } from "@Panel/Constants";
@@ -26,4 +28,8 @@ const getSites = async () => {
   return await PanelSite.find();
 };
 
-export { saveSiteLink, getSites };
+const getMatches = async () => {
+  return await _getMatches();
+};
+
+export { saveSiteLink, getSites, getMatches };

@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import https from "node:https";
 
-const SITE_URL = process.env.BETIST_SITE_URL || "https://betist2105.com";
+let SITE_URL = process.env.BETIST_SITE_URL || "https://betist2105.com";
 
-const BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2105.com";
+let BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2105.com";
 
 const HOME_URL = `${BASE_URL}/home.php?domain=&options=`;
 
@@ -11,7 +11,7 @@ const OUTPUT_FILE = process.env.BETIST_OUTPUT || "betist-matches.json";
 
 const CHUNK_SIZE = Number(process.env.BETIST_CHUNK_SIZE || 10);
 
-const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 120);
+const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 1);
 
 const TARGET_ORDER = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
 
@@ -524,7 +524,10 @@ function sortOutput(output) {
   return sorted;
 }
 
-async function main() {
+async function betistMatchFetcherMain(siteUrl) {
+  SITE_URL = siteUrl;
+  BASE_URL = `${new URL(siteUrl).protocol}//bet.${new URL(siteUrl).hostname}`;
+
   console.log(`Betist: ${SITE_URL}`);
 
   console.log(`Data host: ${BASE_URL}`);
@@ -617,8 +620,4 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error("Fatal error:", error);
-
-  process.exitCode = 1;
-});
+export { betistMatchFetcherMain };

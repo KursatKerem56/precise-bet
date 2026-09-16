@@ -19,7 +19,7 @@ import setRealUserIP from "@Middlewares/IP";
 
 import logger from "@Utils/Logger";
 import { setupErrorHandling } from "@Utils/Error";
-import { saveTempMatches } from "@Match";
+import { initMatchFetchers } from "@Match";
 
 const limiter = rateLimit({
   windowMs: 1 * 30 * 1000,
@@ -82,7 +82,7 @@ httpServer.listen(PORT, async () => {
 
   await setupErrorHandling();
 
-  // await saveTempMatches();
+  await initMatchFetchers();
 
   logger.info(`Server listening on port ${chalk.green(PORT)}`);
 });

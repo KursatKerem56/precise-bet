@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
 
-import { saveSiteLink as _saveSiteLink } from "@Panel";
+import {
+  saveSiteLink as _saveSiteLink,
+  getMatches as _getMatches,
+} from "@Panel";
 
 import { AppError, asyncErrorHandler } from "@Utils/Error";
 
@@ -11,4 +14,9 @@ const saveSiteLink = asyncErrorHandler(async (req: Request, res: Response) => {
 
   res.json(await _saveSiteLink(site, link));
 });
-export { saveSiteLink };
+
+const getMatches = asyncErrorHandler(async (req: Request, res: Response) => {
+  res.json(await _getMatches());
+});
+
+export { saveSiteLink, getMatches };

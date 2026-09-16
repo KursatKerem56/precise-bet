@@ -143,8 +143,18 @@ const getMatches = async () => {
   return matchesBySite;
 };
 
-const compareMatches = async () => {
-  return "Comparison logic not implemented yet.";
+const getComparedMatches = async () => {
+  //   const jsonFilePath = `./${site.toLowerCase()}-matches.json`;
+
+  // const fileContent = await fs.readFile(jsonFilePath, "utf-8");
+
+  // const matchesRaw = JSON.parse(fileContent);
+
+  const jsonFilePath = `./match-times-diff.json`;
+  const fileContent = await fs.readFile(jsonFilePath, "utf-8");
+  const fileRaw = JSON.parse(fileContent);
+
+  return fileRaw;
 };
 
-export { initMatchFetchers, getMatches, compareMatches };
+export { initMatchFetchers, getMatches, getComparedMatches };

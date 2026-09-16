@@ -1,12 +1,17 @@
 import { Request, Response } from "express";
 
 import {
+  getSiteLinks as _getSiteLinks,
   saveSiteLink as _saveSiteLink,
   getMatches as _getMatches,
-  compareMatches as _compareMatches,
+  getComparedMatches as _getComparedMatches,
 } from "@Panel";
 
 import { AppError, asyncErrorHandler } from "@Utils/Error";
+
+const getSiteLinks = asyncErrorHandler(async (req: Request, res: Response) => {
+  res.json(await _getSiteLinks());
+});
 
 const saveSiteLink = asyncErrorHandler(async (req: Request, res: Response) => {
   const { site, link } = req.body;
@@ -19,10 +24,10 @@ const saveSiteLink = asyncErrorHandler(async (req: Request, res: Response) => {
 const getMatches = asyncErrorHandler(async (req: Request, res: Response) => {
   res.json(await _getMatches());
 });
-const compareMatches = asyncErrorHandler(
+const getComparedMatches = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    res.json(await _compareMatches());
+    res.json(await _getComparedMatches());
   }
 );
 
-export { saveSiteLink, getMatches, compareMatches };
+export { getSiteLinks, saveSiteLink, getMatches, getComparedMatches };

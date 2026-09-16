@@ -1,6 +1,6 @@
 import {
   getMatches as _getMatches,
-  compareMatches as _compareMatches,
+  getComparedMatches as _getComparedMatches,
 } from "@Match";
 
 import { PanelSite } from "@Panel/Models";
@@ -8,6 +8,10 @@ import { PanelSite } from "@Panel/Models";
 import { EPanelSite } from "@Panel/Constants";
 
 import { AppError } from "@Utils/Error";
+
+const getSiteLinks = async () => {
+  return await PanelSite.find({}, { _id: 0, site: 1, link: 1 });
+};
 
 const saveSiteLink = async (site: EPanelSite, link: string) => {
   if (!Object.values(EPanelSite).includes(site)) {
@@ -35,8 +39,8 @@ const getMatches = async () => {
   return await _getMatches();
 };
 
-const compareMatches = async () => {
-  return await _compareMatches();
+const getComparedMatches = async () => {
+  return await _getComparedMatches();
 };
 
-export { saveSiteLink, getSites, getMatches, compareMatches };
+export { getSiteLinks, saveSiteLink, getSites, getMatches, getComparedMatches };

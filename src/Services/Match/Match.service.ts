@@ -99,37 +99,70 @@ const saveMatches = async (site: EPanelSite) => {
   }
 };
 
-const initMatchFetchers = async () => {
-  const sites = await getSites();
+const REFETCH_INTERVAL_MS = 1000 * 60 * 2;
 
-  await Promise.all(
-    sites.map(async (site) => {
-      console.log(`Initializing match fetcher for site: ${site.site}`);
+const fetchSite = async (site: { site: EPanelSite; link: string }) => {
+  console.log(`Initializing match fetcher for site: ${site.site}`);
 
-      switch (site.site) {
-        case EPanelSite.VIRUS_BET:
-          await virusBetMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          break;
-        case EPanelSite.BETIST:
-          await betistMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          break;
-        case EPanelSite.MAVI_BET:
-          await mavibetMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          break;
-        default:
-          console.log(`No match fetcher defined for site: ${site.site}`);
-      }
-    })
-  );
+  switch (site.site) {
+    case EPanelSite.VIRUS_BET:
+      await virusBetMatchFetcherMain(site.link);
+      await saveMatches(site.site);
+      break;
+    case EPanelSite.BETIST:
+      await betistMatchFetcherMain(site.link);
+      await saveMatches(site.site);
+      break;
+    case EPanelSite.MAVI_BET:
+      await mavibetMatchFetcherMain(site.link);
+      await saveMatches(site.site);
+      break;
+    default:
+      console.log(`No match fetcher defined for site: ${site.site}`);
+  }
+};
 
-  setTimeout(async () => {
+const compareAndReschedule = async () => {
+  try {
     await compareMatchTimesMain();
+  } catch (error) {
+    console.error(
+      "compareMatchTimesMain failed:",
+      error instanceof Error ? error.message : error
+    );
+  } finally {
+    // Bu satır HER durumda çalışmalı; aksi halde tek bir hata döngüyü
+    // kalıcı olarak durdurur ve sunucu bir daha veri çekmez.
+    setTimeout(initMatchFetchers, REFETCH_INTERVAL_MS);
+  }
+};
 
-    setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
-  });
+const initMatchFetchers = async () => {
+  try {
+    const sites = await getSites();
+
+    // Bir sitenin çekicisi patlarsa (ör. Cloudflare 502) diğerleri yarıda
+    // kalmasın; allSettled ile her site kendi başına değerlendiriliyor.
+    const results = await Promise.allSettled(sites.map(fetchSite));
+
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(
+          `Match fetcher failed for site ${sites[index].site}:`,
+          result.reason instanceof Error ? result.reason.message : result.reason
+        );
+      }
+    });
+  } catch (error) {
+    console.error(
+      "initMatchFetchers cycle failed:",
+      error instanceof Error ? error.message : error
+    );
+  } finally {
+    // Karşılaştırma ve sonraki tur, sunucu açılışını bloklamasın diye
+    // bu tick'in dışına alınıyor.
+    setTimeout(compareAndReschedule, 0);
+  }
 };
 
 const getMatches = async () => {

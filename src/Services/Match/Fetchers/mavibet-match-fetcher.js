@@ -458,10 +458,10 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
         buffer = buffer.subarray(end + 4);
 
         if (!/^HTTP\/1\.1 101/i.test(head)) {
+          const statusLine = head.split("\r\n")[0] || "bilinmeyen yanıt";
+
           return fail(
-            new Error(
-              `WebSocket el sıkışması başarısız: ${head.split("\r\n")[0]}`
-            )
+            new Error(`WebSocket el sıkışması başarısız: ${statusLine}`)
           );
         }
 

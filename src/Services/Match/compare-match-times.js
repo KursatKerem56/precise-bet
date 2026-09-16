@@ -1197,12 +1197,22 @@ function formatTimes(row, siteler) {
     .join("   ");
 }
 
-async function main() {
-  const { files, options } = parseArgs(process.argv.slice(2));
+async function compareMatchTimesMain() {
+  const args = [
+    "./virus_bet-matches.json",
+    "./mavi_bet-matches.json",
+    "./betist-matches.json",
+    "-o",
+    "match-times-diff.json",
+  ];
+
+  console.log(args);
+
+  const { files, options } = parseArgs(args);
 
   if (options.help || files.length < 2) {
     printHelp();
-    process.exit(options.help ? 0 : 1);
+    // process.exit(options.help ? 0 : 1);
   }
 
   const result = await compareFiles(files, options);
@@ -1223,13 +1233,15 @@ async function main() {
   }
 }
 
+export { compareMatchTimesMain };
+
 // Doğrudan çalıştırıldığında CLI; import edildiğinde sadece fonksiyonlar.
-if (
-  process.argv[1] &&
-  import.meta.url === new URL(`file://${process.argv[1]}`).href
-) {
-  main().catch((error) => {
-    console.error("Hata:", error.message);
-    process.exitCode = 1;
-  });
-}
+// if (
+//   process.argv[1] &&
+//   import.meta.url === new URL(`file://${process.argv[1]}`).href
+// ) {
+//   compareMatchTimesMain().catch((error) => {
+//     console.error("Hata:", error.message);
+//     process.exitCode = 1;
+//   });
+// }

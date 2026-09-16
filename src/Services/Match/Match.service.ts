@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs/promises";
 
+import { compareMatchTimesMain } from "./compare-match-times";
+
 import { getSites } from "@Panel";
 
 import {
@@ -123,7 +125,9 @@ const initMatchFetchers = async () => {
     })
   );
 
-  setTimeout(initMatchFetchers, 1000 * 60 * 10); // Re-run every 10 minutes
+  await compareMatchTimesMain();
+
+  setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
 };
 
 const getMatches = async () => {

@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import {
   saveSiteLink as _saveSiteLink,
   getMatches as _getMatches,
+  compareMatches as _compareMatches,
 } from "@Panel";
 
 import { AppError, asyncErrorHandler } from "@Utils/Error";
@@ -18,5 +19,10 @@ const saveSiteLink = asyncErrorHandler(async (req: Request, res: Response) => {
 const getMatches = asyncErrorHandler(async (req: Request, res: Response) => {
   res.json(await _getMatches());
 });
+const compareMatches = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    res.json(await _compareMatches());
+  }
+);
 
-export { saveSiteLink, getMatches };
+export { saveSiteLink, getMatches, compareMatches };

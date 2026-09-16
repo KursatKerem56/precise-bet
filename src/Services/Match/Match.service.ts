@@ -139,4 +139,8 @@ const getMatches = async () => {
   return matchesBySite;
 };
 
-export { initMatchFetchers, getMatches };
+const compareMatches = async () => {
+  return "Comparison logic not implemented yet.";
+};
+
+export { initMatchFetchers, getMatches, compareMatches };

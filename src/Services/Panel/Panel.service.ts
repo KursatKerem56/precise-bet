@@ -1,4 +1,7 @@
-import { getMatches as _getMatches } from "@Match";
+import {
+  getMatches as _getMatches,
+  compareMatches as _compareMatches,
+} from "@Match";
 
 import { PanelSite } from "@Panel/Models";
 
@@ -32,4 +35,8 @@ const getMatches = async () => {
   return await _getMatches();
 };
 
-export { saveSiteLink, getSites, getMatches };
+const compareMatches = async () => {
+  return await _compareMatches();
+};
+
+export { saveSiteLink, getSites, getMatches, compareMatches };

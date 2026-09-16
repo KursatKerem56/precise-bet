@@ -535,7 +535,145 @@ export function matchLists(listA, listB, options = {}) {
 }
 
 /* =========================================================================
- * 6) ÇIKTI ÜRETİMİ
+ * 6) ÇOK SİTELİ KÜMELEME
+ *
+ * İkiden fazla site karşılaştırırken "A ile B eşleşti", "B ile C eşleşti"
+ * bilgilerini birleştirip AYNI MAÇI temsil eden kümeler oluşturmak gerekir.
+ * Burada birleştir-bul (union-find) kullanıyoruz; tek kısıt: bir küme aynı
+ * siteden EN FAZLA BİR maç içerebilir (aksi halde iki farklı maç yanlışlıkla
+ * tek maça kaynardı).
+ * ====================================================================== */
+
+class DisjointSet {
+  constructor() {
+    this.parent = new Map();
+  }
+
+  find(x) {
+    if (!this.parent.has(x)) this.parent.set(x, x);
+    let root = x;
+    while (this.parent.get(root) !== root) root = this.parent.get(root);
+    // yol sıkıştırma
+    let cur = x;
+    while (this.parent.get(cur) !== root) {
+      const next = this.parent.get(cur);
+      this.parent.set(cur, root);
+      cur = next;
+    }
+    return root;
+  }
+
+  union(a, b) {
+    const ra = this.find(a);
+    const rb = this.find(b);
+    if (ra === rb) return true;
+    this.parent.set(ra, rb);
+    return true;
+  }
+}
+
+/**
+ * Site listelerini alıp aynı maçı temsil eden kümeleri üretir.
+ *
+ * @param {Record<string, Array>} bySite  site adı -> maç listesi
+ * @returns {{clusters: Array, pairStats: Array}}
+ */
+export function clusterMatches(bySite, options = {}) {
+  const opt = { ...DEFAULTS, ...options };
+  const siteNames = Object.keys(bySite);
+
+  // Global anahtar: "site#index"
+  const keyOf = (site, index) => `${site}#${index}`;
+  const entryOf = (key) => {
+    const at = key.lastIndexOf("#");
+    const site = key.slice(0, at);
+    return { site, match: bySite[site][Number(key.slice(at + 1))] };
+  };
+
+  const ds = new DisjointSet();
+  // Her kümenin hangi siteleri içerdiğini takip et (çakışmayı engellemek için)
+  const clusterSites = new Map(); // kök -> Set(site)
+
+  for (const site of siteNames) {
+    bySite[site].forEach((_, i) => {
+      const key = keyOf(site, i);
+      ds.find(key);
+      clusterSites.set(key, new Set([site]));
+    });
+  }
+
+  const pairStats = [];
+
+  // Tüm site çiftleri için ikili eşleştirme
+  for (let i = 0; i < siteNames.length; i++) {
+    for (let j = i + 1; j < siteNames.length; j++) {
+      const siteA = siteNames[i];
+      const siteB = siteNames[j];
+
+      const { pairs } = matchLists(bySite[siteA], bySite[siteB], opt);
+
+      for (const pair of pairs) {
+        const ia = bySite[siteA].indexOf(pair.a);
+        const ib = bySite[siteB].indexOf(pair.b);
+        if (ia < 0 || ib < 0) continue;
+
+        const ra = ds.find(keyOf(siteA, ia));
+        const rb = ds.find(keyOf(siteB, ib));
+        if (ra === rb) continue; // zaten aynı kümede (başka site üzerinden birleşmiş)
+
+        const setA = clusterSites.get(ra) ?? new Set();
+        const setB = clusterSites.get(rb) ?? new Set();
+
+        // Aynı siteden iki maç tek kümeye giremez.
+        let clash = false;
+        for (const s of setB) if (setA.has(s)) clash = true;
+        if (clash) continue;
+
+        ds.union(ra, rb);
+        const root = ds.find(ra);
+        clusterSites.set(root, new Set([...setA, ...setB]));
+      }
+
+      // NOT: Burada GERÇEK eşleşme sayısını raporluyoruz. "Kaç tanesi yeni
+      // birleşme yarattı" sayısı yanıltıcı olurdu: A-B ve A-C eşleştikten
+      // sonra B-C zaten aynı kümede olduğu için 0 görünürdü.
+      pairStats.push({ siteA, siteB, eslesen: pairs.length });
+    }
+  }
+
+  // Kökleri toplayıp kümeleri kur
+  const groups = new Map();
+
+  for (const site of siteNames) {
+    bySite[site].forEach((_, i) => {
+      const key = keyOf(site, i);
+      const root = ds.find(key);
+      if (!groups.has(root)) groups.set(root, []);
+      groups.get(root).push(key);
+    });
+  }
+
+  const clusters = [];
+
+  for (const keys of groups.values()) {
+    const entries = keys.map(entryOf);
+
+    // Küme kimliği için ilk sitenin (TARGET sırasına göre) verisini temel al
+    entries.sort(
+      (x, y) => siteNames.indexOf(x.site) - siteNames.indexOf(y.site)
+    );
+
+    const bySiteMatch = {};
+    for (const e of entries) bySiteMatch[e.site] = e.match;
+
+    clusters.push({ entries, bySite: bySiteMatch });
+  }
+
+  return { clusters, pairStats };
+}
+
+/* =========================================================================
+ * 7) ÇIKTI ÜRETİMİ
  * ====================================================================== */
 
 const collator = new Intl.Collator("tr", {
@@ -548,41 +686,95 @@ const sportRank = (s) => {
   return i === -1 ? SPORT_ORDER.length : i;
 };
 
-function pairToRow(pair, nameA, nameB) {
-  const { a, b } = pair;
+/** Bir küme için saat karşılaştırması yapar. */
+function analyseCluster(cluster, siteNames, toleranceMinutes) {
+  const present = siteNames.filter((s) => cluster.bySite[s]);
+  const missing = siteNames.filter((s) => !cluster.bySite[s]);
+
+  const epochs = present
+    .map((s) => ({ site: s, epoch: cluster.bySite[s].epoch }))
+    .filter((x) => x.epoch != null);
+
+  if (epochs.length < 2) {
+    return {
+      present,
+      missing,
+      maxDiffMinutes: 0,
+      isDifferent: false,
+      deviating: [],
+    };
+  }
+
+  const values = epochs.map((x) => x.epoch);
+  const maxDiffMinutes = Math.round(
+    (Math.max(...values) - Math.min(...values)) / 60000
+  );
+
+  // Referans: en çok tekrar eden saat (eşitlik olursa en erken).
+  const counts = new Map();
+  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+
+  let reference = values[0];
+  let bestCount = -1;
+  for (const [value, count] of counts) {
+    if (count > bestCount || (count === bestCount && value < reference)) {
+      reference = value;
+      bestCount = count;
+    }
+  }
+
+  const deviating = epochs
+    .filter((x) => Math.abs(x.epoch - reference) > toleranceMinutes * 60000)
+    .map((x) => ({
+      site: x.site,
+      farkDakika: Math.round((x.epoch - reference) / 60000),
+    }));
+
   return {
-    sport: a.sport,
-    league: a.league,
-    date: a.date,
-    home: a.home,
-    away: a.away,
-    [nameA]: {
-      date: a.date,
-      time: a.time,
-      league: a.leagueRaw,
-      home: a.home,
-      away: a.away,
-      eventId: a.eventId,
-    },
-    [nameB]: {
-      date: b.date,
-      time: b.time,
-      league: b.leagueRaw,
-      home: b.home,
-      away: b.away,
-      eventId: b.eventId,
-    },
-    diffMinutes: pair.diffMinutes,
-    // + ise 2. site daha GEÇ, - ise daha ERKEN gösteriyor
-    fark: `${pair.diffMinutes > 0 ? "+" : ""}${pair.diffMinutes} dk`,
-    takimSkoru: pair.teamScore,
-    ligSkoru: pair.leagueScore,
-    ...(pair.flipped ? { evDeplasmanTers: true } : {}),
+    present,
+    missing,
+    maxDiffMinutes,
+    isDifferent: maxDiffMinutes > toleranceMinutes,
+    deviating,
+  };
+}
+
+function clusterToRow(cluster, siteNames, analysis) {
+  // Görünen ad için ilk mevcut siteyi kullan
+  const first = cluster.bySite[analysis.present[0]];
+
+  const saatler = {};
+  const tarihler = {};
+  const ligler = {};
+  const takimlar = {};
+
+  for (const site of siteNames) {
+    const m = cluster.bySite[site];
+    if (!m) continue;
+    saatler[site] = m.time;
+    tarihler[site] = m.date;
+    ligler[site] = m.leagueRaw;
+    takimlar[site] = `${m.home} - ${m.away}`;
+  }
+
+  return {
+    sport: first.sport,
+    league: first.league,
+    date: first.date,
+    home: first.home,
+    away: first.away,
+    saatler,
+    tarihler,
+    maxFarkDakika: analysis.maxDiffMinutes,
+    sapanSiteler: analysis.deviating,
+    eksikSiteler: analysis.missing,
+    ligler,
+    takimlar,
   };
 }
 
 /** Düz satır listesini SPOR -> LİG -> TARİH ağacına çevirir. */
-function groupRows(rows, nameA) {
+function groupRows(rows) {
   const tree = {};
   for (const r of rows) {
     tree[r.sport] ??= {};
@@ -601,8 +793,8 @@ function groupRows(rows, nameA) {
       for (const date of Object.keys(tree[sport][league]).sort()) {
         sorted[sport][league][date] = tree[sport][league][date].sort(
           (p, q) =>
-            String(p[nameA]?.time ?? "").localeCompare(
-              String(q[nameA]?.time ?? "")
+            String(Object.values(p.saatler)[0] ?? "").localeCompare(
+              String(Object.values(q.saatler)[0] ?? "")
             ) || collator.compare(`${p.home} ${p.away}`, `${q.home} ${q.away}`)
         );
       }
@@ -617,48 +809,83 @@ function siteNameFromPath(filePath) {
   return base.replace(/\.json$/i, "").replace(/[-_]?matches?$/i, "") || base;
 }
 
+/** Aynı ada sahip dosyalar varsa sonuna sayı ekleyerek ayır. */
+function uniqueSiteNames(filePaths) {
+  const names = filePaths.map(siteNameFromPath);
+  const seen = new Map();
+  return names.map((n) => {
+    const count = (seen.get(n) ?? 0) + 1;
+    seen.set(n, count);
+    return count === 1 ? n : `${n}_${count}`;
+  });
+}
+
 /**
- * Uçtan uca: iki dosyayı oku, karşılaştır, sonucu döndür.
+ * Uçtan uca: 2 veya daha fazla dosyayı oku, karşılaştır, sonucu döndür.
  *
- * @param {string} fileA
- * @param {string} fileB
+ * @param {string[]} filePaths
  * @param {object} options
  */
-export async function compareFiles(fileA, fileB, options = {}) {
+export async function compareFiles(filePaths, options = {}) {
   const opt = { ...DEFAULTS, includeUnmatched: false, flat: false, ...options };
 
-  const [rawA, rawB] = await Promise.all([
-    readFile(fileA, "utf8").then(JSON.parse),
-    readFile(fileB, "utf8").then(JSON.parse),
-  ]);
-
-  const parsedA = normalizeInput(rawA, fileA, opt);
-  const parsedB = normalizeInput(rawB, fileB, opt);
-
-  // Site adları dosya adından türetilir:
-  //   "betist-matches.json"  -> "betist"
-  //   "mavibet-matches.json" -> "mavibet"
-  let nameA = opt.nameA || siteNameFromPath(fileA);
-  let nameB = opt.nameB || siteNameFromPath(fileB);
-  if (nameA === nameB) {
-    nameA = `${nameA}_1`;
-    nameB = `${nameB}_2`;
+  if (filePaths.length < 2) {
+    throw new Error("En az iki dosya gerekli.");
   }
 
-  const listA = parsedA.matches.map((m) => ({ ...m, site: nameA }));
-  const listB = parsedB.matches.map((m) => ({ ...m, site: nameB }));
+  const siteNames = uniqueSiteNames(filePaths);
 
-  const { pairs, onlyA, onlyB } = matchLists(listA, listB, opt);
+  const bySite = {};
+  const kaynaklar = {};
 
-  const differentPairs = pairs.filter((p) => p.isDifferent);
-  const rows = differentPairs.map((p) => pairToRow(p, nameA, nameB));
+  for (let i = 0; i < filePaths.length; i++) {
+    const raw = JSON.parse(await readFile(filePaths[i], "utf8"));
+    const parsed = normalizeInput(raw, filePaths[i], opt);
+
+    const site = siteNames[i];
+    bySite[site] = parsed.matches.map((m) => ({ ...m, site }));
+    kaynaklar[site] = { dosya: filePaths[i], macSayisi: bySite[site].length };
+  }
+
+  const { clusters, pairStats } = clusterMatches(bySite, opt);
+
+  const analysed = clusters.map((c) => ({
+    cluster: c,
+    analysis: analyseCluster(c, siteNames, opt.toleranceMinutes),
+  }));
+
+  // Sadece BİRDEN FAZLA sitede bulunan maçlar karşılaştırılabilir.
+  const comparable = analysed.filter((x) => x.analysis.present.length > 1);
+  const different = comparable.filter((x) => x.analysis.isDifferent);
+
+  const rows = different.map((x) =>
+    clusterToRow(x.cluster, siteNames, x.analysis)
+  );
+
+  // Site bazında istatistik
+  const siteBazinda = {};
+  for (const site of siteNames) {
+    const only = analysed.filter(
+      (x) => x.analysis.present.length === 1 && x.analysis.present[0] === site
+    ).length;
+    siteBazinda[site] = {
+      toplam: bySite[site].length,
+      sadeceBuSitede: only,
+    };
+  }
+
+  // Kaç sitede birden göründüğüne göre dağılım
+  const kapsam = {};
+  for (const x of analysed) {
+    const n = x.analysis.present.length;
+    const key = `${n}_sitede`;
+    kapsam[key] = (kapsam[key] ?? 0) + 1;
+  }
 
   const result = {
     olusturulma: new Date().toISOString(),
-    kaynaklar: {
-      [nameA]: { dosya: fileA, macSayisi: listA.length },
-      [nameB]: { dosya: fileB, macSayisi: listB.length },
-    },
+    siteler: siteNames,
+    kaynaklar,
     ayarlar: {
       toleransDakika: opt.toleranceMinutes,
       takimEsigi: opt.teamThreshold,
@@ -667,36 +894,45 @@ export async function compareFiles(fileA, fileB, options = {}) {
       tarihToleransGun: opt.dateToleranceDays,
     },
     ozet: {
-      eslesen: pairs.length,
-      saatiFarkli: differentPairs.length,
-      saatiAyni: pairs.length - differentPairs.length,
-      [`sadece_${nameA}`]: onlyA.length,
-      [`sadece_${nameB}`]: onlyB.length,
+      toplamMacGrubu: analysed.length,
+      karsilastirilabilir: comparable.length,
+      saatiFarkli: different.length,
+      saatiAyni: comparable.length - different.length,
+      kapsam,
+      siteBazinda,
+      ikiliEslesme: pairStats,
     },
-    farkliMaclar: opt.flat ? rows : groupRows(rows, nameA),
+    farkliMaclar: opt.flat ? rows : groupRows(rows),
   };
 
   if (opt.includeUnmatched) {
     const slim = (m) => ({
       sport: m.sport,
-      league: m.league,
+      league: m.leagueRaw,
       date: m.date,
       time: m.time,
       home: m.home,
       away: m.away,
       eventId: m.eventId,
     });
-    result.eslesmeyenler = {
-      [nameA]: onlyA.map(slim),
-      [nameB]: onlyB.map(slim),
-    };
+
+    const eslesmeyenler = {};
+    for (const site of siteNames) {
+      eslesmeyenler[site] = analysed
+        .filter(
+          (x) =>
+            x.analysis.present.length === 1 && x.analysis.present[0] === site
+        )
+        .map((x) => slim(x.cluster.bySite[site]));
+    }
+    result.eslesmeyenler = eslesmeyenler;
   }
 
   return result;
 }
 
 /* =========================================================================
- * 7) KOMUT SATIRI
+ * 8) KOMUT SATIRI
  * ====================================================================== */
 
 function parseArgs(argv) {
@@ -725,9 +961,10 @@ function parseArgs(argv) {
 function printHelp() {
   console.log(`
 Maç saati karşılaştırıcı (spor -> lig -> tarih -> takım eşleştirmesi)
+2, 3 veya daha fazla site çıktısını aynı anda karşılaştırır.
 
 Kullanım:
-  node mac-saati-karsilastir.js <dosya1.json> <dosya2.json> [seçenekler]
+  node mac-saati-karsilastir.js betist-matches.json mavibet-matches.json virusbet-matches.json -o farkli.json
 
 Seçenekler:
   -o, --out <dosya>       Sonucu dosyaya yaz (varsayılan: ekrana bas)
@@ -737,40 +974,56 @@ Seçenekler:
       --lig-esigi <n>     Lig adı benzerlik eşiği 0-100 (varsayılan: ${DEFAULTS.leagueThreshold})
       --lig-zorunlu       Lig eşleşmesini zorunlu kıl (varsayılan: sadece ağırlık)
       --tarih-tolerans <g> Gün toleransı (varsayılan: ${DEFAULTS.dateToleranceDays}, gece yarısı kaymaları için)
-      --eslesmeyenler     Çıktıya eşleşmeyen maçları da ekle
+      --eslesmeyenler     Çıktıya sadece tek sitede olan maçları da ekle
       --duz               Gruplamadan düz liste üret
   -h, --help              Bu yardım
 
-Girdi dosyaları betist-match-fetcher.js ve mavibet-match-fetcher.js
-çıktılarıdır (ikisi de aynı yapıda). Sıra önemli değildir; site adları
-dosya adlarından türetilir.
+Girdi dosyaları betist / mavibet / virusbet fetcher çıktılarıdır (hepsi aynı
+yapıda). Sıra önemli değildir; site adları dosya adlarından türetilir.
 `);
 }
 
 function printSummary(result) {
-  const [nameA, nameB] = Object.keys(result.kaynaklar);
+  const siteler = result.siteler;
+  const pad = Math.max(...siteler.map((s) => s.length), 10);
+
   console.log("");
   for (const [name, src] of Object.entries(result.kaynaklar)) {
-    console.log(`  ${name.padEnd(12)} ${src.macSayisi} maç   (${src.dosya})`);
+    console.log(
+      `  ${name.padEnd(pad)}  ${String(src.macSayisi).padStart(5)} maç   (${src.dosya})`
+    );
   }
-  console.log("");
-  console.log(`  Eşleşen maç      : ${result.ozet.eslesen}`);
-  console.log(`  SAATİ FARKLI     : ${result.ozet.saatiFarkli}`);
-  console.log(`  Saati aynı       : ${result.ozet.saatiAyni}`);
-  console.log(
-    `  Sadece ${nameA.padEnd(10)}: ${result.ozet[`sadece_${nameA}`]}`
-  );
-  console.log(
-    `  Sadece ${nameB.padEnd(10)}: ${result.ozet[`sadece_${nameB}`]}`
-  );
-  console.log("");
 
+  console.log("");
+  console.log(`  Toplam maç grubu     : ${result.ozet.toplamMacGrubu}`);
+  console.log(
+    `  Karşılaştırılabilir  : ${result.ozet.karsilastirilabilir}  (2+ sitede var)`
+  );
+  console.log(`  SAATİ FARKLI         : ${result.ozet.saatiFarkli}`);
+  console.log(`  Saati aynı           : ${result.ozet.saatiAyni}`);
+
+  console.log("");
+  console.log("  Kaç sitede bulundu:");
+  for (const [key, count] of Object.entries(result.ozet.kapsam).sort()) {
+    console.log(`    ${key.replace("_", " ")}: ${count}`);
+  }
+
+  console.log("");
+  console.log("  İkili eşleşmeler:");
+  for (const p of result.ozet.ikiliEslesme) {
+    console.log(`    ${p.siteA} <-> ${p.siteB}: ${p.eslesen}`);
+  }
+
+  console.log("");
   const tree = result.farkliMaclar;
+
   if (Array.isArray(tree)) {
-    for (const r of tree)
+    for (const r of tree) {
       console.log(
-        `  ${r.sport} | ${r.league} | ${r.date} | ${r.home} - ${r.away} | ${r.fark}`
+        `  ${r.sport} | ${r.league} | ${r.date} | ${r.home} - ${r.away}`
       );
+      console.log(`      ${formatTimes(r, siteler)}`);
+    }
     return;
   }
 
@@ -780,17 +1033,29 @@ function printSummary(result) {
       console.log(`  ${league}`);
       for (const [date, rows] of Object.entries(dates)) {
         for (const r of rows) {
-          const a = r[nameA],
-            b = r[nameB];
-          console.log(`    ${date}  ${r.home} - ${r.away}`);
           console.log(
-            `        ${nameA}: ${a.date} ${a.time}   ${nameB}: ${b.date} ${b.time}   fark: ${r.fark}`
+            `    ${date}  ${r.home} - ${r.away}   (maks fark ${r.maxFarkDakika} dk)`
           );
+          console.log(`        ${formatTimes(r, siteler)}`);
         }
       }
     }
     console.log("");
   }
+}
+
+function formatTimes(row, siteler) {
+  return siteler
+    .map((s) => {
+      const time = row.saatler[s];
+      if (!time) return `${s}: -`;
+      const dev = row.sapanSiteler.find((d) => d.site === s);
+      const mark = dev
+        ? ` (${dev.farkDakika > 0 ? "+" : ""}${dev.farkDakika})`
+        : "";
+      return `${s}: ${time}${mark}`;
+    })
+    .join("   ");
 }
 
 async function main() {
@@ -801,7 +1066,7 @@ async function main() {
     process.exit(options.help ? 0 : 1);
   }
 
-  const result = await compareFiles(files[0], files[1], options);
+  const result = await compareFiles(files, options);
 
   if (options.summary) {
     printSummary(result);

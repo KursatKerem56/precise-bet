@@ -427,8 +427,7 @@ async function fetchAllEventsForSport(menuInfo, canonicalName) {
   const events = new Map();
 
   console.log(
-    "[BETIST]" +
-      `${canonicalName}: sportId=${menuInfo.sportId}, lig=${menuInfo.leagueIds.length}, layout=${menuInfo.layoutSchemaCode}`
+    `${canonicalName}: sportId=${menuInfo.sportId}, lig=${menuInfo.leagueIds.length}, layout=${menuInfo.layoutSchemaCode}`
   );
 
   for (let i = 0; i < groups.length; i++) {
@@ -436,9 +435,7 @@ async function fetchAllEventsForSport(menuInfo, canonicalName) {
 
     const url = buildEventsUrl(leagueIds, menuInfo.layoutSchemaCode);
 
-    console.log(
-      "[BETIST]" + `  grup ${i + 1}/${groups.length} -> ${leagueIds.length} lig`
-    );
+    console.log(`  grup ${i + 1}/${groups.length} -> ${leagueIds.length} lig`);
 
     const response = await get(url, {
       Referer: `${SITE_URL}/betting`,
@@ -459,7 +456,7 @@ async function fetchAllEventsForSport(menuInfo, canonicalName) {
     }
   }
 
-  console.log("[BETIST]" + `  benzersiz maç: ${events.size}`);
+  console.log(`  benzersiz maç: ${events.size}`);
 
   return [...events.values()];
 }
@@ -531,11 +528,11 @@ async function betistMatchFetcherMain(siteUrl) {
   SITE_URL = siteUrl;
   BASE_URL = `${new URL(siteUrl).protocol}//bet.${new URL(siteUrl).hostname}`;
 
-  console.log("[BETIST]" + `Betist: ${SITE_URL}`);
+  console.log(`Betist: ${SITE_URL}`);
 
-  console.log("[BETIST]" + `Data host: ${BASE_URL}`);
+  console.log(`Data host: ${BASE_URL}`);
 
-  console.log("[BETIST]" + "Spor/lig menüsü çekiliyor...");
+  console.log("Spor/lig menüsü çekiliyor...");
 
   const homeResponse = await get(HOME_URL, {
     Accept:
@@ -568,23 +565,19 @@ async function betistMatchFetcherMain(siteUrl) {
     const menuInfo = targetMenus.get(sport);
 
     if (!menuInfo) {
-      console.warn(
-        "[BETIST]" + `${sport}: menüde bulunamadı; boş bırakılıyor.`
-      );
+      console.warn(`${sport}: menüde bulunamadı; boş bırakılıyor.`);
 
       continue;
     }
 
     if (!menuInfo.layoutSchemaCode) {
-      console.warn(
-        "[BETIST]" + `${sport}: layout_schema_code bulunamadı; boş bırakılıyor.`
-      );
+      console.warn(`${sport}: layout_schema_code bulunamadı; boş bırakılıyor.`);
 
       continue;
     }
 
     if (!menuInfo.leagueIds.length) {
-      console.warn("[BETIST]" + `${sport}: lig bulunamadı; boş bırakılıyor.`);
+      console.warn(`${sport}: lig bulunamadı; boş bırakılıyor.`);
 
       continue;
     }
@@ -594,7 +587,7 @@ async function betistMatchFetcherMain(siteUrl) {
 
       addEventsToOutput(output, sport, events);
     } catch (error) {
-      console.error("[BETIST]" + `${sport} çekilirken hata: ${error.message}`);
+      console.error(`${sport} çekilirken hata: ${error.message}`);
     }
   }
 
@@ -606,9 +599,9 @@ async function betistMatchFetcherMain(siteUrl) {
     "utf8"
   );
 
-  console.log("[BETIST]" + "");
+  console.log("");
 
-  console.log("[BETIST]" + `JSON yazıldı: ${OUTPUT_FILE}`);
+  console.log(`JSON yazıldı: ${OUTPUT_FILE}`);
 
   for (const sport of TARGET_ORDER) {
     const leagues = Object.keys(finalOutput[sport]);
@@ -623,9 +616,7 @@ async function betistMatchFetcherMain(siteUrl) {
       0
     );
 
-    console.log(
-      "[BETIST]" + `${sport}: ${leagues.length} lig / ${matchCount} maç`
-    );
+    console.log(`${sport}: ${leagues.length} lig / ${matchCount} maç`);
   }
 }
 

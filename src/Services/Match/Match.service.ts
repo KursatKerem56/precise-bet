@@ -104,31 +104,29 @@ const initMatchFetchers = async () => {
 
   const completedMatchFetchers = [];
 
-  await Promise.all(
-    sites.map(async (site) => {
-      console.log(`Initializing match fetcher for site: ${site.site}`);
+  for await (const site of sites) {
+    console.log(`Initializing match fetcher for site: ${site.site}`);
 
-      switch (site.site) {
-        case EPanelSite.VIRUS_BET:
-          await virusBetMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          completedMatchFetchers.push(site.site);
-          break;
-        case EPanelSite.BETIST:
-          await betistMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          completedMatchFetchers.push(site.site);
-          break;
-        case EPanelSite.MAVI_BET:
-          await mavibetMatchFetcherMain(site.link);
-          await saveMatches(site.site);
-          completedMatchFetchers.push(site.site);
-          break;
-        default:
-          console.log(`No match fetcher defined for site: ${site.site}`);
-      }
-    })
-  );
+    switch (site.site) {
+      case EPanelSite.VIRUS_BET:
+        await virusBetMatchFetcherMain(site.link);
+        await saveMatches(site.site);
+        completedMatchFetchers.push(site.site);
+        break;
+      case EPanelSite.BETIST:
+        await betistMatchFetcherMain(site.link);
+        await saveMatches(site.site);
+        completedMatchFetchers.push(site.site);
+        break;
+      case EPanelSite.MAVI_BET:
+        await mavibetMatchFetcherMain(site.link);
+        await saveMatches(site.site);
+        completedMatchFetchers.push(site.site);
+        break;
+      default:
+        console.log(`No match fetcher defined for site: ${site.site}`);
+    }
+  }
 
   const interval = setInterval(async () => {
     if (completedMatchFetchers.length === sites.length) {

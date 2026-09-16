@@ -102,6 +102,8 @@ const saveMatches = async (site: EPanelSite) => {
 const initMatchFetchers = async () => {
   const sites = await getSites();
 
+  const completedMatchFetchers = [];
+
   await Promise.all(
     sites.map(async (site) => {
       console.log(`Initializing match fetcher for site: ${site.site}`);
@@ -110,14 +112,17 @@ const initMatchFetchers = async () => {
         case EPanelSite.VIRUS_BET:
           await virusBetMatchFetcherMain(site.link);
           await saveMatches(site.site);
+          completedMatchFetchers.push(site.site);
           break;
         case EPanelSite.BETIST:
           await betistMatchFetcherMain(site.link);
           await saveMatches(site.site);
+          completedMatchFetchers.push(site.site);
           break;
         case EPanelSite.MAVI_BET:
           await mavibetMatchFetcherMain(site.link);
           await saveMatches(site.site);
+          completedMatchFetchers.push(site.site);
           break;
         default:
           console.log(`No match fetcher defined for site: ${site.site}`);
@@ -125,11 +130,15 @@ const initMatchFetchers = async () => {
     })
   );
 
-  setTimeout(async () => {
-    await compareMatchTimesMain();
+  const interval = setInterval(async () => {
+    if (completedMatchFetchers.length === sites.length) {
+      clearInterval(interval);
 
-    setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
-  });
+      await compareMatchTimesMain();
+
+      setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
+    }
+  }, 100);
 };
 
 const getMatches = async () => {

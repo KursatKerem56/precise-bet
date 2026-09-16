@@ -125,9 +125,11 @@ const initMatchFetchers = async () => {
     })
   );
 
-  await compareMatchTimesMain();
+  setTimeout(async () => {
+    await compareMatchTimesMain();
 
-  setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
+    setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
+  });
 };
 
 const getMatches = async () => {

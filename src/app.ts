@@ -82,7 +82,7 @@ httpServer.listen(PORT, async () => {
 
   await setupErrorHandling();
 
-  // await initMatchFetchers();
+  await initMatchFetchers();
 
   logger.info(`Server listening on port ${chalk.green(PORT)}`);
 });

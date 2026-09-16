@@ -68,7 +68,6 @@
 import fs from "node:fs/promises";
 import tls from "node:tls";
 import crypto from "node:crypto";
-import { pathToFileURL } from "node:url";
 
 /* =========================================================================
  * AYARLAR
@@ -962,19 +961,3 @@ async function virusBetMatchFetcherMain(siteUrl) {
 }
 
 export { virusBetMatchFetcherMain };
-
-if (
-  process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
-) {
-  virusBetMatchFetcherMain(
-    process.env.VIRUSBET_SITE_URL ||
-      `https://www.virusbettr${process.env.VIRUSBET_NUMBER || "1139"}.com`
-  ).catch((error) => {
-    console.error(
-      "[VIRUS_BET]" +
-        `VirusBet çekici başlatılamadı: ${error.stack || error.message}`
-    );
-    process.exitCode = 1;
-  });
-}

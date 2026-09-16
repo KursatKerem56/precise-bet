@@ -62,6 +62,7 @@
 import fs from "node:fs/promises";
 import tls from "node:tls";
 import crypto from "node:crypto";
+import zlib from "node:zlib";
 
 /* =========================================================================
  * AYARLAR
@@ -89,7 +90,7 @@ const OUTPUT_FILE = process.env.MAVIBET_OUTPUT || "mavibet-matches.json";
 
 const TENANT = process.env.MAVIBET_TENANT || "2007";
 
-const LANG = "tr";
+const LANG = "en";
 
 // Türkiye saati (UTC+3, yaz saati uygulaması yok)
 const TIMEZONE = "Europe/Istanbul";
@@ -121,6 +122,9 @@ const POPULAR_LIMIT = Number(process.env.MAVIBET_POPULAR_LIMIT || 20);
 // 0 = sınırsız. Futbolda 80+ ülke olabiliyor; hepsini dolaşmak zaman alır.
 const MAX_LOCATIONS = Number(process.env.MAVIBET_MAX_LOCATIONS || 0);
 
+// Sorun çıkarsa denenen tüm topic'lerin ve hataların yazılacağı dosya.
+const DEBUG_FILE = process.env.MAVIBET_DEBUG_FILE || "mavibet-debug.log";
+
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
@@ -129,6 +133,86 @@ const USER_AGENT =
  * ====================================================================== */
 
 const WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+
+/**
+ * permessage-deflate (RFC 7692) çözücü.
+ *
+ * Sunucu yanıtı "permessage-deflate" (ek parametre olmadan) ise sunucu TEK
+ * bir deflate akışını tüm mesajlar boyunca sürdürür ("context takeover").
+ * Bu durumda her mesajı ayrı ayrı açamayız; kalıcı bir inflate akışı tutup
+ * mesajları sırayla beslemek ZORUNDAYIZ. Sıra bozulursa veri çöpe döner.
+ *
+ * "server_no_context_takeover" varsa her mesaj bağımsızdır; o zaman her
+ * mesaj için taze akış kullanmak daha güvenli.
+ */
+const DEFLATE_TAIL = Buffer.from([0x00, 0x00, 0xff, 0xff]);
+
+class PermessageDeflate {
+  constructor(noContextTakeover) {
+    this.noContextTakeover = noContextTakeover;
+    this.stream = null;
+    this.chunks = [];
+    // Mesajların SIRAYLA işlenmesi şart (paylaşılan sıkıştırma penceresi).
+    this.queue = Promise.resolve();
+  }
+
+  _ensureStream() {
+    if (this.stream) return;
+
+    this.stream = zlib.createInflateRaw({ windowBits: 15 });
+    this.stream.on("data", (chunk) => this.chunks.push(chunk));
+    this.stream.on("error", (error) => {
+      this.lastError = error;
+    });
+  }
+
+  /** Sıkıştırılmış mesaj gövdesini açar. */
+  inflate(payload) {
+    const task = this.queue.then(
+      () =>
+        new Promise((resolve, reject) => {
+          if (this.noContextTakeover && this.stream) {
+            this.stream.close();
+            this.stream = null;
+          }
+
+          this._ensureStream();
+
+          this.chunks = [];
+          this.lastError = null;
+
+          this.stream.write(payload);
+          this.stream.write(DEFLATE_TAIL);
+
+          this.stream.flush(zlib.constants.Z_SYNC_FLUSH, () => {
+            if (this.lastError) {
+              reject(this.lastError);
+              return;
+            }
+
+            resolve(Buffer.concat(this.chunks));
+          });
+        })
+    );
+
+    // Sıradaki mesaj, bu iş bitmeden başlamasın (hata olsa bile).
+    this.queue = task.then(
+      () => undefined,
+      () => undefined
+    );
+
+    return task;
+  }
+
+  close() {
+    try {
+      this.stream?.close();
+    } catch {
+      /* yut */
+    }
+    this.stream = null;
+  }
+}
 
 function encodeFrame(payload, opcode = 0x1) {
   const len = payload.length;
@@ -171,6 +255,9 @@ function decodeFrames(buffer) {
     const b1 = buffer[offset + 1];
 
     const fin = (b0 & 0x80) !== 0;
+    // RSV1: permessage-deflate'te "bu mesaj sıkıştırıldı" demek.
+    // Sadece mesajın İLK çerçevesinde set edilir.
+    const rsv1 = (b0 & 0x40) !== 0;
     const opcode = b0 & 0x0f;
     const masked = (b1 & 0x80) !== 0;
 
@@ -219,7 +306,7 @@ function decodeFrames(buffer) {
       payload = unmasked;
     }
 
-    frames.push({ fin, opcode, payload });
+    frames.push({ fin, rsv1, opcode, payload });
 
     offset = cursor + len;
   }
@@ -268,8 +355,9 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
           "Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
           "Cache-Control: no-cache",
           "Pragma: no-cache",
-          // permessage-deflate KASITLI olarak teklif edilmiyor: sıkıştırılmış
-          // çerçeveleri açacak kodumuz yok, teklif etmezsek sunucu da kullanmaz.
+          // Sunucu büyük yanıtları (lig maç dökümleri ~100-200 KB) YALNIZCA
+          // sıkıştırılmış gönderiyor; bu yüzden permessage-deflate şart.
+          "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits",
           "",
           "",
         ];
@@ -282,6 +370,10 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
     let buffer = Buffer.alloc(0);
     let fragOpcode = null;
     let fragParts = [];
+    let fragCompressed = false;
+    let inflater = null;
+    // Sıkıştırma açma asenkron; mesajların SIRASI korunmalı.
+    let emitQueue = Promise.resolve();
 
     const textHandlers = [];
     const closeHandlers = [];
@@ -393,15 +485,17 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
           }
         }
 
-        // Sıkıştırma açacak kodumuz yok; sunucu yine de zorlarsa erken uyar.
-        if (
-          /sec-websocket-extensions:\s*[^\r\n]*permessage-deflate/i.test(head)
-        ) {
-          return fail(
-            new Error(
-              "Sunucu permessage-deflate dayattı; bu istemci sıkıştırılmış çerçeveleri çözemiyor."
-            )
+        // permessage-deflate pazarlığı
+        const extLine =
+          /sec-websocket-extensions:\s*([^\r\n]*)/i.exec(head)?.[1] ?? "";
+        if (/permessage-deflate/i.test(extLine)) {
+          // "server_no_context_takeover" YOKSA sunucu tek bir deflate akışını
+          // mesajlar boyunca sürdürür; bu durumda inflate akışı da kalıcı olmalı.
+          inflater = new PermessageDeflate(
+            /server_no_context_takeover/i.test(extLine)
           );
+          if (DEBUG)
+            console.log(`  [ws] permessage-deflate aktif (${extLine.trim()})`);
         }
 
         handshakeDone = true;
@@ -441,22 +535,47 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
         } else {
           fragOpcode = frame.opcode;
           fragParts = [frame.payload];
+          fragCompressed = frame.rsv1;
         }
 
         if (frame.fin) {
           const full = Buffer.concat(fragParts);
+          const compressed = fragCompressed;
+          const opcode = fragOpcode;
 
           fragParts = [];
-
-          if (fragOpcode === 0x1 || fragOpcode === 0x2) {
-            const text = full.toString("utf8");
-
-            if (DEBUG) console.log("  <<", text.slice(0, 160));
-
-            emitText(text);
-          }
-
           fragOpcode = null;
+          fragCompressed = false;
+
+          if (opcode === 0x1 || opcode === 0x2) {
+            // Sıra korunmalı: inflate akışı paylaşımlı olduğu için
+            // mesajlar geldikleri sırayla açılmak zorunda.
+            emitQueue = emitQueue.then(async () => {
+              let body = full;
+
+              if (compressed) {
+                if (!inflater) {
+                  console.error(
+                    "[ws] sıkıştırılmış mesaj geldi ama deflate pazarlığı yok."
+                  );
+                  return;
+                }
+
+                try {
+                  body = await inflater.inflate(full);
+                } catch (error) {
+                  console.error(`[ws] mesaj açılamadı: ${error.message}`);
+                  return;
+                }
+              }
+
+              const text = body.toString("utf8");
+
+              if (DEBUG) console.log("  <<", text.slice(0, 160));
+
+              emitText(text);
+            });
+          }
         }
       }
     });
@@ -648,7 +767,24 @@ class MavibetClient {
 
       this.pending.delete(message[2]);
 
-      pending.reject(new Error(`WAMP ERROR: ${message[4] ?? "bilinmeyen"}`));
+      // WAMP ERROR: [8, istekTipi, istekId, details, errorUri, args, kwargs]
+      // Sunucunun ASIL açıklaması args/kwargs içinde olur; sadece errorUri
+      // ("om.rpc.exception") tek başına hiçbir şey anlatmıyor.
+      const errorUri = message[4] ?? "bilinmeyen";
+      const details = message[3];
+      const args = message[5];
+      const kwargs = message[6];
+
+      const extras = [];
+      if (details && Object.keys(details).length)
+        extras.push(`details=${JSON.stringify(details)}`);
+      if (args && args.length) extras.push(`args=${JSON.stringify(args)}`);
+      if (kwargs && Object.keys(kwargs).length)
+        extras.push(`kwargs=${JSON.stringify(kwargs)}`);
+
+      const suffix = extras.length ? ` | ${extras.join(" ")}` : "";
+
+      pending.reject(new Error(`WAMP ERROR: ${errorUri}${suffix}`));
     }
   }
 
@@ -761,11 +897,21 @@ class MavibetClient {
     console.log("Oturum hazırlandı.\n");
   }
 
-  /** Bir topic'in anlık dökümü: önce REGISTER, sonra initialDump. */
+  /** Bir topic'in anlık dökümü: önce REGISTER, sonra initialDump.
+   * Hangi adımın koptuğu belli olsun diye hatalar etiketleniyor. */
   async initialDump(topic) {
-    await this.register(topic);
+    try {
+      await this.register(topic);
+    } catch (error) {
+      throw new Error(`[REGISTER başarısız] ${error.message}`);
+    }
 
-    const data = await this.call("/sports#initialDump", { topic });
+    let data;
+    try {
+      data = await this.call("/sports#initialDump", { topic });
+    } catch (error) {
+      throw new Error(`[initialDump başarısız] ${error.message}`);
+    }
 
     return Array.isArray(data?.records) ? data.records : [];
   }
@@ -820,8 +966,6 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  * yapıyoruz çünkü sunucu bunu bir hazırlık adımı olarak bekliyor. */
 async function fetchMarketGroupIds(client, sportId) {
   try {
-    // Tarayıcı önce LIVE, sonra NOT_LIVE çağırıyor. LIVE'ın sonucunu
-    // kullanmıyoruz ama sırayı bozmuyoruz.
     await client
       .call("/sports#marketGroupsOverview", {
         lang: LANG,
@@ -836,19 +980,43 @@ async function fetchMarketGroupIds(client, sportId) {
       liveStatus: "NOT_LIVE",
     });
 
-    const ids = (data?.response ?? [])
-      .filter((x) => x && x._type === "MARKET_GROUP_OVERVIEW" && x.id != null)
-      .sort((a, b) => Number(a.position ?? 999) - Number(b.position ?? 999))
-      .map((x) => String(x.id));
+    const response = data?.response ?? data?.records ?? [];
 
-    if (ids.length) return ids.slice(0, 3).join(",");
+    const groups = response
+      .filter((x) => x && x._type === "MARKET_GROUP_OVERVIEW" && x.id != null)
+      .sort((a, b) => Number(a.position ?? 999) - Number(b.position ?? 999));
+
+    if (DEBUG) {
+      console.log(
+        `  [marketGroups] ham yanıt anahtarları: ${Object.keys(data ?? {}).join(",") || "(boş)"}`
+      );
+      console.log(
+        `  [marketGroups] bulunan grup: ${groups.length} -> ${groups.map((g) => g.id).join(",")}`
+      );
+    }
+
+    if (groups.length) {
+      return {
+        ids: groups
+          .slice(0, 3)
+          .map((g) => String(g.id))
+          .join(","),
+        all: groups.map((g) => String(g.id)),
+      };
+    }
+
+    // Sessizce varsayılana düşmek, yanlış topic üretip "om.rpc.exception"
+    // almamıza yol açıyordu. Artık açıkça uyarıyoruz.
+    console.warn(
+      `  UYARI: sportId=${sportId} için market group listesi BOŞ döndü; varsayılan deneniyor.`
+    );
   } catch (error) {
     console.warn(
-      `  market group alınamadı (${error.message}); varsayılana düşülüyor.`
+      `  UYARI: market group alınamadı (${error.message}); varsayılan deneniyor.`
     );
   }
 
-  return "2875,2876,2877"; // HAR'da görülen futbol varsayılanı
+  return { ids: "2875,2876,2877", all: ["2875", "2876", "2877"] };
 }
 
 /** Tarayıcının bir spor sekmesine girerken yaptığı tarih penceresi çağrısı. */
@@ -873,77 +1041,162 @@ async function sendSportsDataInfo(client, sportId) {
   }
 }
 
-/** Bir dump alır ve DEBUG açıksa ne döndüğünü özetler (teşhis için). */
-async function dumpTopic(client, topic, label) {
-  const records = await client.initialDump(topic);
+/** Denenen her topic'i ve sonucunu biriktirir; sorun çıkarsa dosyaya yazılır. */
+const diagnostics = [];
 
-  if (DEBUG) {
-    const counts = {};
-    for (const r of records)
-      counts[r?._type ?? "?"] = (counts[r?._type ?? "?"] ?? 0) + 1;
+function note(entry) {
+  diagnostics.push(entry);
+  if (DEBUG)
     console.log(
-      `  [dump] ${label}: ${records.length} kayıt ${JSON.stringify(counts)}`
+      `  [dump] ${entry.label}: ${entry.ok ? entry.records + " kayıt" : "HATA " + entry.error}`
     );
-    console.log(`         topic=${topic}`);
-  }
+}
 
-  return records;
+/** Bir topic'in dökümünü alır; hata olursa fırlatmak yerine null döner. */
+async function tryDump(client, topic, label) {
+  try {
+    const records = await client.initialDump(topic);
+    note({ label, topic, ok: true, records: records.length });
+    return records;
+  } catch (error) {
+    note({ label, topic, ok: false, error: error.message });
+    return null;
+  }
 }
 
 /**
  * Bir "yaklaşan maç sayısı" alanını güvenli yorumlar.
- * ÖNEMLİ: Alan YOKSA (undefined) bunu "0" saymıyoruz - eskiden öyle yapıp
- * tüm ülkeleri/ligleri sessizce eliyordum. Sadece açıkça 0 olanı atlıyoruz.
+ * Alan YOKSA "0" saymıyoruz (eskiden öyle yapıp her şeyi eliyordum);
+ * sadece açıkça 0 olanı atlıyoruz.
  */
 function hasUpcoming(record) {
   const value = record?.numberOfUpcomingMatches;
-  if (value === undefined || value === null || value === "") return true; // bilinmiyor -> dene
+  if (value === undefined || value === null || value === "") return true;
   return Number(value) > 0;
 }
 
-/** Bir turnuvanın (ligin) tüm maçlarını çeker.
+/* -------------------------------------------------------------------------
+ * TURNUVA TOPIC MERDİVENİ
  *
- * ÖNEMLİ: Tarayıcı, aggregator topic'ini istemeden ÖNCE o turnuva için
- * "/sports#tournaments" çağrısını yapıyor. Bu adım atlanırsa sunucu
- * "om.rpc.exception" ile reddediyor (turnuva oturum bağlamına yüklenmemiş
- * oluyor). Bu yüzden aynı hazırlığı burada da yapıyoruz.
- */
+ * Aynı ligin maçlarını veren BİRDEN FAZLA topic biçimi var (sitenin kendi
+ * JS paketinden çıkarıldı). Bunlar payload büyüklüğü ve sunucu tarafındaki
+ * gereksinimleri bakımından farklı; hangisinin kabul edileceğini önceden
+ * bilemediğimiz için EN HAFİFTEN başlayıp sırayla deniyoruz.
+ *
+ *   tournament-aggregator-main/{id}/default-event-info/NOT_LIVE/{nrOfMarkets}
+ *       -> oran sayısı sınırlı, çok küçük yanıt
+ *   tournament-aggregator-groups-overview/{id}/default-event-info/NOT_LIVE/{marketGroups}
+ *       -> tam market grubu bilgisiyle, çok büyük yanıt (100-200 KB)
+ *
+ * İlk çalışan biçim HATIRLANIR; sonraki ligler doğrudan onunla istenir.
+ * Böylece hem her ligde boşuna deneme yapılmaz hem de sunucu biçim
+ * değiştirirse kod kendini uyarlar.
+ * ---------------------------------------------------------------------- */
+
+function tournamentTopicVariants(tournamentId, marketGroups) {
+  const single = marketGroups.all[0] ?? "2875";
+
+  return [
+    {
+      key: "main-1",
+      topic: topicFor(
+        `tournament-aggregator-main/${tournamentId}/default-event-info/NOT_LIVE/1`
+      ),
+    },
+    {
+      key: "main-0",
+      topic: topicFor(
+        `tournament-aggregator-main/${tournamentId}/default-event-info/NOT_LIVE/0`
+      ),
+    },
+    {
+      key: "groups-tek",
+      topic: topicFor(
+        `tournament-aggregator-groups-overview/${tournamentId}/default-event-info/NOT_LIVE/${single}`
+      ),
+    },
+    {
+      key: "groups-uc",
+      topic: topicFor(
+        `tournament-aggregator-groups-overview/${tournamentId}/default-event-info/NOT_LIVE/${marketGroups.ids}`
+      ),
+    },
+  ];
+}
+
+// Hangi biçimin çalıştığı burada tutulur (tüm sporlar için ortak).
+let workingTournamentVariant = null;
+
 async function fetchTournamentMatches(
   client,
   tournament,
-  sportId,
-  marketGroupIds,
+  marketGroups,
   addRecords
 ) {
+  // Tarayıcı, lig dökümünden önce bu çağrıyı yapıyor; zararsız, taklit ediyoruz.
   try {
     await client.call("/sports#tournaments", {
       lang: LANG,
       tournamentId: String(tournament.id),
     });
-  } catch (error) {
-    if (DEBUG)
-      console.log(`  [hazırlık] tournaments çağrısı atlandı: ${error.message}`);
+  } catch {
+    /* zorunlu değil */
   }
 
-  const topic = topicFor(
-    `tournament-aggregator-groups-overview/${tournament.id}/default-event-info/NOT_LIVE/${marketGroupIds}`
-  );
+  const variants = tournamentTopicVariants(tournament.id, marketGroups);
 
-  const records = await dumpTopic(client, topic, `lig ${tournament.name}`);
+  // Daha önce maç getirdiği kanıtlanmış biçim varsa önce onu dene.
+  const ordered = workingTournamentVariant
+    ? [
+        ...variants.filter((v) => v.key === workingTournamentVariant),
+        ...variants.filter((v) => v.key !== workingTournamentVariant),
+      ]
+    : variants;
 
-  addRecords(records);
+  let answeredWithoutError = false;
+
+  for (const variant of ordered) {
+    const records = await tryDump(
+      client,
+      variant.topic,
+      `lig ${tournament.name} [${variant.key}]`
+    );
+
+    if (!records) continue; // hata -> sıradaki biçimi dene
+
+    answeredWithoutError = true;
+
+    const matchCount = records.filter((r) => r?._type === "MATCH").length;
+
+    // ÖNEMLİ: Hatasız ama MAÇ İÇERMEYEN yanıt "çalışıyor" sayılmaz.
+    // Aksi halde boş dönen bir biçimi kalıcı olarak seçip tüm ligleri
+    // boş toplardık. Maç getiren ilk biçimi hatırlıyoruz.
+    if (matchCount === 0) continue;
+
+    if (workingTournamentVariant !== variant.key) {
+      console.log(`  (lig verisi için "${variant.key}" biçimi kullanılıyor)`);
+      workingTournamentVariant = variant.key;
+    }
+
+    addRecords(records);
+    return true;
+  }
+
+  // Hiçbir biçim maç getirmedi. En az biri hatasız yanıt verdiyse bu ligde
+  // gerçekten yaklaşan maç yok demektir; hepsi hata verdiyse başarısızlık.
+  return answeredWithoutError;
 }
 
-/** Bir sporun tüm maçlarını toplar: popüler liste + lig ağacı. */
+/** Bir sporun tüm maçlarını toplar. */
 async function fetchSportMatches(client, sport) {
   const matches = new Map(); // eventId -> MATCH kaydı
 
-  const marketGroupIds = await fetchMarketGroupIds(client, sport.sportId);
+  const marketGroups = await fetchMarketGroupIds(client, sport.sportId);
 
   await sendSportsDataInfo(client, sport.sportId);
 
   console.log(
-    `${sport.name}: sportId=${sport.sportId}, marketGroups=${marketGroupIds}`
+    `${sport.name}: sportId=${sport.sportId}, marketGroups=${marketGroups.ids}`
   );
 
   const addRecords = (records) => {
@@ -955,113 +1208,96 @@ async function fetchSportMatches(client, sport) {
         String(record.sportId) === String(sport.sportId)
       ) {
         const key = String(record.id);
-
         matches.set(key, { ...(matches.get(key) ?? {}), ...record });
       }
     }
   };
 
-  // --- a) Popüler maçlar (hızlı ve garantili bir taban) ---
-  try {
-    const topic = topicFor(
-      `popular-matches-aggregator-groups-overview/${sport.sportId}/${POPULAR_LIMIT}/${marketGroupIds}`
+  // --- a) ORAN İÇERMEYEN genel liste (en hafif, market grubu gerektirmez) ---
+  // Sitenin kendi JS'inde bulunan "no-odds" varyantı. Bize sadece maç adı ve
+  // saati lazım olduğu için oranları hiç istememek en sağlamı.
+  const noOdds = await tryDump(
+    client,
+    topicFor(
+      `popular-matches-aggregator/${sport.sportId}/${POPULAR_LIMIT}/no-odds`
+    ),
+    "popüler (oransız)"
+  );
+
+  if (noOdds) addRecords(noOdds);
+
+  console.log(`  popüler (oransız) -> ${matches.size}`);
+
+  // --- b) Lig ağacı: spora göre iki farklı yol ---
+  let branches = [];
+
+  if (sport.tree === "eventCategory") {
+    // TENİS: ülke yerine "event category" (WTA, Challenger, ITF...)
+    const categories = await tryDump(
+      client,
+      topicFor(`event-category-by-sport/${sport.sportId}/BOTH`),
+      "event kategorileri"
     );
 
-    addRecords(await dumpTopic(client, topic, "popüler maçlar"));
-
-    console.log(`  popüler maçlar -> ${matches.size}`);
-  } catch (error) {
-    console.warn(`  popüler maçlar alınamadı: ${error.message}`);
-  }
-
-  // --- b) Lig ağacı: sporun tipine göre iki farklı yol ---
-  let branches = []; // { id, name, topic } -> her biri turnuva listesi döndürür
-
-  try {
-    if (sport.tree === "eventCategory") {
-      // TENİS: ülke yok, "event category" var (WTA, Challenger, ITF...)
-      const categories = await dumpTopic(
-        client,
-        topicFor(`event-category-by-sport/${sport.sportId}/BOTH`),
-        "event kategorileri"
-      );
-
-      branches = categories
-        .filter(
-          (r) =>
-            r && r._type === "EVENT_CATEGORY" && r.id != null && hasUpcoming(r)
-        )
-        .map((r) => ({
-          id: r.id,
-          name: r.name ?? `KATEGORI_${r.id}`,
-          topic: topicFor(`tournaments-by-event-category/${r.id}`),
-        }));
-    } else {
-      // FUTBOL / BASKETBOL / VOLEYBOL: ülke listesi
-      const locations = await dumpTopic(
-        client,
-        topicFor(`locations/${sport.sportId}`),
-        "ülkeler"
-      );
-
-      branches = locations
-        .filter(
-          (r) => r && r._type === "LOCATION" && r.id != null && hasUpcoming(r)
-        )
-        .map((r) => ({
-          id: r.id,
-          name: r.name ?? `ULKE_${r.id}`,
-          topic: topicFor(`tournaments/${sport.sportId}/${r.id}`),
-        }));
-    }
-
-    if (MAX_LOCATIONS > 0) branches = branches.slice(0, MAX_LOCATIONS);
-
-    console.log(
-      `  ${sport.tree === "eventCategory" ? "kategori" : "ülke"}: ${branches.length}`
+    branches = (categories ?? [])
+      .filter(
+        (r) =>
+          r && r._type === "EVENT_CATEGORY" && r.id != null && hasUpcoming(r)
+      )
+      .map((r) => ({
+        name: r.name ?? `KATEGORI_${r.id}`,
+        topic: topicFor(`tournaments-by-event-category/${r.id}`),
+      }));
+  } else {
+    const locations = await tryDump(
+      client,
+      topicFor(`locations/${sport.sportId}`),
+      "ülkeler"
     );
-  } catch (error) {
-    console.warn(`  lig ağacı alınamadı: ${error.message}`);
+
+    branches = (locations ?? [])
+      .filter(
+        (r) => r && r._type === "LOCATION" && r.id != null && hasUpcoming(r)
+      )
+      .map((r) => ({
+        name: r.name ?? `ULKE_${r.id}`,
+        topic: topicFor(`tournaments/${sport.sportId}/${r.id}`),
+      }));
   }
 
-  // --- c) Her daldaki ligler ve o liglerin tüm maçları ---
-  let leagueCount = 0;
+  if (MAX_LOCATIONS > 0) branches = branches.slice(0, MAX_LOCATIONS);
+
+  console.log(
+    `  ${sport.tree === "eventCategory" ? "kategori" : "ülke"}: ${branches.length}`
+  );
+
+  // --- c) Her daldaki ligler ve o liglerin maçları ---
+  let leagueOk = 0;
+  let leagueFail = 0;
 
   for (const [index, branch] of branches.entries()) {
-    let tournaments = [];
+    const records = await tryDump(
+      client,
+      branch.topic,
+      `lig listesi ${branch.name}`
+    );
 
-    try {
-      const records = await dumpTopic(
-        client,
-        branch.topic,
-        `lig listesi ${branch.name}`
-      );
+    if (!records) continue;
 
-      tournaments = records.filter(
-        (r) => r && r._type === "TOURNAMENT" && r.id != null
-      );
-    } catch (error) {
-      console.warn(
-        `  ${branch.name}: lig listesi alınamadı (${error.message})`
-      );
-      continue;
-    }
+    const tournaments = records.filter(
+      (r) => r && r._type === "TOURNAMENT" && r.id != null && hasUpcoming(r)
+    );
 
     for (const tournament of tournaments) {
-      if (!hasUpcoming(tournament)) continue;
+      const ok = await fetchTournamentMatches(
+        client,
+        tournament,
+        marketGroups,
+        addRecords
+      );
 
-      try {
-        await fetchTournamentMatches(
-          client,
-          tournament,
-          sport.sportId,
-          marketGroupIds,
-          addRecords
-        );
-        leagueCount++;
-      } catch (error) {
-        console.warn(`  ${branch.name} / ${tournament.name}: ${error.message}`);
-      }
+      if (ok) leagueOk++;
+      else leagueFail++;
 
       if (REQUEST_DELAY_MS > 0) await sleep(REQUEST_DELAY_MS);
     }
@@ -1072,7 +1308,7 @@ async function fetchSportMatches(client, sport) {
   }
 
   console.log(
-    `  ${sport.name} bitti -> ${leagueCount} lig, ${matches.size} benzersiz maç\n`
+    `  ${sport.name} bitti -> ${leagueOk} lig OK, ${leagueFail} lig başarısız, ${matches.size} maç\n`
   );
 
   return [...matches.values()];
@@ -1158,53 +1394,94 @@ function sortOutput(output) {
  * ====================================================================== */
 
 async function probe(client) {
-  console.log("TEŞHİS MODU - topic'ler tek tek deneniyor\n");
+  console.log("TEŞHİS MODU - topic biçimleri tek tek deneniyor\n");
 
   for (const sport of SPORTS) {
     console.log(`=== ${sport.name} (sportId=${sport.sportId}) ===`);
 
-    let marketGroupIds = "2875,2876,2877";
+    const mg = await fetchMarketGroupIds(client, sport.sportId);
+    console.log(`  market grupları: ${mg.all.join(",")}`);
 
-    try {
-      marketGroupIds = await fetchMarketGroupIds(client, sport.sportId);
-      console.log(`  marketGroups: ${marketGroupIds}`);
-    } catch (error) {
-      console.log(`  marketGroups HATA: ${error.message}`);
-    }
+    await sendSportsDataInfo(client, sport.sportId);
 
-    const candidates = [
+    const light = [
       [
-        `popular-matches`,
-        topicFor(
-          `popular-matches-aggregator-groups-overview/${sport.sportId}/20/${marketGroupIds}`
-        ),
+        "popüler (oransız)",
+        topicFor(`popular-matches-aggregator/${sport.sportId}/20/no-odds`),
       ],
+      ["ülkeler", topicFor(`locations/${sport.sportId}`)],
       [
-        `live-matches`,
-        topicFor(
-          `live-matches-aggregator-groups-overview/${sport.sportId}/all-locations/default-event-info/10/${marketGroupIds}`
-        ),
-      ],
-      [`locations`, topicFor(`locations/${sport.sportId}`)],
-      [
-        `event-category`,
+        "event kategorileri",
         topicFor(`event-category-by-sport/${sport.sportId}/BOTH`),
       ],
     ];
 
-    for (const [label, topic] of candidates) {
-      try {
-        const records = await client.initialDump(topic);
+    let sampleTournament = null;
 
-        const counts = {};
-        for (const r of records)
-          counts[r?._type ?? "?"] = (counts[r?._type ?? "?"] ?? 0) + 1;
+    for (const [label, topic] of light) {
+      const records = await tryDump(client, topic, label);
 
-        console.log(
-          `  ${label.padEnd(16)} ${String(records.length).padStart(4)} kayıt  ${JSON.stringify(counts)}`
+      if (!records) {
+        console.log(`  ${label.padEnd(20)} HATA`);
+        continue;
+      }
+
+      const counts = {};
+      for (const r of records)
+        counts[r?._type ?? "?"] = (counts[r?._type ?? "?"] ?? 0) + 1;
+      console.log(
+        `  ${label.padEnd(20)} OK  ${records.length} kayıt ${JSON.stringify(counts)}`
+      );
+
+      if (!sampleTournament) {
+        const node = records.find(
+          (r) => r?._type === "LOCATION" || r?._type === "EVENT_CATEGORY"
         );
-      } catch (error) {
-        console.log(`  ${label.padEnd(16)} HATA: ${error.message}`);
+
+        if (node) {
+          const sub =
+            node._type === "LOCATION"
+              ? topicFor(`tournaments/${sport.sportId}/${node.id}`)
+              : topicFor(`tournaments-by-event-category/${node.id}`);
+
+          const tours = await tryDump(client, sub, "örnek lig listesi");
+          sampleTournament =
+            (tours ?? []).find(
+              (x) => x?._type === "TOURNAMENT" && x.id != null
+            ) ?? null;
+        }
+      }
+    }
+
+    if (sampleTournament) {
+      console.log(
+        `  örnek lig: ${sampleTournament.name} (${sampleTournament.id})`
+      );
+
+      try {
+        await client.call("/sports#tournaments", {
+          lang: LANG,
+          tournamentId: String(sampleTournament.id),
+        });
+      } catch {
+        /* zorunlu değil */
+      }
+
+      for (const variant of tournamentTopicVariants(sampleTournament.id, mg)) {
+        const records = await tryDump(
+          client,
+          variant.topic,
+          `lig [${variant.key}]`
+        );
+
+        if (records) {
+          const matchCount = records.filter((r) => r?._type === "MATCH").length;
+          console.log(
+            `  lig [${variant.key.padEnd(11)}] OK  ${records.length} kayıt (MATCH=${matchCount})`
+          );
+        } else {
+          console.log(`  lig [${variant.key.padEnd(11)}] HATA`);
+        }
       }
     }
 
@@ -1288,16 +1565,51 @@ async function main() {
 
   // Boş çıktı sessizce geçmesin; ne yapılacağını söyle.
   if (grandTotal === 0) {
+    // Sessizce boş JSON bırakmak yerine, ne denendiğini dosyaya yaz.
+    const failed = diagnostics.filter((d) => !d.ok);
+
+    const report = [
+      `mavibet teşhis raporu - ${new Date().toISOString()}`,
+      `WS: ${WS_URL}`,
+      `Origin: ${WS_ORIGIN}`,
+      `denenen topic sayısı: ${diagnostics.length}, başarısız: ${failed.length}`,
+      "",
+      ...diagnostics.map((d) =>
+        d.ok
+          ? `OK    ${d.records.toString().padStart(5)} kayıt  ${d.topic}`
+          : `HATA  ${d.error}\n      ${d.topic}`
+      ),
+    ].join("\n");
+
+    await fs.writeFile(DEBUG_FILE, `${report}\n`, "utf8");
+
     console.log("");
-    console.log("UYARI: Hiç maç bulunamadı. Olası sebepler:");
+    console.log("UYARI: Hiç maç bulunamadı.");
+    console.log(`Ayrıntılı rapor yazıldı: ${DEBUG_FILE}`);
+    console.log("Denenecekler:");
     console.log(
       "  - Site numarası değişmiş olabilir:  MAVIBET_NUMBER=1007 node mavibet-match-fetcher.js"
     );
     console.log(
-      "  - Ayrıntılı trafiği görmek için:    MAVIBET_DEBUG=1 node mavibet-match-fetcher.js"
+      "  - Topic biçimlerini tek tek dene:   MAVIBET_PROBE=1 node mavibet-match-fetcher.js"
     );
-    console.log("  - Yukarıdaki uyarı/hata satırlarını kontrol edin.");
+    console.log(
+      "  - Tüm trafiği gör:                  MAVIBET_DEBUG=1 node mavibet-match-fetcher.js"
+    );
+
     process.exitCode = 1;
+  } else if (diagnostics.some((d) => !d.ok)) {
+    // Kısmi başarı: bazı ligler alınamadıysa yine de rapor bırak.
+    const failed = diagnostics.filter((d) => !d.ok);
+    console.log(
+      `\n(${failed.length} istek başarısız oldu; ayrıntı için ${DEBUG_FILE})`
+    );
+
+    await fs.writeFile(
+      DEBUG_FILE,
+      failed.map((d) => `HATA ${d.error}\n     ${d.topic}`).join("\n") + "\n",
+      "utf8"
+    );
   }
 }
 

@@ -75,9 +75,13 @@ import crypto from "node:crypto";
 
 const VIRUSBET_NUMBER = process.env.VIRUSBET_NUMBER || "1139";
 
-const SITE_URL = process.env.VIRUSBET_SITE_URL || `https://www.virusbettr${VIRUSBET_NUMBER}.com`;
+const SITE_URL =
+  process.env.VIRUSBET_SITE_URL ||
+  `https://www.virusbettr${VIRUSBET_NUMBER}.com`;
 
-const WS_URL = process.env.VIRUSBET_WS_URL || `wss://eu-swarm-newm.virusbettr${VIRUSBET_NUMBER}.com/`;
+const WS_URL =
+  process.env.VIRUSBET_WS_URL ||
+  `wss://eu-swarm-newm.virusbettr${VIRUSBET_NUMBER}.com/`;
 
 const SITE_ID = Number(process.env.VIRUSBET_SITE_ID || 1476);
 
@@ -91,7 +95,7 @@ const CALL_TIMEOUT_MS = Number(process.env.VIRUSBET_CALL_TIMEOUT_MS || 30000);
 
 const DEBUG = process.env.VIRUSBET_DEBUG === "1";
 
-const LANGUAGE = "tur";
+const LANGUAGE = "en";
 
 const TIMEZONE = "Europe/Istanbul";
 
@@ -352,7 +356,11 @@ function wsConnect(url, { origin, userAgent } = {}) {
         buffer = buffer.subarray(end + 4);
 
         if (!/^HTTP\/1\.1 101/i.test(head)) {
-          return fail(new Error(`WebSocket el sıkışması başarısız: ${head.split("\r\n")[0]}`));
+          return fail(
+            new Error(
+              `WebSocket el sıkışması başarısız: ${head.split("\r\n")[0]}`
+            )
+          );
         }
 
         const accept = /sec-websocket-accept:\s*(\S+)/i.exec(head)?.[1];
@@ -362,9 +370,13 @@ function wsConnect(url, { origin, userAgent } = {}) {
         }
 
         // Sıkıştırma açacak kodumuz yok; sunucu yine de dayatırsa erken uyar.
-        if (/sec-websocket-extensions:\s*[^\r\n]*permessage-deflate/i.test(head)) {
+        if (
+          /sec-websocket-extensions:\s*[^\r\n]*permessage-deflate/i.test(head)
+        ) {
           return fail(
-            new Error("Sunucu permessage-deflate dayattı; bu istemci sıkıştırılmış çerçeveleri çözemiyor.")
+            new Error(
+              "Sunucu permessage-deflate dayattı; bu istemci sıkıştırılmış çerçeveleri çözemiyor."
+            )
           );
         }
 
@@ -443,7 +455,10 @@ class SwarmClient {
   }
 
   async connect() {
-    this.ws = await wsConnect(WS_URL, { origin: SITE_URL, userAgent: USER_AGENT });
+    this.ws = await wsConnect(WS_URL, {
+      origin: SITE_URL,
+      userAgent: USER_AGENT,
+    });
 
     this.ws.onText((text) => {
       let message;
@@ -467,7 +482,9 @@ class SwarmClient {
 
       if (message.code !== 0) {
         pending.reject(
-          new Error(`swarm hata code=${message.code} msg=${JSON.stringify(message.msg ?? message.data ?? "")}`)
+          new Error(
+            `swarm hata code=${message.code} msg=${JSON.stringify(message.msg ?? message.data ?? "")}`
+          )
         );
         return;
       }
@@ -714,7 +731,11 @@ async function fetchSportMatches(client, sport) {
     console.log(`  grup ${i + 1}/${groups.length} -> ${groups[i].length} lig`);
 
     try {
-      for (const row of await fetchGamesForCompetitions(client, sport, groups[i])) {
+      for (const row of await fetchGamesForCompetitions(
+        client,
+        sport,
+        groups[i]
+      )) {
         if (row.game?.id != null) rows.set(String(row.game.id), row);
       }
     } catch (error) {
@@ -748,11 +769,15 @@ function addRowsToOutput(output, sportName, rows) {
       continue;
     }
 
-    const leagueName = String(row.competitionName || `LIG_${row.competitionId}`).trim();
+    const leagueName = String(
+      row.competitionName || `LIG_${row.competitionId}`
+    ).trim();
 
     const countryName = String(row.regionName || "").trim();
 
-    const leagueKey = countryName ? `${countryName} - ${leagueName}` : leagueName;
+    const leagueKey = countryName
+      ? `${countryName} - ${leagueName}`
+      : leagueName;
 
     const { date, time } = formatStartTs(game.start_ts);
 
@@ -799,7 +824,10 @@ function sortOutput(output) {
             return byTime;
           }
 
-          return `${a.home}-${a.away}`.localeCompare(`${b.home}-${b.away}`, "tr");
+          return `${a.home}-${a.away}`.localeCompare(
+            `${b.home}-${b.away}`,
+            "tr"
+          );
         });
       }
     }
@@ -825,7 +853,9 @@ async function main() {
 
   const session = await client.requestSession();
 
-  console.log(`Oturum açıldı (sid=${client.sessionId}, sürüm=${session?.version ?? "?"}).\n`);
+  console.log(
+    `Oturum açıldı (sid=${client.sessionId}, sürüm=${session?.version ?? "?"}).\n`
+  );
 
   const output = Object.fromEntries(TARGET_ORDER.map((sport) => [sport, {}]));
 
@@ -845,7 +875,11 @@ async function main() {
 
   const finalOutput = sortOutput(output);
 
-  await fs.writeFile(OUTPUT_FILE, `${JSON.stringify(finalOutput, null, 2)}\n`, "utf8");
+  await fs.writeFile(
+    OUTPUT_FILE,
+    `${JSON.stringify(finalOutput, null, 2)}\n`,
+    "utf8"
+  );
 
   console.log("");
 
@@ -874,9 +908,15 @@ async function main() {
   if (grandTotal === 0) {
     console.log("");
     console.log("UYARI: Hiç maç bulunamadı. Olası sebepler:");
-    console.log("  - Site numarası değişmiş olabilir:  VIRUSBET_NUMBER=1140 node virusbet-match-fetcher.js");
-    console.log("  - site_id değişmiş olabilir:        VIRUSBET_SITE_ID=... node virusbet-match-fetcher.js");
-    console.log("  - Ayrıntılı trafik için:            VIRUSBET_DEBUG=1 node virusbet-match-fetcher.js");
+    console.log(
+      "  - Site numarası değişmiş olabilir:  VIRUSBET_NUMBER=1140 node virusbet-match-fetcher.js"
+    );
+    console.log(
+      "  - site_id değişmiş olabilir:        VIRUSBET_SITE_ID=... node virusbet-match-fetcher.js"
+    );
+    console.log(
+      "  - Ayrıntılı trafik için:            VIRUSBET_DEBUG=1 node virusbet-match-fetcher.js"
+    );
 
     process.exitCode = 1;
   }

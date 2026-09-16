@@ -210,23 +210,44 @@ const isAbbrev = (short, long) =>
 
 /** Kelime sırasına duyarsız, baş harf kısaltmalarını tanıyan örtüşme oranı.
  * "Ferro, Fiona" ~ "Fiona Ferro", "Recek D / Siniakov D" ~ "D. Recek / D. Siniakov" */
+// Kısaltma eşleşmesi tam puan alır: "M. Zheng" ile "Michael Zheng" aynı
+// oyuncudur. "Deportivo (A)" ile "Deportivo Alaves" gibi sahte eşleşmeler
+// bu ağırlıkla değil, TAKIM NİTELEYİCİSİ kuralıyla engelleniyor (sondaki
+// tek harf rezerv/ikinci takım göstergesi sayılır) - bkz. splitQualifiers.
+const ABBREV_WEIGHT = 1;
+
 function tokenOverlapRatio(a, b) {
   const ta = a.split(" ").filter(Boolean);
   const tb = b.split(" ").filter(Boolean);
   if (!ta.length || !tb.length) return 0;
   const used = new Array(tb.length).fill(false);
-  let matched = 0;
+  let score = 0;
   for (const x of ta) {
+    // Önce birebir eşleşme aranır; kısaltmaya göre önceliklidir. Böylece
+    // aynı harfle başlayan iki kelime birbirine yanlış atanmaz.
+    let exact = -1;
+    for (let j = 0; j < tb.length; j++) {
+      if (!used[j] && x === tb[j]) {
+        exact = j;
+        break;
+      }
+    }
+    if (exact >= 0) {
+      used[exact] = true;
+      score += 1;
+      continue;
+    }
+
     for (let j = 0; j < tb.length; j++) {
       if (used[j]) continue;
-      if (x === tb[j] || isAbbrev(x, tb[j]) || isAbbrev(tb[j], x)) {
+      if (isAbbrev(x, tb[j]) || isAbbrev(tb[j], x)) {
         used[j] = true;
-        matched++;
+        score += ABBREV_WEIGHT;
         break;
       }
     }
   }
-  return (100 * matched) / Math.max(ta.length, tb.length);
+  return (100 * score) / Math.max(ta.length, tb.length);
 }
 
 /** "NY" ~ "New York" gibi birleşik baş harf kısaltmaları. */
@@ -259,8 +280,118 @@ export function similarityRatio(a, b) {
   );
 }
 
-export const teamSimilarity = (a, b) =>
-  similarityRatio(normalizeTeamName(a), normalizeTeamName(b));
+/**
+ * TAKIM NİTELEYİCİLERİ
+ *
+ * "Athletic Bilbao" ile "Athletic Bilbao B" AYNI TAKIM DEĞİLDİR: ikincisi
+ * rezerv (B) takımıdır ve genelde bambaşka bir ligde oynar. Aynı şekilde
+ * U19/U21 altyapı takımları ve kadın takımları da ayrıdır.
+ *
+ * Bu ekler karakter benzerliğini çok az değiştirdiği için ("athletic bilbao"
+ * vs "athletic bilbao b" %88 benzer çıkıyor) bulanık eşleştirme tek başına
+ * bunları ayırt edemiyor. Bu yüzden niteleyiciler isimden AYRI çıkarılıp
+ * ayrıca karşılaştırılıyor: biri varsa diğerinde de olmak ZORUNDA.
+ */
+const MULTI_CHAR_QUALIFIERS = new Set([
+  "ii",
+  "iii",
+  "u16",
+  "u17",
+  "u18",
+  "u19",
+  "u20",
+  "u21",
+  "u23",
+  "res",
+  "reserve",
+  "reserves",
+  "rezerv",
+  "castilla",
+  "atletic",
+  "youth",
+  "junior",
+  "juniors",
+  "jr",
+  "genclik",
+  "altyapi",
+  "amateur",
+  "amator",
+  "women",
+  "womens",
+  "kadin",
+  "kadinlar",
+  "femenino",
+  "feminin",
+  "feminine",
+  "fem",
+  "academy",
+  "akademi",
+]);
+
+const hasSingleLetterToken = (tokens) => tokens.some((t) => t.length === 1);
+
+/**
+ * İsmi "çekirdek ad" ve "niteleyiciler" olarak ayırır.
+ *
+ * Sondaki tek harf ("... B") sadece KARŞI TARAFTA tek harfli token YOKSA
+ * niteleyici sayılır. Aksi halde tenisteki "Recek D" / "D. Recek" biçimini
+ * yanlışlıkla farklı takım sanardık.
+ */
+function splitQualifiers(folded, otherFolded) {
+  const tokens = folded.split(" ").filter(Boolean);
+  const otherTokens = otherFolded.split(" ").filter(Boolean);
+
+  // İki tarafta da tek harfli token varsa bunlar isim baş harfidir (tenis).
+  const singleLettersAreInitials =
+    hasSingleLetterToken(tokens) && hasSingleLetterToken(otherTokens);
+
+  const quals = new Set();
+  const core = [];
+
+  tokens.forEach((token, index) => {
+    if (MULTI_CHAR_QUALIFIERS.has(token)) {
+      quals.add(token);
+      return;
+    }
+
+    const isLast = index === tokens.length - 1;
+
+    if (
+      !singleLettersAreInitials &&
+      isLast &&
+      token.length === 1 &&
+      tokens.length > 1
+    ) {
+      quals.add(token);
+      return;
+    }
+
+    core.push(token);
+  });
+
+  return { core: core.join(" ") || folded, quals };
+}
+
+function sameQualifiers(a, b) {
+  if (a.size !== b.size) return false;
+  for (const q of a) if (!b.has(q)) return false;
+  return true;
+}
+
+export function teamSimilarity(a, b) {
+  const fa = normalizeTeamName(a);
+  const fb = normalizeTeamName(b);
+
+  const pa = splitQualifiers(fa, fb);
+  const pb = splitQualifiers(fb, fa);
+
+  // Niteleyiciler farklıysa (biri B takımı / U19 / kadınlar) bunlar farklı
+  // takımlardır; isim ne kadar benzerse benzesin eşleştirme yapılmaz.
+  if (!sameQualifiers(pa.quals, pb.quals)) return 0;
+
+  return similarityRatio(pa.core, pb.core);
+}
+
 export const leagueSimilarity = (a, b) =>
   similarityRatio(normalizeLeagueName(a), normalizeLeagueName(b));
 
@@ -476,6 +607,14 @@ export function matchLists(listA, listB, options = {}) {
         const s = scorePair(a, b, opt.teamThreshold);
         if (!s.ok) continue;
         if (opt.requireLeague && s.leagueScore < opt.leagueThreshold) continue;
+
+        // Lig adları tamamen farklıysa takım adları da çok yüksek
+        // benzerlikte olmalı (bkz. DEFAULTS.lowLeagueScore).
+        if (
+          s.leagueScore < opt.lowLeagueScore &&
+          s.teamScore < opt.teamScoreWhenLeagueLow
+        )
+          continue;
 
         candidates.push({
           ai,

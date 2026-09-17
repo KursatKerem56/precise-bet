@@ -93,6 +93,10 @@ const REQUEST_DELAY_MS = Number(process.env.VIRUSBET_REQUEST_DELAY_MS || 120);
 
 const CALL_TIMEOUT_MS = Number(process.env.VIRUSBET_CALL_TIMEOUT_MS || 30000);
 
+// EC2 makinelerinde IPv6 rotası/DNS tercihi WebSocket bağlantısını bozabilir.
+// Varsayılan IPv4'tür; gerekirse VIRUSBET_IP_FAMILY=6 ile değiştirilebilir.
+const IP_FAMILY = Number(process.env.VIRUSBET_IP_FAMILY || 4);
+
 const DEBUG = process.env.VIRUSBET_DEBUG === "1";
 
 const LANGUAGE = "en";
@@ -245,6 +249,7 @@ function wsConnect(url, { origin, userAgent } = {}) {
         host: parsed.hostname,
         port,
         servername: parsed.hostname,
+        family: IP_FAMILY,
       },
       () => {
         const lines = [
@@ -290,7 +295,7 @@ function wsConnect(url, { origin, userAgent } = {}) {
 
     const api = {
       send(text) {
-        if (DEBUG) console.log("  >>", text.slice(0, 200));
+        if (DEBUG) console.log("[VIRUS_BET]" + "  >>", text.slice(0, 200));
 
         socket.write(encodeFrame(Buffer.from(text, "utf8"), 0x1));
       },
@@ -427,7 +432,7 @@ function wsConnect(url, { origin, userAgent } = {}) {
           if (fragOpcode === 0x1 || fragOpcode === 0x2) {
             const text = full.toString("utf8");
 
-            if (DEBUG) console.log("  <<", text.slice(0, 200));
+            if (DEBUG) console.log("[VIRUS_BET]" + "  <<", text.slice(0, 200));
 
             emitText(text);
           }
@@ -709,7 +714,9 @@ async function fetchSportMatches(client, sport) {
   try {
     competitions = await fetchCompetitions(client, sport);
   } catch (error) {
-    console.error(`${sport.name}: lig listesi alınamadı - ${error.message}`);
+    console.error(
+      "[VIRUS_BET]" + `${sport.name}: lig listesi alınamadı - ${error.message}`
+    );
     return [];
   }
 
@@ -717,7 +724,8 @@ async function fetchSportMatches(client, sport) {
   const withGames = competitions.filter((c) => c.gameCount > 0);
 
   console.log(
-    `${sport.name}: sportId=${sport.sportId}, lig=${competitions.length} (maçı olan: ${withGames.length})`
+    "[VIRUS_BET]" +
+      `${sport.name}: sportId=${sport.sportId}, lig=${competitions.length} (maçı olan: ${withGames.length})`
   );
 
   const groups = chunkArray(
@@ -728,7 +736,10 @@ async function fetchSportMatches(client, sport) {
   const rows = new Map(); // gameId -> satır
 
   for (let i = 0; i < groups.length; i++) {
-    console.log(`  grup ${i + 1}/${groups.length} -> ${groups[i].length} lig`);
+    console.log(
+      "[VIRUS_BET]" +
+        `  grup ${i + 1}/${groups.length} -> ${groups[i].length} lig`
+    );
 
     try {
       for (const row of await fetchGamesForCompetitions(
@@ -739,7 +750,9 @@ async function fetchSportMatches(client, sport) {
         if (row.game?.id != null) rows.set(String(row.game.id), row);
       }
     } catch (error) {
-      console.error(`  grup ${i + 1} alınamadı: ${error.message}`);
+      console.error(
+        "[VIRUS_BET]" + `  grup ${i + 1} alınamadı: ${error.message}`
+      );
     }
 
     if (REQUEST_DELAY_MS > 0 && i + 1 < groups.length) {
@@ -747,7 +760,7 @@ async function fetchSportMatches(client, sport) {
     }
   }
 
-  console.log(`  benzersiz maç: ${rows.size}`);
+  console.log("[VIRUS_BET]" + `  benzersiz maç: ${rows.size}`);
 
   return [...rows.values()];
 }
@@ -799,7 +812,9 @@ function addRowsToOutput(output, sportName, rows) {
   }
 
   if (skipped > 0) {
-    console.log(`  (${skipped} outright/tek taraflı kayıt atlandı)`);
+    console.log(
+      "[VIRUS_BET]" + `  (${skipped} outright/tek taraflı kayıt atlandı)`
+    );
   }
 }
 
@@ -845,10 +860,10 @@ async function virusBetMatchFetcherMain(siteUrl) {
 
   if (!foundSiteNumber) return;
 
-  console.log(`Site URL'si: ${siteUrl}`);
-  console.log(`Site numarası bulundu: ${foundSiteNumber[1]}`);
+  console.log("[VIRUS_BET]" + `Site URL'si: ${siteUrl}`);
+  console.log("[VIRUS_BET]" + `Site numarası bulundu: ${foundSiteNumber[1]}`);
   const siteNumber = foundSiteNumber[1];
-  console.log(`VIRUSBET_NUMBER=${siteNumber}`);
+  console.log("[VIRUS_BET]" + `VIRUSBET_NUMBER=${siteNumber}`);
 
   VIRUSBET_NUMBER = siteNumber;
 
@@ -856,11 +871,11 @@ async function virusBetMatchFetcherMain(siteUrl) {
 
   WS_URL = `wss://eu-swarm-newm.virusbettr${VIRUSBET_NUMBER}.com/`;
 
-  console.log(`Virusbet: ${SITE_URL}`);
+  console.log("[VIRUS_BET]" + `Virusbet: ${SITE_URL}`);
 
-  console.log(`Swarm WS: ${WS_URL}`);
+  console.log("[VIRUS_BET]" + `Swarm WS: ${WS_URL}`);
 
-  console.log("Bağlanılıyor...");
+  console.log("[VIRUS_BET]" + "Bağlanılıyor...");
 
   const client = new SwarmClient();
 
@@ -869,7 +884,8 @@ async function virusBetMatchFetcherMain(siteUrl) {
   const session = await client.requestSession();
 
   console.log(
-    `Oturum açıldı (sid=${client.sessionId}, sürüm=${session?.version ?? "?"}).\n`
+    "[VIRUS_BET]" +
+      `Oturum açıldı (sid=${client.sessionId}, sürüm=${session?.version ?? "?"}).\n`
   );
 
   const output = Object.fromEntries(TARGET_ORDER.map((sport) => [sport, {}]));
@@ -881,7 +897,9 @@ async function virusBetMatchFetcherMain(siteUrl) {
 
         addRowsToOutput(output, sport.name, rows);
       } catch (error) {
-        console.error(`${sport.name} çekilirken hata: ${error.message}`);
+        console.error(
+          "[VIRUS_BET]" + `${sport.name} çekilirken hata: ${error.message}`
+        );
       }
     }
   } finally {
@@ -896,9 +914,9 @@ async function virusBetMatchFetcherMain(siteUrl) {
     "utf8"
   );
 
-  console.log("");
+  console.log("[VIRUS_BET]" + "");
 
-  console.log(`JSON yazıldı: ${OUTPUT_FILE}`);
+  console.log("[VIRUS_BET]" + `JSON yazıldı: ${OUTPUT_FILE}`);
 
   let grandTotal = 0;
 
@@ -917,20 +935,25 @@ async function virusBetMatchFetcherMain(siteUrl) {
 
     grandTotal += matchCount;
 
-    console.log(`${sport}: ${leagues.length} lig / ${matchCount} maç`);
+    console.log(
+      "[VIRUS_BET]" + `${sport}: ${leagues.length} lig / ${matchCount} maç`
+    );
   }
 
   if (grandTotal === 0) {
-    console.log("");
-    console.log("UYARI: Hiç maç bulunamadı. Olası sebepler:");
+    console.log("[VIRUS_BET]" + "");
+    console.log("[VIRUS_BET]" + "UYARI: Hiç maç bulunamadı. Olası sebepler:");
     console.log(
-      "  - Site numarası değişmiş olabilir:  VIRUSBET_NUMBER=1140 node virusbet-match-fetcher.js"
+      "[VIRUS_BET]" +
+        "  - Site numarası değişmiş olabilir:  VIRUSBET_NUMBER=1140 node virusbet-match-fetcher.js"
     );
     console.log(
-      "  - site_id değişmiş olabilir:        VIRUSBET_SITE_ID=... node virusbet-match-fetcher.js"
+      "[VIRUS_BET]" +
+        "  - site_id değişmiş olabilir:        VIRUSBET_SITE_ID=... node virusbet-match-fetcher.js"
     );
     console.log(
-      "  - Ayrıntılı trafik için:            VIRUSBET_DEBUG=1 node virusbet-match-fetcher.js"
+      "[VIRUS_BET]" +
+        "  - Ayrıntılı trafik için:            VIRUSBET_DEBUG=1 node virusbet-match-fetcher.js"
     );
 
     process.exitCode = 1;

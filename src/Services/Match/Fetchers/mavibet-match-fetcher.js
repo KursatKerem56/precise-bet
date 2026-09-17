@@ -393,7 +393,7 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
 
     const api = {
       send(text) {
-        if (DEBUG) console.log("  >>", text.slice(0, 160));
+        if (DEBUG) console.log("[MAVI_BET]" + "  >>", text.slice(0, 160));
         socket.write(encodeFrame(Buffer.from(text, "utf8"), 0x1));
       },
 
@@ -458,10 +458,10 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
         buffer = buffer.subarray(end + 4);
 
         if (!/^HTTP\/1\.1 101/i.test(head)) {
+          const statusLine = head.split("\r\n")[0] || "bilinmeyen yanıt";
+
           return fail(
-            new Error(
-              `WebSocket el sıkışması başarısız: ${head.split("\r\n")[0]}`
-            )
+            new Error(`WebSocket el sıkışması başarısız: ${statusLine}`)
           );
         }
 
@@ -495,7 +495,10 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
             /server_no_context_takeover/i.test(extLine)
           );
           if (DEBUG)
-            console.log(`  [ws] permessage-deflate aktif (${extLine.trim()})`);
+            console.log(
+              "[MAVI_BET]" +
+                `  [ws] permessage-deflate aktif (${extLine.trim()})`
+            );
         }
 
         handshakeDone = true;
@@ -556,7 +559,8 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
               if (compressed) {
                 if (!inflater) {
                   console.error(
-                    "[ws] sıkıştırılmış mesaj geldi ama deflate pazarlığı yok."
+                    "[MAVI_BET]" +
+                      "[ws] sıkıştırılmış mesaj geldi ama deflate pazarlığı yok."
                   );
                   return;
                 }
@@ -564,14 +568,16 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
                 try {
                   body = await inflater.inflate(full);
                 } catch (error) {
-                  console.error(`[ws] mesaj açılamadı: ${error.message}`);
+                  console.error(
+                    "[MAVI_BET]" + `[ws] mesaj açılamadı: ${error.message}`
+                  );
                   return;
                 }
               }
 
               const text = body.toString("utf8");
 
-              if (DEBUG) console.log("  <<", text.slice(0, 160));
+              if (DEBUG) console.log("[MAVI_BET]" + "  <<", text.slice(0, 160));
 
               emitText(text);
             });
@@ -715,7 +721,9 @@ class MavibetClient {
 
     this.sessionId = await welcome;
 
-    console.log(`WAMP oturumu açıldı (session ${this.sessionId}).\n`);
+    console.log(
+      "[MAVI_BET]" + `WAMP oturumu açıldı (session ${this.sessionId}).\n`
+    );
   }
 
   handle(message) {
@@ -852,7 +860,10 @@ class MavibetClient {
     try {
       await this.subscribe("/registrationDismissed");
     } catch (error) {
-      if (DEBUG) console.log(`  [prime] subscribe atlandı: ${error.message}`);
+      if (DEBUG)
+        console.log(
+          "[MAVI_BET]" + `  [prime] subscribe atlandı: ${error.message}`
+        );
     }
 
     // Önce hepsini REGISTER et (tarayıcı da böyle yapıyor)
@@ -862,7 +873,8 @@ class MavibetClient {
       } catch (error) {
         if (DEBUG)
           console.log(
-            `  [prime] register atlandı (${topic}): ${error.message}`
+            "[MAVI_BET]" +
+              `  [prime] register atlandı (${topic}): ${error.message}`
           );
       }
     }
@@ -872,7 +884,9 @@ class MavibetClient {
       await this.call("/sports#configureFonts", {});
     } catch (error) {
       if (DEBUG)
-        console.log(`  [prime] oturum bilgisi atlandı: ${error.message}`);
+        console.log(
+          "[MAVI_BET]" + `  [prime] oturum bilgisi atlandı: ${error.message}`
+        );
     }
 
     // Sonra dökümlerini al (tarayıcının sırası: disciplinesV2 önce)
@@ -890,11 +904,13 @@ class MavibetClient {
         await this.call("/sports#initialDump", { topic });
       } catch (error) {
         if (DEBUG)
-          console.log(`  [prime] dump atlandı (${topic}): ${error.message}`);
+          console.log(
+            "[MAVI_BET]" + `  [prime] dump atlandı (${topic}): ${error.message}`
+          );
       }
     }
 
-    console.log("Oturum hazırlandı.\n");
+    console.log("[MAVI_BET]" + "Oturum hazırlandı.\n");
   }
 
   /** Bir topic'in anlık dökümü: önce REGISTER, sonra initialDump.
@@ -989,10 +1005,12 @@ async function fetchMarketGroupIds(client, sportId) {
 
     if (DEBUG) {
       console.log(
-        `  [marketGroups] ham yanıt anahtarları: ${Object.keys(data ?? {}).join(",") || "(boş)"}`
+        "[MAVI_BET]" +
+          `  [marketGroups] ham yanıt anahtarları: ${Object.keys(data ?? {}).join(",") || "(boş)"}`
       );
       console.log(
-        `  [marketGroups] bulunan grup: ${groups.length} -> ${groups.map((g) => g.id).join(",")}`
+        "[MAVI_BET]" +
+          `  [marketGroups] bulunan grup: ${groups.length} -> ${groups.map((g) => g.id).join(",")}`
       );
     }
 
@@ -1009,11 +1027,13 @@ async function fetchMarketGroupIds(client, sportId) {
     // Sessizce varsayılana düşmek, yanlış topic üretip "om.rpc.exception"
     // almamıza yol açıyordu. Artık açıkça uyarıyoruz.
     console.warn(
-      `  UYARI: sportId=${sportId} için market group listesi BOŞ döndü; varsayılan deneniyor.`
+      "[MAVI_BET]" +
+        `  UYARI: sportId=${sportId} için market group listesi BOŞ döndü; varsayılan deneniyor.`
     );
   } catch (error) {
     console.warn(
-      `  UYARI: market group alınamadı (${error.message}); varsayılan deneniyor.`
+      "[MAVI_BET]" +
+        `  UYARI: market group alınamadı (${error.message}); varsayılan deneniyor.`
     );
   }
 
@@ -1038,7 +1058,9 @@ async function sendSportsDataInfo(client, sportId) {
     });
   } catch (error) {
     if (DEBUG)
-      console.log(`  [hazırlık] sportsDataInfo atlandı: ${error.message}`);
+      console.log(
+        "[MAVI_BET]" + `  [hazırlık] sportsDataInfo atlandı: ${error.message}`
+      );
   }
 }
 
@@ -1049,7 +1071,8 @@ function note(entry) {
   diagnostics.push(entry);
   if (DEBUG)
     console.log(
-      `  [dump] ${entry.label}: ${entry.ok ? entry.records + " kayıt" : "HATA " + entry.error}`
+      "[MAVI_BET]" +
+        `  [dump] ${entry.label}: ${entry.ok ? entry.records + " kayıt" : "HATA " + entry.error}`
     );
 }
 
@@ -1175,7 +1198,10 @@ async function fetchTournamentMatches(
     if (matchCount === 0) continue;
 
     if (workingTournamentVariant !== variant.key) {
-      console.log(`  (lig verisi için "${variant.key}" biçimi kullanılıyor)`);
+      console.log(
+        "[MAVI_BET]" +
+          `  (lig verisi için "${variant.key}" biçimi kullanılıyor)`
+      );
       workingTournamentVariant = variant.key;
     }
 
@@ -1197,7 +1223,8 @@ async function fetchSportMatches(client, sport) {
   await sendSportsDataInfo(client, sport.sportId);
 
   console.log(
-    `${sport.name}: sportId=${sport.sportId}, marketGroups=${marketGroups.ids}`
+    "[MAVI_BET]" +
+      `${sport.name}: sportId=${sport.sportId}, marketGroups=${marketGroups.ids}`
   );
 
   const addRecords = (records) => {
@@ -1227,7 +1254,7 @@ async function fetchSportMatches(client, sport) {
 
   if (noOdds) addRecords(noOdds);
 
-  console.log(`  popüler (oransız) -> ${matches.size}`);
+  console.log("[MAVI_BET]" + `  popüler (oransız) -> ${matches.size}`);
 
   // --- b) Lig ağacı: spora göre iki farklı yol ---
   let branches = [];
@@ -1269,7 +1296,8 @@ async function fetchSportMatches(client, sport) {
   if (MAX_LOCATIONS > 0) branches = branches.slice(0, MAX_LOCATIONS);
 
   console.log(
-    `  ${sport.tree === "eventCategory" ? "kategori" : "ülke"}: ${branches.length}`
+    "[MAVI_BET]" +
+      `  ${sport.tree === "eventCategory" ? "kategori" : "ülke"}: ${branches.length}`
   );
 
   // --- c) Her daldaki ligler ve o liglerin maçları ---
@@ -1304,12 +1332,14 @@ async function fetchSportMatches(client, sport) {
     }
 
     console.log(
-      `  [${index + 1}/${branches.length}] ${branch.name}: ${tournaments.length} lig, toplam maç ${matches.size}`
+      "[MAVI_BET]" +
+        `  [${index + 1}/${branches.length}] ${branch.name}: ${tournaments.length} lig, toplam maç ${matches.size}`
     );
   }
 
   console.log(
-    `  ${sport.name} bitti -> ${leagueOk} lig OK, ${leagueFail} lig başarısız, ${matches.size} maç\n`
+    "[MAVI_BET]" +
+      `  ${sport.name} bitti -> ${leagueOk} lig OK, ${leagueFail} lig başarısız, ${matches.size} maç\n`
   );
 
   return [...matches.values()];
@@ -1395,13 +1425,17 @@ function sortOutput(output) {
  * ====================================================================== */
 
 async function probe(client) {
-  console.log("TEŞHİS MODU - topic biçimleri tek tek deneniyor\n");
+  console.log(
+    "[MAVI_BET]" + "TEŞHİS MODU - topic biçimleri tek tek deneniyor\n"
+  );
 
   for (const sport of SPORTS) {
-    console.log(`=== ${sport.name} (sportId=${sport.sportId}) ===`);
+    console.log(
+      "[MAVI_BET]" + `=== ${sport.name} (sportId=${sport.sportId}) ===`
+    );
 
     const mg = await fetchMarketGroupIds(client, sport.sportId);
-    console.log(`  market grupları: ${mg.all.join(",")}`);
+    console.log("[MAVI_BET]" + `  market grupları: ${mg.all.join(",")}`);
 
     await sendSportsDataInfo(client, sport.sportId);
 
@@ -1423,7 +1457,7 @@ async function probe(client) {
       const records = await tryDump(client, topic, label);
 
       if (!records) {
-        console.log(`  ${label.padEnd(20)} HATA`);
+        console.log("[MAVI_BET]" + `  ${label.padEnd(20)} HATA`);
         continue;
       }
 
@@ -1431,7 +1465,8 @@ async function probe(client) {
       for (const r of records)
         counts[r?._type ?? "?"] = (counts[r?._type ?? "?"] ?? 0) + 1;
       console.log(
-        `  ${label.padEnd(20)} OK  ${records.length} kayıt ${JSON.stringify(counts)}`
+        "[MAVI_BET]" +
+          `  ${label.padEnd(20)} OK  ${records.length} kayıt ${JSON.stringify(counts)}`
       );
 
       if (!sampleTournament) {
@@ -1456,7 +1491,8 @@ async function probe(client) {
 
     if (sampleTournament) {
       console.log(
-        `  örnek lig: ${sampleTournament.name} (${sampleTournament.id})`
+        "[MAVI_BET]" +
+          `  örnek lig: ${sampleTournament.name} (${sampleTournament.id})`
       );
 
       try {
@@ -1478,15 +1514,16 @@ async function probe(client) {
         if (records) {
           const matchCount = records.filter((r) => r?._type === "MATCH").length;
           console.log(
-            `  lig [${variant.key.padEnd(11)}] OK  ${records.length} kayıt (MATCH=${matchCount})`
+            "[MAVI_BET]" +
+              `  lig [${variant.key.padEnd(11)}] OK  ${records.length} kayıt (MATCH=${matchCount})`
           );
         } else {
-          console.log(`  lig [${variant.key.padEnd(11)}] HATA`);
+          console.log("[MAVI_BET]" + `  lig [${variant.key.padEnd(11)}] HATA`);
         }
       }
     }
 
-    console.log("");
+    console.log("[MAVI_BET]" + "");
   }
 }
 
@@ -1509,11 +1546,11 @@ async function mavibetMatchFetcherMain(siteUrl) {
 
   WS_URL = `wss://sportsapi.mavibet${MAVIBET_NUMBER}.com/v2`;
 
-  console.log(`Mavibet: ${SITE_URL}`);
+  console.log("[MAVI_BET]" + `Mavibet: ${SITE_URL}`);
 
-  console.log(`Mavibet WS: ${WS_URL}`);
+  console.log("[MAVI_BET]" + `Mavibet WS: ${WS_URL}`);
 
-  console.log("Bağlanılıyor...\n");
+  console.log("[MAVI_BET]" + "Bağlanılıyor...\n");
 
   const client = new MavibetClient();
 
@@ -1540,7 +1577,9 @@ async function mavibetMatchFetcherMain(siteUrl) {
 
         addMatchesToOutput(output, sport.name, records);
       } catch (error) {
-        console.error(`${sport.name} çekilirken hata: ${error.message}`);
+        console.error(
+          "[MAVI_BET]" + `${sport.name} çekilirken hata: ${error.message}`
+        );
       }
     }
   } finally {
@@ -1555,8 +1594,8 @@ async function mavibetMatchFetcherMain(siteUrl) {
     "utf8"
   );
 
-  console.log("");
-  console.log(`JSON yazıldı: ${OUTPUT_FILE}`);
+  console.log("[MAVI_BET]" + "");
+  console.log("[MAVI_BET]" + `JSON yazıldı: ${OUTPUT_FILE}`);
 
   let grandTotal = 0;
 
@@ -1575,7 +1614,9 @@ async function mavibetMatchFetcherMain(siteUrl) {
 
     grandTotal += matchCount;
 
-    console.log(`${sport}: ${leagues.length} lig / ${matchCount} maç`);
+    console.log(
+      "[MAVI_BET]" + `${sport}: ${leagues.length} lig / ${matchCount} maç`
+    );
   }
 
   // Boş çıktı sessizce geçmesin; ne yapılacağını söyle.
@@ -1598,18 +1639,21 @@ async function mavibetMatchFetcherMain(siteUrl) {
 
     await fs.writeFile(DEBUG_FILE, `${report}\n`, "utf8");
 
-    console.log("");
-    console.log("UYARI: Hiç maç bulunamadı.");
-    console.log(`Ayrıntılı rapor yazıldı: ${DEBUG_FILE}`);
-    console.log("Denenecekler:");
+    console.log("[MAVI_BET]" + "");
+    console.log("[MAVI_BET]" + "UYARI: Hiç maç bulunamadı.");
+    console.log("[MAVI_BET]" + `Ayrıntılı rapor yazıldı: ${DEBUG_FILE}`);
+    console.log("[MAVI_BET]" + "Denenecekler:");
     console.log(
-      "  - Site numarası değişmiş olabilir:  MAVIBET_NUMBER=1007 node mavibet-match-fetcher.js"
+      "[MAVI_BET]" +
+        "  - Site numarası değişmiş olabilir:  MAVIBET_NUMBER=1007 node mavibet-match-fetcher.js"
     );
     console.log(
-      "  - Topic biçimlerini tek tek dene:   MAVIBET_PROBE=1 node mavibet-match-fetcher.js"
+      "[MAVI_BET]" +
+        "  - Topic biçimlerini tek tek dene:   MAVIBET_PROBE=1 node mavibet-match-fetcher.js"
     );
     console.log(
-      "  - Tüm trafiği gör:                  MAVIBET_DEBUG=1 node mavibet-match-fetcher.js"
+      "[MAVI_BET]" +
+        "  - Tüm trafiği gör:                  MAVIBET_DEBUG=1 node mavibet-match-fetcher.js"
     );
 
     process.exitCode = 1;
@@ -1617,7 +1661,8 @@ async function mavibetMatchFetcherMain(siteUrl) {
     // Kısmi başarı: bazı ligler alınamadıysa yine de rapor bırak.
     const failed = diagnostics.filter((d) => !d.ok);
     console.log(
-      `\n(${failed.length} istek başarısız oldu; ayrıntı için ${DEBUG_FILE})`
+      "[MAVI_BET]" +
+        `\n(${failed.length} istek başarısız oldu; ayrıntı için ${DEBUG_FILE})`
     );
 
     await fs.writeFile(

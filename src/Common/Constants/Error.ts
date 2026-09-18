@@ -21,6 +21,13 @@ const Errors: Record<string, IError> = {
     service: EErrorService.NONE,
     statusCode: 400,
   },
+  UNEXPECTED_ERROR: {
+    message: "Unexpected error",
+    locale_key: "api.error.unexpected_error",
+    type: EErrorType.GENERIC,
+    service: EErrorService.NONE,
+    statusCode: 500,
+  },
   MISSING_PARAMETERS: {
     message: "Missing parameters",
     locale_key: "api.error.missingParameters",

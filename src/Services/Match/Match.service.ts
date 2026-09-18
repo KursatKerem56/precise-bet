@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs/promises";
+import { chromium } from "playwright";
 
 import { compareMatchTimesMain } from "./compare-match-times";
 
@@ -15,6 +16,7 @@ import { Match } from "@Match/Models";
 
 import { EMatchSport } from "@Match/Constants";
 import { EPanelSite } from "@Panel/Constants";
+import axios from "axios";
 
 const saveMatches = async (site: EPanelSite) => {
   const jsonFilePath = `./${site.toLowerCase()}-matches.json`;
@@ -101,12 +103,10 @@ const saveMatches = async (site: EPanelSite) => {
 
 const initMatchFetchers = async () => {
   const sites = await getSites();
-
   await Promise.all(
     sites.map(async (site) => {
       try {
         console.log(`Initializing match fetcher for site: ${site.site}`);
-
         switch (site.site) {
           case EPanelSite.VIRUS_BET:
             await virusBetMatchFetcherMain(site.link);
@@ -131,10 +131,8 @@ const initMatchFetchers = async () => {
       }
     })
   );
-
   setTimeout(async () => {
     await compareMatchTimesMain();
-
     setTimeout(initMatchFetchers, 1000 * 60 * 2); // Re-run after 2 minutes
   });
 };

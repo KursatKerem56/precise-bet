@@ -33,7 +33,7 @@ const getComparedMatches = asyncErrorHandler(
 
 const saveMatchTimesDiff = asyncErrorHandler(
   async (req: Request, res: Response) => {
-    const fileRaw = req.body;
+    const { fileRaw } = req.body;
 
     if (!fileRaw) throw new AppError("MISSING_PARAMETERS");
 

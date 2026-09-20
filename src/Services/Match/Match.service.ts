@@ -103,8 +103,12 @@ const saveMatches = async (site: EPanelSite) => {
 
 const initMatchFetchers = async () => {
   const sites = await getSites();
+
   await Promise.all(
     sites.map(async (site) => {
+      if (site.site !== EPanelSite.MAVI_BET) {
+        return;
+      }
       try {
         console.log(`Initializing match fetcher for site: ${site.site}`);
         switch (site.site) {

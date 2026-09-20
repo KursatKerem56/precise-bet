@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+
 import {
   getMatches as _getMatches,
   getComparedMatches as _getComparedMatches,
@@ -44,9 +46,9 @@ const getComparedMatches = async () => {
 };
 
 const saveMatchTimesDiff = async (fileRaw: string) => {
-  const parsedData = JSON.parse(fileRaw);
+  const jsonFilePath = `./match-times-diff.json`;
 
-  console.log(parsedData);
+  await fs.writeFile(jsonFilePath, fileRaw, "utf-8");
 
   return "Match times diff saved successfully";
 };

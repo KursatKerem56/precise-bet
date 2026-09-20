@@ -5,6 +5,7 @@ import {
   saveSiteLink as _saveSiteLink,
   getMatches as _getMatches,
   getComparedMatches as _getComparedMatches,
+  saveMatchTimesDiff as _saveMatchTimesDiff,
 } from "@Panel";
 
 import { AppError, asyncErrorHandler } from "@Utils/Error";
@@ -30,4 +31,20 @@ const getComparedMatches = asyncErrorHandler(
   }
 );
 
-export { getSiteLinks, saveSiteLink, getMatches, getComparedMatches };
+const saveMatchTimesDiff = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const fileRaw = req.body;
+
+    if (!fileRaw) throw new AppError("MISSING_PARAMETERS");
+
+    res.json(await _saveMatchTimesDiff(fileRaw));
+  }
+);
+
+export {
+  getSiteLinks,
+  saveSiteLink,
+  getMatches,
+  getComparedMatches,
+  saveMatchTimesDiff,
+};

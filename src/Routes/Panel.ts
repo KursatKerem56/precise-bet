@@ -7,6 +7,7 @@ import {
   saveSiteLink,
   getMatches,
   getComparedMatches,
+  saveMatchTimesDiff,
 } from "@Controllers/Panel";
 
 const router = Router();
@@ -18,5 +19,7 @@ router.post("/save-site-link", isAuth, saveSiteLink);
 router.get("/matches", isAuth, getMatches);
 
 router.get("/compared-matches", isAuth, getComparedMatches);
+
+router.post("/match-times-diff", isAuth, saveMatchTimesDiff);
 
 export default router;

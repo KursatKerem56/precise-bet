@@ -43,4 +43,19 @@ const getComparedMatches = async () => {
   return await _getComparedMatches();
 };
 
-export { getSiteLinks, saveSiteLink, getSites, getMatches, getComparedMatches };
+const saveMatchTimesDiff = async (fileRaw: string) => {
+  const parsedData = JSON.parse(fileRaw);
+
+  console.log(parsedData);
+
+  return "Match times diff saved successfully";
+};
+
+export {
+  getSiteLinks,
+  saveSiteLink,
+  getSites,
+  getMatches,
+  getComparedMatches,
+  saveMatchTimesDiff,
+};

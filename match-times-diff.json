@@ -1,0 +1,2640 @@
+{
+  "olusturulma": "2026-09-20T21:33:23.898Z",
+  "siteler": [
+    "virus_bet",
+    "mavi_bet",
+    "betist"
+  ],
+  "kaynaklar": {
+    "virus_bet": {
+      "dosya": "./virus_bet-matches.json",
+      "macSayisi": 669
+    },
+    "mavi_bet": {
+      "dosya": "./mavi_bet-matches.json",
+      "macSayisi": 1156
+    },
+    "betist": {
+      "dosya": "./betist-matches.json",
+      "macSayisi": 826
+    }
+  },
+  "ayarlar": {
+    "toleransDakika": 0,
+    "takimEsigi": 78,
+    "ligEsigi": 55,
+    "ligZorunlu": false,
+    "tarihToleransGun": 1
+  },
+  "ozet": {
+    "toplamMacGrubu": 1818,
+    "karsilastirilabilir": 636,
+    "saatiFarkli": 73,
+    "saatiAyni": 563,
+    "kapsam": {
+      "1_sitede": 1182,
+      "2_sitede": 439,
+      "3_sitede": 197
+    },
+    "siteBazinda": {
+      "virus_bet": {
+        "toplam": 669,
+        "sadeceBuSitede": 246
+      },
+      "mavi_bet": {
+        "toplam": 1156,
+        "sadeceBuSitede": 588
+      },
+      "betist": {
+        "toplam": 826,
+        "sadeceBuSitede": 348
+      }
+    },
+    "ikiliEslesme": [
+      {
+        "siteA": "virus_bet",
+        "siteB": "mavi_bet",
+        "eslesen": 353
+      },
+      {
+        "siteA": "virus_bet",
+        "siteB": "betist",
+        "eslesen": 263
+      },
+      {
+        "siteA": "mavi_bet",
+        "siteB": "betist",
+        "eslesen": 409
+      }
+    ]
+  },
+  "farkliMaclar": {
+    "FUTBOL": {
+      "Copa Libertadores Playoffs": {
+        "2026-10-14": [
+          {
+            "sport": "FUTBOL",
+            "league": "Copa Libertadores Playoffs",
+            "date": "2026-10-14",
+            "home": "Fluminense",
+            "away": "Palmeiras",
+            "saatler": {
+              "mavi_bet": "01:00",
+              "betist": "23:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-10-14",
+              "betist": "2026-10-13"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "South America - Copa Libertadores Playoffs",
+              "betist": "International Clubs - Copa Libertadores"
+            },
+            "takimlar": {
+              "mavi_bet": "Fluminense - Palmeiras",
+              "betist": "Fluminense - Palmeiras"
+            }
+          }
+        ]
+      },
+      "Copa Sudamericana": {
+        "2026-10-15": [
+          {
+            "sport": "FUTBOL",
+            "league": "Copa Sudamericana",
+            "date": "2026-10-15",
+            "home": "Boca Juniors",
+            "away": "CR Vasco da Gama",
+            "saatler": {
+              "virus_bet": "01:00",
+              "mavi_bet": "01:00",
+              "betist": "01:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-10-15",
+              "mavi_bet": "2026-10-14",
+              "betist": "2026-10-14"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "South America - Copa Sudamericana",
+              "mavi_bet": "South America - Copa Sudamericana Playoffs",
+              "betist": "International Clubs - Copa Sudamericana"
+            },
+            "takimlar": {
+              "virus_bet": "Boca Juniors - CR Vasco da Gama",
+              "mavi_bet": "Boca Juniors - Vasco da Gama",
+              "betist": "Boca Juniors - Vasco Da Gama"
+            }
+          }
+        ]
+      },
+      "EFL Cup": {
+        "2026-10-28": [
+          {
+            "sport": "FUTBOL",
+            "league": "EFL Cup",
+            "date": "2026-10-28",
+            "home": "Liverpool",
+            "away": "Chelsea",
+            "saatler": {
+              "mavi_bet": "23:00",
+              "betist": "22:45"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-10-28",
+              "betist": "2026-10-28"
+            },
+            "maxFarkDakika": 15,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 15
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "England - EFL Cup",
+              "betist": "England - EFL Cup"
+            },
+            "takimlar": {
+              "mavi_bet": "Liverpool - Chelsea",
+              "betist": "Liverpool FC - Chelsea FC"
+            }
+          }
+        ]
+      }
+    },
+    "BASKETBOL": {
+      "Baloncesto Superior Nacional Women": {
+        "2026-09-21": [
+          {
+            "sport": "BASKETBOL",
+            "league": "Baloncesto Superior Nacional Women",
+            "date": "2026-09-21",
+            "home": "Criollos de Caguas (W)",
+            "away": "Pollitas de Isabela (W)",
+            "saatler": {
+              "mavi_bet": "04:00",
+              "betist": "02:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Puerto Rico - Baloncesto Superior Nacional Women",
+              "betist": "Puerto Rico - BSN, Women"
+            },
+            "takimlar": {
+              "mavi_bet": "Criollos de Caguas (W) - Pollitas de Isabela (W)",
+              "betist": "Criollos de Caguas (w) - Pollitas de Isabela (w)"
+            }
+          }
+        ]
+      }
+    },
+    "TENIS": {
+      "ATP Challenger Buenos Aires 2, Main Draw": {
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Gonzalo Villanueva",
+            "away": "Guido Ivan Justo",
+            "saatler": {
+              "mavi_bet": "00:30",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 510,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 510
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Gonzalo Villanueva - Guido Ivan Justo",
+              "betist": "Villanueva, Gonzalo - Justo, Guido Ivan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Facundo Mena",
+            "away": "Renzo Olivo",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Facundo Mena - Renzo Olivo",
+              "betist": "Mena, Facundo - Olivo, Renzo"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Francisco Comesana",
+            "away": "Juan Estevez",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Francisco Comesana - Juan Estevez",
+              "betist": "Comesana, Francisco - Estevez, Juan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Gonzalo Bueno",
+            "away": "Franco Roncadelli",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Gonzalo Bueno - Franco Roncadelli",
+              "betist": "Bueno, Gonzalo - Roncadelli, Franco"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Juan Bautista Torres",
+            "away": "Juan Pablo Ficovich",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Juan Bautista Torres - Juan Pablo Ficovich",
+              "betist": "Torres, Juan Bautista - Ficovich, Juan Pablo"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Matheus Pucinelli de Almeida",
+            "away": "Hugo Dellien",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Matheus Pucinelli de Almeida - Hugo Dellien",
+              "betist": "Pucinelli De Almeida, Matheus - Dellien, Hugo"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Murkel Alejandro Dellien Velasco",
+            "away": "Hernan Casanova",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Murkel Alejandro Dellien Velasco - Hernan Casanova",
+              "betist": "Dellien Velasco, Murkel Alejandro - Casanova, Hernan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Buenos Aires 2, Main Draw",
+            "date": "2026-09-22",
+            "home": "Valentin Garay",
+            "away": "Alex Barrena",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "16:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Argentina - ATP Challenger Buenos Aires 2, Main Draw",
+              "betist": "ATP - Buenos Aires, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Valentin Garay - Alex Barrena",
+              "betist": "Garay, Valentin - Barrena, Alex"
+            }
+          }
+        ]
+      },
+      "ATP Challenger Genoa - Clay": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Genoa - Clay",
+            "date": "2026-09-21",
+            "home": "Lorenzo Rottoli",
+            "away": "Stefano D'Agostino",
+            "saatler": {
+              "virus_bet": "14:30",
+              "mavi_bet": "14:10",
+              "betist": "14:30"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - ATP Challenger Genoa - Clay",
+              "mavi_bet": "Italy - ATP Challenger Genova 2, Qualification",
+              "betist": "ATP - Genoa, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Lorenzo Rottoli - Stefano D'Agostino",
+              "mavi_bet": "Lorenzo Rottoli - Stefano D'Agostino",
+              "betist": "Rottoli, Lorenzo - D'Agostino, Stefano"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Genoa - Clay",
+            "date": "2026-09-21",
+            "home": "Maximo Zeitune",
+            "away": "Federico Iannaccone",
+            "saatler": {
+              "virus_bet": "14:30",
+              "mavi_bet": "14:10",
+              "betist": "14:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - ATP Challenger Genoa - Clay",
+              "mavi_bet": "Italy - ATP Challenger Genova 2, Qualification",
+              "betist": "ATP - Genoa, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Maximo Zeitune - Federico Iannaccone",
+              "mavi_bet": "Maximo Zeitune - Federico Iannaccone",
+              "betist": "Zeitune, Maximo - Iannaccone, Federico"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Genoa - Clay",
+            "date": "2026-09-21",
+            "home": "Pierluigi Basile",
+            "away": "Giovanni Oradini",
+            "saatler": {
+              "virus_bet": "14:30",
+              "mavi_bet": "14:10",
+              "betist": "14:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - ATP Challenger Genoa - Clay",
+              "mavi_bet": "Italy - ATP Challenger Genova 2, Qualification",
+              "betist": "ATP - Genoa, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Pierluigi Basile - Giovanni Oradini",
+              "mavi_bet": "Pierluigi Basile - Giovanni Oradini",
+              "betist": "Basile, Pierluigi - Oradini, Giovanni"
+            }
+          }
+        ]
+      },
+      "ATP Challenger Plovdiv - Clay": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv - Clay",
+            "date": "2026-09-21",
+            "home": "Dusan Obradovic",
+            "away": "Adrian Andreev",
+            "saatler": {
+              "virus_bet": "12:30",
+              "mavi_bet": "12:10",
+              "betist": "12:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Bulgaria - ATP Challenger Plovdiv - Clay",
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Qualification",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Dusan Obradovic - Adrian Andreev",
+              "mavi_bet": "Dusan Obradovic - Adrian Andreev",
+              "betist": "Obradovic, Dusan - Andreev, Adrian"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv - Clay",
+            "date": "2026-09-21",
+            "home": "Luca Wiedenmann",
+            "away": "Yanaki Milev",
+            "saatler": {
+              "virus_bet": "12:30",
+              "mavi_bet": "12:10",
+              "betist": "12:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Bulgaria - ATP Challenger Plovdiv - Clay",
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Qualification",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Luca Wiedenmann - Yanaki Milev",
+              "mavi_bet": "Luca Wiedenmann - Yanaki Milev",
+              "betist": "Wiedenmann, Luca - Milev, Yanaki"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv - Clay",
+            "date": "2026-09-21",
+            "home": "Benjamin Hassan",
+            "away": "Pol Martin Tiffon",
+            "saatler": {
+              "virus_bet": "16:30",
+              "mavi_bet": "16:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Bulgaria - ATP Challenger Plovdiv - Clay",
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw"
+            },
+            "takimlar": {
+              "virus_bet": "Benjamin Hassan - Pol Martin Tiffon",
+              "mavi_bet": "Benjamin Hassan - Pol Martin Tiffon"
+            }
+          }
+        ]
+      },
+      "ATP Challenger Plovdiv 4, Main Draw": {
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Carlos Taberner",
+            "away": "Pyotr Nesterov",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Carlos Taberner - Pyotr Nesterov",
+              "betist": "Taberner, Carlos - Nesterov, Petr"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Felix Gill",
+            "away": "Alexander Vasilev",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Felix Gill - Alexander Vasilev",
+              "betist": "Gill, Felix - Vasilev, Alexander"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Filip Cristian Jianu",
+            "away": "Ivan Ivanov",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Filip Cristian Jianu - Ivan Ivanov",
+              "betist": "Jianu, Filip Cristian - Ivanov, Ivan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Max Wiskandt",
+            "away": "Andrey Chepelev",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Max Wiskandt - Andrey Chepelev",
+              "betist": "Wiskandt, Max - Chepelev, Andrey"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Maxime Chazal",
+            "away": "Joel Josef Schwarzler",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Maxime Chazal - Joel Josef Schwarzler",
+              "betist": "Chazal, Maxime - Schwarzler, Joel Josef"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Plovdiv 4, Main Draw",
+            "date": "2026-09-22",
+            "home": "Michael Geerts",
+            "away": "Carlos Sanchez Jover",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Bulgaria - ATP Challenger Plovdiv 4, Main Draw",
+              "betist": "ATP - Plovdiv, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Michael Geerts - Carlos Sanchez Jover",
+              "betist": "Geerts, Michael - Sanchez Jover, Carlos"
+            }
+          }
+        ]
+      },
+      "ATP Challenger Saint-Tropez, Main Draw": {
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Saint-Tropez, Main Draw",
+            "date": "2026-09-22",
+            "home": "Harold Mayot",
+            "away": "Sascha Gueymard Wayenburg",
+            "saatler": {
+              "mavi_bet": "11:00",
+              "betist": "11:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 1440,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 1440
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "France - ATP Challenger Saint-Tropez, Main Draw",
+              "betist": "ATP - Saint Tropez, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Harold Mayot - Sascha Gueymard Wayenburg",
+              "betist": "Mayot, Harold - Gueymard Wayenburg, Sascha"
+            }
+          }
+        ]
+      },
+      "ATP Challenger San Diego - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego - Hard",
+            "date": "2026-09-21",
+            "home": "Aleksi Lofman",
+            "away": "Evan Zhu",
+            "saatler": {
+              "virus_bet": "01:00",
+              "mavi_bet": "00:50"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 10,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 10
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - ATP Challenger San Diego - Hard",
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Qualification"
+            },
+            "takimlar": {
+              "virus_bet": "Aleksi Lofman - Evan Zhu",
+              "mavi_bet": "Aleksi Lofman - Evan Zhu"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego - Hard",
+            "date": "2026-09-21",
+            "home": "Andrew Johnson",
+            "away": "Sebastian Gorzny",
+            "saatler": {
+              "virus_bet": "01:30",
+              "mavi_bet": "00:55"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 35,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 35
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - ATP Challenger San Diego - Hard",
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Qualification"
+            },
+            "takimlar": {
+              "virus_bet": "Andrew Johnson - Sebastian Gorzny",
+              "mavi_bet": "Andrew Johnson - Sebastian Gorzny"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego - Hard",
+            "date": "2026-09-21",
+            "home": "Timo Legout",
+            "away": "Darian King",
+            "saatler": {
+              "virus_bet": "01:30",
+              "mavi_bet": "01:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 30,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 30
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - ATP Challenger San Diego - Hard",
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Qualification"
+            },
+            "takimlar": {
+              "virus_bet": "Timo Legout - Darian King",
+              "mavi_bet": "Timo Legout - Darian King"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego - Hard",
+            "date": "2026-09-21",
+            "home": "Aidan Mayo",
+            "away": "Jordan Lee",
+            "saatler": {
+              "virus_bet": "02:30",
+              "mavi_bet": "02:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 30,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 30
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - ATP Challenger San Diego - Hard",
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Qualification"
+            },
+            "takimlar": {
+              "virus_bet": "Aidan Mayo - Jordan Lee",
+              "mavi_bet": "Aidan Mayo - Jordan Lee"
+            }
+          }
+        ]
+      },
+      "ATP Challenger San Diego 2, Main Draw": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Abedallah Shelbayh",
+            "away": "Andres Andrade",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Abedallah Shelbayh - Andres Andrade",
+              "betist": "Shelbayh, Abedallah - Andrade, Andres"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Braden Shick",
+            "away": "Patrick Maloney",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Braden Shick - Patrick Maloney",
+              "betist": "Shick, Braden - Maloney, Patrick"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Darwin Blanch",
+            "away": "Jeffrey John Wolf",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Darwin Blanch - Jeffrey John Wolf",
+              "betist": "Blanch, Darwin - Wolf, Jeffrey John"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Dinko Dinev",
+            "away": "Dylan Dietrich",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Dinko Dinev - Dylan Dietrich",
+              "betist": "Dinev, Dinko - Dietrich, Dylan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Jack Kennedy",
+            "away": "Liam Draxl",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Jack Kennedy - Liam Draxl",
+              "betist": "Kennedy, Jack - Draxl, Liam"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Keegan Smith",
+            "away": "Edward Winter",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Keegan Smith - Edward Winter",
+              "betist": "Smith, Keegan - Winter, Edward"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Nishesh Basavareddy",
+            "away": "Mees Rottgering",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Nishesh Basavareddy - Mees Rottgering",
+              "betist": "Basavareddy, Nishesh - Rottgering, Mees"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger San Diego 2, Main Draw",
+            "date": "2026-09-21",
+            "home": "Tyler Zink",
+            "away": "Federico Agustin Gomez",
+            "saatler": {
+              "mavi_bet": "21:00",
+              "betist": "20:00"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 60
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "United States - ATP Challenger San Diego 2, Main Draw",
+              "betist": "ATP - San Diego, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Tyler Zink - Federico Agustin Gomez",
+              "betist": "Zink, Tyler - Gomez, Federico Agustin"
+            }
+          }
+        ]
+      },
+      "ATP Challenger Tiburon - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "ATP Challenger Tiburon - Hard",
+            "date": "2026-09-21",
+            "home": "Darwin Blanch",
+            "away": "Michael Mmoh",
+            "saatler": {
+              "virus_bet": "01:15",
+              "mavi_bet": "01:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 15,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 15
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - ATP Challenger Tiburon - Hard",
+              "mavi_bet": "United States - ATP Challenger Tiburon, Main Draw"
+            },
+            "takimlar": {
+              "virus_bet": "Darwin Blanch - Michael Mmoh",
+              "mavi_bet": "Darwin Blanch - Michael Mmoh"
+            }
+          }
+        ]
+      },
+      "UTR Pro Series Kawaguchi": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Kawaguchi",
+            "date": "2026-09-21",
+            "home": "Kotaro Mochizuki",
+            "away": "Kenta Kawada",
+            "saatler": {
+              "virus_bet": "05:35",
+              "mavi_bet": "05:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 25,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 25
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Japan - UTR Pro Series Kawaguchi",
+              "mavi_bet": "Japan - UTR Men Saitama"
+            },
+            "takimlar": {
+              "virus_bet": "Kotaro Mochizuki - Kenta Kawada",
+              "mavi_bet": "Kotaro Mochizuki - Kenta Kawada"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Kawaguchi",
+            "date": "2026-09-21",
+            "home": "Mirgiiaz Mirdzhaliev",
+            "away": "Masaki Ishikawa",
+            "saatler": {
+              "virus_bet": "05:35",
+              "mavi_bet": "05:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 25,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 25
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Japan - UTR Pro Series Kawaguchi",
+              "mavi_bet": "Japan - UTR Men Saitama"
+            },
+            "takimlar": {
+              "virus_bet": "Mirgiiaz Mirdzhaliev - Masaki Ishikawa",
+              "mavi_bet": "Mirgiiaz Mirdzhaliev - Masaki Ishikawa"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Kawaguchi",
+            "date": "2026-09-21",
+            "home": "Taki Adachi",
+            "away": "Natsuki Yamamoto",
+            "saatler": {
+              "virus_bet": "07:05",
+              "mavi_bet": "06:20"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 45,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 45
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Japan - UTR Pro Series Kawaguchi",
+              "mavi_bet": "Japan - UTR Men Saitama"
+            },
+            "takimlar": {
+              "virus_bet": "Taki Adachi - Natsuki Yamamoto",
+              "mavi_bet": "Taki Adachi - Natsuki Yamamoto"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Kawaguchi",
+            "date": "2026-09-21",
+            "home": "Takumi Katsuda",
+            "away": "Raffael Gasanov",
+            "saatler": {
+              "virus_bet": "07:05",
+              "mavi_bet": "06:20"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 45,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 45
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Japan - UTR Pro Series Kawaguchi",
+              "mavi_bet": "Japan - UTR Men Saitama"
+            },
+            "takimlar": {
+              "virus_bet": "Takumi Katsuda - Raffael Gasanov",
+              "mavi_bet": "Takumi Katsuda - Raffael Gasanov"
+            }
+          }
+        ]
+      },
+      "UTR Pro Series Norfolk": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Norfolk",
+            "date": "2026-09-21",
+            "home": "Gordon Gallagher",
+            "away": "Piet Steveker",
+            "saatler": {
+              "virus_bet": "18:00",
+              "mavi_bet": "19:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 70,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 70
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - UTR Pro Series Norfolk",
+              "mavi_bet": "United States - UTR Men Norfolk +H"
+            },
+            "takimlar": {
+              "virus_bet": "Gordon Gallagher - Piet Steveker",
+              "mavi_bet": "Gordon Gallagher - Piet Steveker"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Norfolk",
+            "date": "2026-09-21",
+            "home": "Ryan Morgan",
+            "away": "Jean Karim Olivier De Sardan",
+            "saatler": {
+              "virus_bet": "18:00",
+              "mavi_bet": "19:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 70,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 70
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - UTR Pro Series Norfolk",
+              "mavi_bet": "United States - UTR Men Norfolk +H"
+            },
+            "takimlar": {
+              "virus_bet": "Ryan Morgan - Jean Karim Olivier De Sardan",
+              "mavi_bet": "Ryan Morgan - Jean Karim Olivier De Sardan"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "UTR Pro Series Norfolk",
+            "date": "2026-09-21",
+            "home": "Zechariah Hamrouni",
+            "away": "Lukas Palovic",
+            "saatler": {
+              "virus_bet": "18:00",
+              "mavi_bet": "21:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 180,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 180
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "USA - UTR Pro Series Norfolk",
+              "mavi_bet": "United States - UTR Men Norfolk +H"
+            },
+            "takimlar": {
+              "virus_bet": "Zechariah Hamrouni - Lukas Palovic",
+              "mavi_bet": "Zechariah Hamrouni - Lukas Palovic"
+            }
+          }
+        ]
+      },
+      "WTA 125K Porto, Main Draw": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA 125K Porto, Main Draw",
+            "date": "2026-09-21",
+            "home": "Kajsa Rinaldo Persson",
+            "away": "Carla Tomai",
+            "saatler": {
+              "mavi_bet": "16:00",
+              "betist": "15:40"
+            },
+            "tarihler": {
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [
+              "virus_bet"
+            ],
+            "ligler": {
+              "mavi_bet": "Portugal - WTA 125K Porto, Main Draw",
+              "betist": "WTA - Porto, Singles"
+            },
+            "takimlar": {
+              "mavi_bet": "Kajsa Rinaldo Persson - Carla Tomai",
+              "betist": "Rinaldo Persson, Kajsa - Tomai, Carla"
+            }
+          }
+        ]
+      },
+      "WTA Ankara - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-21",
+            "home": "Viktoria Hruncakova",
+            "away": "Polina Iatcenko",
+            "saatler": {
+              "virus_bet": "12:30",
+              "mavi_bet": "12:30",
+              "betist": "12:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Viktoria Hruncakova - Polina Iatcenko",
+              "mavi_bet": "Viktoria Hruncakova - Polina Iatcenko",
+              "betist": "Hruncakova, Viktoria - Iatcenko, Polina"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-21",
+            "home": "Weronika Falkowska",
+            "away": "Alana Smith",
+            "saatler": {
+              "virus_bet": "12:30",
+              "mavi_bet": "12:30",
+              "betist": "12:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Qualification",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Weronika Falkowska - Alana Smith",
+              "mavi_bet": "Weronika Falkowska - Alana Smith",
+              "betist": "Falkowska, Weronika - Smith, Alana"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-21",
+            "home": "Yuki Naito",
+            "away": "Julia Avdeeva",
+            "saatler": {
+              "virus_bet": "12:30",
+              "mavi_bet": "12:30",
+              "betist": "12:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Yuki Naito - Julia Avdeeva",
+              "mavi_bet": "Yuki Naito - Julia Avdeeva",
+              "betist": "Naito, Yuki - Avdeeva, Julia"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-21",
+            "home": "Aliona Falei",
+            "away": "Tian Fangran",
+            "saatler": {
+              "virus_bet": "14:00",
+              "mavi_bet": "14:00",
+              "betist": "13:20"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 40,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -40
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Aliona Falei - Tian Fangran",
+              "mavi_bet": "Falei Aliona - Fangran Tian",
+              "betist": "Falei, Aliona - Tian, Fangran"
+            }
+          }
+        ],
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Anastasia Tikhonova",
+            "away": "Anastasia Gasanova",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Anastasia Tikhonova - Anastasia Gasanova",
+              "mavi_bet": "Anastasia Tikhonova - Anastasia Gasanova",
+              "betist": "Tikhonova, Anastasia - Gasanova, Anastasia"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Elena Micic",
+            "away": "Julia Riera",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Elena Micic - Julia Riera",
+              "mavi_bet": "Elena Micic  - Julia Riera",
+              "betist": "Micic, Elena - Riera, Julia"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Fiona Crawley",
+            "away": "Carole Monnet",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Fiona Crawley - Carole Monnet",
+              "mavi_bet": "Crawley Fiona - Carole Monnet",
+              "betist": "Crawley, Fiona - Monnet, Carole"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Katarina Kuzmova",
+            "away": "Cagla Buyukakcay",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Katarina Kuzmova - Cagla Buyukakcay",
+              "mavi_bet": "Katarina Kuzmova - Cagla Buyukakcay",
+              "betist": "Kuzmova, Katarina - Buyukakcay, Cagla"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Martyna Kubka",
+            "away": "Berfu Cengiz",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Martyna Kubka - Berfu Cengiz",
+              "mavi_bet": "Martyna Kubka - Berfu Cengiz",
+              "betist": "Kubka, Martyna - Cengiz, Berfu"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Solana Sierra",
+            "away": "Deniz Dilek",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Solana Sierra - Deniz Dilek",
+              "mavi_bet": "Solana Sierra - Deniz Dilek",
+              "betist": "Sierra, Solana - Dilek, Deniz"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Ankara - Hard",
+            "date": "2026-09-22",
+            "home": "Teodora Kostovic",
+            "away": "Carolyn Ansari",
+            "saatler": {
+              "virus_bet": "12:00",
+              "mavi_bet": "10:00",
+              "betist": "10:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Turkiye - WTA Ankara - Hard",
+              "mavi_bet": "Turkey - WTA 125k Ankara, Main Draw",
+              "betist": "WTA - Ankara, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Teodora Kostovic - Carolyn Ansari",
+              "mavi_bet": "Teodora Kostovic - Carolyn Ansari",
+              "betist": "Kostovic, Teodora - Ansari, Carolyn"
+            }
+          }
+        ]
+      },
+      "WTA Porto - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Porto - Hard",
+            "date": "2026-09-21",
+            "home": "Lizette Cabrera",
+            "away": "Sinja Kraus",
+            "saatler": {
+              "virus_bet": "16:00",
+              "mavi_bet": "16:00",
+              "betist": "15:40"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Portugal - WTA Porto - Hard",
+              "mavi_bet": "Portugal - WTA 125K Porto, Main Draw",
+              "betist": "WTA - Porto, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Lizette Cabrera - Sinja Kraus",
+              "mavi_bet": "Lizette Cabrera - Sinja Kraus",
+              "betist": "Cabrera, Lizette - Kraus, Sinja"
+            }
+          }
+        ]
+      },
+      "WTA Sao Paulo - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Sao Paulo - Hard",
+            "date": "2026-09-21",
+            "home": "Kaitlin Quevedo",
+            "away": "Nadia Podoroska",
+            "saatler": {
+              "virus_bet": "02:00",
+              "mavi_bet": "00:50"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 70,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 70
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Brazil - WTA Sao Paulo - Hard",
+              "mavi_bet": "Brazil - WTA Sao Paulo, Main Draw"
+            },
+            "takimlar": {
+              "virus_bet": "Kaitlin Quevedo - Nadia Podoroska",
+              "mavi_bet": "Kaitlin Quevedo - Nadia Podoroska"
+            }
+          }
+        ]
+      },
+      "WTA Seoul - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-21",
+            "home": "Alina Korneeva",
+            "away": "Mananchaya Sawangkaew",
+            "saatler": {
+              "virus_bet": "07:30",
+              "mavi_bet": "07:30",
+              "betist": "07:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw",
+              "betist": "WTA - Seoul, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Alina Korneeva - Mananchaya Sawangkaew",
+              "mavi_bet": "Alina Korneeva - Mananchaya Sawangkaew",
+              "betist": "Korneeva, Alina - Sawangkaew, Mananchaya"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-21",
+            "home": "Kamilla Rakhimova",
+            "away": "Polina Kudermetova",
+            "saatler": {
+              "virus_bet": "07:30",
+              "mavi_bet": "07:30",
+              "betist": "07:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw",
+              "betist": "WTA - Seoul, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Kamilla Rakhimova - Polina Kudermetova",
+              "mavi_bet": "Kamilla Rakhimova - Polina Kudermetova",
+              "betist": "Rakhimova, Kamilla - Kudermetova, Polina"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-21",
+            "home": "Darya Astakhova",
+            "away": "Magda Linette",
+            "saatler": {
+              "virus_bet": "09:30",
+              "mavi_bet": "09:30",
+              "betist": "09:10"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw",
+              "betist": "WTA - Seoul, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Darya Astakhova - Magda Linette",
+              "mavi_bet": "Darya Astakhova - Magda Linette",
+              "betist": "Astakhova, Darya - Linette, Magda"
+            }
+          }
+        ],
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-22",
+            "home": "Alevtina Ibragimova",
+            "away": "Yeonwoo Ku",
+            "saatler": {
+              "virus_bet": "04:00",
+              "mavi_bet": "06:00",
+              "betist": "06:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": -120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw",
+              "betist": "WTA - Seoul, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Alevtina Ibragimova - Yeonwoo Ku",
+              "mavi_bet": "Ibragimova Alevtina - Yeon Woo Ku",
+              "betist": "Ibragimova, Alevtina - Ku, Yeon Woo"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-22",
+            "home": "Emerson Jones",
+            "away": "YeXin Ma",
+            "saatler": {
+              "virus_bet": "04:00",
+              "mavi_bet": "06:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw"
+            },
+            "takimlar": {
+              "virus_bet": "Emerson Jones - YeXin Ma",
+              "mavi_bet": "Emerson Jones - Yexin Ma"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Seoul - Hard",
+            "date": "2026-09-22",
+            "home": "Jelena Ostapenko",
+            "away": "Anastasia Zakharova",
+            "saatler": {
+              "virus_bet": "04:00",
+              "mavi_bet": "06:00",
+              "betist": "04:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 120,
+            "sapanSiteler": [
+              {
+                "site": "mavi_bet",
+                "farkDakika": 120
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Korea (South) - WTA Seoul - Hard",
+              "mavi_bet": "Republic of Korea - WTA Seoul, Main Draw",
+              "betist": "WTA - Seoul, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Jelena Ostapenko - Anastasia Zakharova",
+              "mavi_bet": "Jelena Ostapenko - Anastasia Zakharova",
+              "betist": "Ostapenko, Jelena - Zakharova, Anastasia"
+            }
+          }
+        ]
+      },
+      "WTA Singapore - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Singapore - Hard",
+            "date": "2026-09-21",
+            "home": "Rebecca Sramkova",
+            "away": "Maja Chwalinska",
+            "saatler": {
+              "virus_bet": "09:00",
+              "mavi_bet": "09:00",
+              "betist": "08:40"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Singapore - WTA Singapore - Hard",
+              "mavi_bet": "Singapore - WTA Singapore, Main Draw",
+              "betist": "WTA - Singapore, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Rebecca Sramkova - Maja Chwalinska",
+              "mavi_bet": "Rebecca Sramkova - Maja Chwalinska",
+              "betist": "Sramkova, Rebecca - Chwalinska, Maja"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Singapore - Hard",
+            "date": "2026-09-21",
+            "home": "Storm Hunter",
+            "away": "Joanna Garland",
+            "saatler": {
+              "virus_bet": "15:00",
+              "mavi_bet": "14:40",
+              "betist": "14:40"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 20,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 20
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Singapore - WTA Singapore - Hard",
+              "mavi_bet": "Singapore - WTA Singapore, Main Draw",
+              "betist": "WTA - Singapore, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Storm Hunter - Joanna Garland",
+              "mavi_bet": "Storm Hunter - Joanna Garland",
+              "betist": "Hunter, Storm - Garland, Joanna"
+            }
+          }
+        ],
+        "2026-09-22": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Singapore - Hard",
+            "date": "2026-09-22",
+            "home": "Barbora Krejcikova",
+            "away": "Anna-Lena Friedsam",
+            "saatler": {
+              "virus_bet": "05:00",
+              "mavi_bet": "06:00",
+              "betist": "06:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-22",
+              "mavi_bet": "2026-09-22",
+              "betist": "2026-09-22"
+            },
+            "maxFarkDakika": 60,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": -60
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Singapore - WTA Singapore - Hard",
+              "mavi_bet": "Singapore - WTA Singapore, Main Draw",
+              "betist": "WTA - Singapore, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Barbora Krejcikova - Anna-Lena Friedsam",
+              "mavi_bet": "Barbora Krejcikova - Anna Lena Friedsam",
+              "betist": "Krejcikova, Barbora - Friedsam, Anna-Lena"
+            }
+          }
+        ]
+      },
+      "WTA Tolentino - Clay": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTA Tolentino - Clay",
+            "date": "2026-09-21",
+            "home": "Dalila Spiteri",
+            "away": "Iva Primorac Pavicic",
+            "saatler": {
+              "virus_bet": "11:05",
+              "mavi_bet": "11:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 5,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 5
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Italy - WTA Tolentino - Clay",
+              "mavi_bet": "Italy - WTA 125K Tolentino, Qualification"
+            },
+            "takimlar": {
+              "virus_bet": "Dalila Spiteri - Iva Primorac Pavicic",
+              "mavi_bet": "Dalila Spiteri - Iva Primorac Pavicic"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Tolentino - Clay",
+            "date": "2026-09-21",
+            "home": "Lisa Zaar",
+            "away": "Enola Chiesa",
+            "saatler": {
+              "virus_bet": "11:05",
+              "mavi_bet": "11:00",
+              "betist": "11:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 5,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 5
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - WTA Tolentino - Clay",
+              "mavi_bet": "Italy - WTA 125K Tolentino, Qualification",
+              "betist": "WTA - Tolentino, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Lisa Zaar - Enola Chiesa",
+              "mavi_bet": "Lisa Zaar - Enola Chiesa",
+              "betist": "Zaar, Lisa - Chiesa, Enola"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Tolentino - Clay",
+            "date": "2026-09-21",
+            "home": "Guiomar Maristany Zuleta de Reales",
+            "away": "Despina Papamichail",
+            "saatler": {
+              "virus_bet": "14:00",
+              "mavi_bet": "14:00",
+              "betist": "13:20"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 40,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -40
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - WTA Tolentino - Clay",
+              "mavi_bet": "Italy - WTA 125K Tolentino, Main Draw",
+              "betist": "WTA - Tolentino, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Guiomar Maristany Zuleta de Reales - Despina Papamichail",
+              "mavi_bet": "Guiomar Maristany Zuleta de Reales - Despina Papamichail",
+              "betist": "Maristany Zuleta De Reales, Guiomar - Papamichail, Despina"
+            }
+          },
+          {
+            "sport": "TENIS",
+            "league": "WTA Tolentino - Clay",
+            "date": "2026-09-21",
+            "home": "Mia Ristic",
+            "away": "Arantxa Rus",
+            "saatler": {
+              "virus_bet": "14:00",
+              "mavi_bet": "14:00",
+              "betist": "13:20"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21",
+              "betist": "2026-09-21"
+            },
+            "maxFarkDakika": 40,
+            "sapanSiteler": [
+              {
+                "site": "betist",
+                "farkDakika": -40
+              }
+            ],
+            "eksikSiteler": [],
+            "ligler": {
+              "virus_bet": "Italy - WTA Tolentino - Clay",
+              "mavi_bet": "Italy - WTA 125K Tolentino, Main Draw",
+              "betist": "WTA - Tolentino, Singles"
+            },
+            "takimlar": {
+              "virus_bet": "Mia Ristic - Arantxa Rus",
+              "mavi_bet": "Mia Ristic - Arantxa Rus",
+              "betist": "Ristic, Mia - Rus, Arantxa"
+            }
+          }
+        ]
+      },
+      "WTT Men - Sharm El Sheikh - Hard": {
+        "2026-09-21": [
+          {
+            "sport": "TENIS",
+            "league": "WTT Men - Sharm El Sheikh - Hard",
+            "date": "2026-09-21",
+            "home": "Matteo Fondriest",
+            "away": "Filippo Crippa",
+            "saatler": {
+              "virus_bet": "11:30",
+              "mavi_bet": "11:00"
+            },
+            "tarihler": {
+              "virus_bet": "2026-09-21",
+              "mavi_bet": "2026-09-21"
+            },
+            "maxFarkDakika": 30,
+            "sapanSiteler": [
+              {
+                "site": "virus_bet",
+                "farkDakika": 30
+              }
+            ],
+            "eksikSiteler": [
+              "betist"
+            ],
+            "ligler": {
+              "virus_bet": "Egypt - WTT Men - Sharm El Sheikh - Hard",
+              "mavi_bet": "Egypt - ITF M25 Egypt Sharm El Sheikh"
+            },
+            "takimlar": {
+              "virus_bet": "Matteo Fondriest - Filippo Crippa",
+              "mavi_bet": "Matteo Fondriest - Filippo Crippa"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

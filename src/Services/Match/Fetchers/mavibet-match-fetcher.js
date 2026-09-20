@@ -126,7 +126,7 @@ const MAX_LOCATIONS = Number(process.env.MAVIBET_MAX_LOCATIONS || 0);
 const DEBUG_FILE = process.env.MAVIBET_DEBUG_FILE || "mavibet-debug.log";
 
 const USER_AGENT =
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
 /* =========================================================================
  * 1) MİNİMAL WEBSOCKET İSTEMCİSİ (RFC 6455) - harici paket gerekmez
@@ -459,8 +459,6 @@ function wsConnect(url, { origin, userAgent, subprotocol } = {}) {
 
         if (!/^HTTP\/1\.1 101/i.test(head)) {
           const statusLine = head.split("\r\n")[0] || "bilinmeyen yanıt";
-
-          console.log(buffer);
 
           return fail(
             new Error(`WebSocket el sıkışması başarısız: ${statusLine}`)

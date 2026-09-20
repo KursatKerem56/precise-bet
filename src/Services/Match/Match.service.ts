@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from "node:fs/promises";
-import { chromium } from "playwright";
 
 import { compareMatchTimesMain } from "./compare-match-times";
 
@@ -16,7 +15,6 @@ import { Match } from "@Match/Models";
 
 import { EMatchSport } from "@Match/Constants";
 import { EPanelSite } from "@Panel/Constants";
-import axios from "axios";
 
 const saveMatches = async (site: EPanelSite) => {
   const jsonFilePath = `./${site.toLowerCase()}-matches.json`;
@@ -106,9 +104,6 @@ const initMatchFetchers = async () => {
 
   await Promise.all(
     sites.map(async (site) => {
-      if (site.site !== EPanelSite.MAVI_BET) {
-        return;
-      }
       try {
         console.log(`Initializing match fetcher for site: ${site.site}`);
         switch (site.site) {

@@ -1,0 +1,5433 @@
+{
+  "FUTBOL": {
+    "Angola - Girabola": {
+      "2026-09-21": [
+        {
+          "eventId": "30959958",
+          "leagueId": "10726",
+          "home": "EC Primeiro de Maio",
+          "away": "CD da Lunda Sul",
+          "time": "17:30"
+        }
+      ]
+    },
+    "Argentina - Liga Profesional": {
+      "2026-09-21": [
+        {
+          "eventId": "30811033",
+          "leagueId": "1685",
+          "home": "CA Belgrano Cordoba",
+          "away": "AA Estudiantes",
+          "time": "01:15"
+        },
+        {
+          "eventId": "30817145",
+          "leagueId": "1685",
+          "home": "Velez Sarsfield",
+          "away": "CA Tigre BA",
+          "time": "03:30"
+        },
+        {
+          "eventId": "30817129",
+          "leagueId": "1685",
+          "home": "CA Aldosivi",
+          "away": "Atletico Tucuman",
+          "time": "20:30"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30819295",
+          "leagueId": "1685",
+          "home": "Barracas Central",
+          "away": "Independiente Rivadavia",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30831671",
+          "leagueId": "1685",
+          "home": "CA Lanus",
+          "away": "Estudiantes La Plata",
+          "time": "03:15"
+        }
+      ]
+    },
+    "Argentina - Primera C": {
+      "2026-09-21": [
+        {
+          "eventId": "30960063",
+          "leagueId": "9188",
+          "home": "CA Claypole",
+          "away": "CSD Yupanqui",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30960062",
+          "leagueId": "9188",
+          "home": "Club El Porvenir",
+          "away": "Deportivo Espanol",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30960064",
+          "leagueId": "9188",
+          "home": "CSyD Central Ballester",
+          "away": "Central Cordoba de Rosario",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30960060",
+          "leagueId": "9188",
+          "home": "Sacachispas FC",
+          "away": "CA Victoriano Arenas",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30960059",
+          "leagueId": "9188",
+          "home": "Sportivo Barracas",
+          "away": "Canuelas FC",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Argentina - Primera Nacional": {
+      "2026-09-21": [
+        {
+          "eventId": "30916494",
+          "leagueId": "1684",
+          "home": "Tristan Suarez",
+          "away": "CA Atlanta",
+          "time": "21:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30929557",
+          "leagueId": "1684",
+          "home": "CA Nueva Chicago",
+          "away": "CA Patronato",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Asia - Asian Games": {
+      "2026-09-22": [
+        {
+          "eventId": "30964486",
+          "leagueId": "9208",
+          "home": "Philippines U23",
+          "away": "Kuwait U23",
+          "time": "08:00"
+        },
+        {
+          "eventId": "30964484",
+          "leagueId": "9208",
+          "home": "Vietnam U23",
+          "away": "Uzbekistan U23",
+          "time": "08:00"
+        }
+      ]
+    },
+    "Asia - Asian Games - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30956330",
+          "leagueId": "9209",
+          "home": "Bangladesh (Wom)",
+          "away": "Myanmar (Wom)",
+          "time": "10:00"
+        },
+        {
+          "eventId": "30956329",
+          "leagueId": "9209",
+          "home": "China (Wom)",
+          "away": "Philippines (Wom)",
+          "time": "10:00"
+        },
+        {
+          "eventId": "30956328",
+          "leagueId": "9209",
+          "home": "South Korea (Wom)",
+          "away": "Korea DPR (Wom)",
+          "time": "10:00"
+        },
+        {
+          "eventId": "30956327",
+          "leagueId": "9209",
+          "home": "Uzbekistan (Wom)",
+          "away": "Hong Kong (Wom)",
+          "time": "10:00"
+        }
+      ]
+    },
+    "Austria - Bundesliga": {
+      "2026-10-10": [
+        {
+          "eventId": "30935918",
+          "leagueId": "556",
+          "home": "Grazer AK",
+          "away": "Red Bull Salzburg",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30935595",
+          "leagueId": "556",
+          "home": "WSG Tirol",
+          "away": "SV Ried",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30935920",
+          "leagueId": "556",
+          "home": "FK Austria Wien",
+          "away": "SK Sturm Graz",
+          "time": "20:30"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30935919",
+          "leagueId": "556",
+          "home": "SCR Altach",
+          "away": "RZ Pellets WAC",
+          "time": "15:30"
+        },
+        {
+          "eventId": "30935594",
+          "leagueId": "556",
+          "home": "TSV Hartberg",
+          "away": "SC Austria Lustenau",
+          "time": "15:30"
+        },
+        {
+          "eventId": "30935415",
+          "leagueId": "556",
+          "home": "LASK Linz",
+          "away": "SK Rapid Wien",
+          "time": "18:00"
+        }
+      ],
+      "2026-10-16": [
+        {
+          "eventId": "30968686",
+          "leagueId": "556",
+          "home": "SK Rapid Wien",
+          "away": "TSV Hartberg",
+          "time": "20:30"
+        }
+      ],
+      "2026-10-17": [
+        {
+          "eventId": "30968490",
+          "leagueId": "556",
+          "home": "SC Austria Lustenau",
+          "away": "LASK Linz",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30968491",
+          "leagueId": "556",
+          "home": "SV Ried",
+          "away": "FK Austria Wien",
+          "time": "20:30"
+        }
+      ],
+      "2026-10-18": [
+        {
+          "eventId": "30968687",
+          "leagueId": "556",
+          "home": "Red Bull Salzburg",
+          "away": "SCR Altach",
+          "time": "15:30"
+        },
+        {
+          "eventId": "30968571",
+          "leagueId": "556",
+          "home": "RZ Pellets WAC",
+          "away": "WSG Tirol",
+          "time": "15:30"
+        },
+        {
+          "eventId": "30968688",
+          "leagueId": "556",
+          "home": "SK Sturm Graz",
+          "away": "Grazer AK",
+          "time": "18:00"
+        }
+      ]
+    },
+    "Bolivia - Copa Bolivia": {
+      "2026-09-21": [
+        {
+          "eventId": "30952980",
+          "leagueId": "18284830",
+          "home": "CD Oriente Petrolero",
+          "away": "Club Blooming",
+          "time": "02:30"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30962004",
+          "leagueId": "18284830",
+          "home": "Guabira Montero",
+          "away": "CD San Antonio Bulo Bulo",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Brazil - Campeonato Brasileiro A1 - Women": {
+      "2026-09-22": [
+        {
+          "eventId": "30930825",
+          "leagueId": "12944",
+          "home": "Corinthians SP (Wom)",
+          "away": "EC Bahia (Wom)",
+          "time": "03:30"
+        }
+      ]
+    },
+    "Brazil - Campeonato Carioca B": {
+      "2026-09-21": [
+        {
+          "eventId": "30968514",
+          "leagueId": "4669",
+          "home": "7 de Abril",
+          "away": "SE Paraty RJ",
+          "time": "20:45"
+        }
+      ]
+    },
+    "Brazil - Copa Paulista": {
+      "2026-09-22": [
+        {
+          "eventId": "30962282",
+          "leagueId": "12158",
+          "home": "CA Juventus SP",
+          "away": "Uniao Sao Joao EC SP",
+          "time": "02:30"
+        }
+      ]
+    },
+    "Brazil - Serie A": {
+      "2026-09-21": [
+        {
+          "eventId": "30811039",
+          "leagueId": "1792",
+          "home": "CA Paranaense",
+          "away": "EC Bahia",
+          "time": "01:30"
+        }
+      ]
+    },
+    "Brazil - Serie B": {
+      "2026-09-22": [
+        {
+          "eventId": "30819284",
+          "leagueId": "3104",
+          "home": "Criciuma EC",
+          "away": "Operario Ferroviario EC",
+          "time": "01:30"
+        },
+        {
+          "eventId": "30831701",
+          "leagueId": "3104",
+          "home": "Cuiaba EC",
+          "away": "Nautico Capibaribe",
+          "time": "03:30"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30867857",
+          "leagueId": "3104",
+          "home": "Gremio Novorizontino",
+          "away": "Sao Bernardo FC SP",
+          "time": "01:30"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30878930",
+          "leagueId": "3104",
+          "home": "Goias EC",
+          "away": "Atletico Goianiense",
+          "time": "00:30"
+        }
+      ]
+    },
+    "Brazil - Serie C": {
+      "2026-09-21": [
+        {
+          "eventId": "30941190",
+          "leagueId": "4672",
+          "home": "Associacao Ferroviaria de Esportes",
+          "away": "Brusque FC",
+          "time": "00:30"
+        },
+        {
+          "eventId": "30941191",
+          "leagueId": "4672",
+          "home": "Paysandu PA",
+          "away": "AA Internacional de Limeira",
+          "time": "00:30"
+        }
+      ]
+    },
+    "Bulgaria - Second League": {
+      "2026-09-21": [
+        {
+          "eventId": "30819466",
+          "leagueId": "4156",
+          "home": "FC Sportist Svoge",
+          "away": "Vihren Sandanski",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30819464",
+          "leagueId": "4156",
+          "home": "FK Spartak 1919 Pleven",
+          "away": "PFC Ludogorets Razgrad II",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30819465",
+          "leagueId": "4156",
+          "home": "PFC Dobrudzha 1919 Dobrich",
+          "away": "CSKA Sofia II",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30819463",
+          "leagueId": "4156",
+          "home": "PFC Montana 1921",
+          "away": "FK Hebar Pazardzhik",
+          "time": "19:30"
+        }
+      ]
+    },
+    "Canada - Northern Super League - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30952840",
+          "leagueId": "18292640",
+          "home": "Ottawa Rapid FC (Wom)",
+          "away": "Calgary Wild FC (Wom)",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Colombia - LFP - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30952979",
+          "leagueId": "21476",
+          "home": "Millonarios FC (Wom)",
+          "away": "Independiente Santa Fe (Wom)",
+          "time": "02:30"
+        }
+      ]
+    },
+    "Colombia - Primera A": {
+      "2026-09-21": [
+        {
+          "eventId": "30887307",
+          "leagueId": "1815",
+          "home": "Deportes Tolima",
+          "away": "America de Cali",
+          "time": "02:10"
+        },
+        {
+          "eventId": "30888431",
+          "leagueId": "1815",
+          "home": "Llaneros FC Villavicencio",
+          "away": "Atletico Nacional Medellin",
+          "time": "04:15"
+        }
+      ],
+      "2026-09-23": [
+        {
+          "eventId": "30907648",
+          "leagueId": "1815",
+          "home": "Independiente Medellin",
+          "away": "Jaguares de Cordoba",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30908892",
+          "leagueId": "1815",
+          "home": "Independiente Santa Fe",
+          "away": "Deportivo Cali",
+          "time": "04:00"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30941533",
+          "leagueId": "1815",
+          "home": "Boyaca Chico",
+          "away": "Deportivo Pasto",
+          "time": "02:10"
+        },
+        {
+          "eventId": "30942774",
+          "leagueId": "1815",
+          "home": "Once Caldas",
+          "away": "Atletico Bucaramanga",
+          "time": "04:15"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30952495",
+          "leagueId": "1815",
+          "home": "Deportivo Pereira",
+          "away": "Internacional de Bogota",
+          "time": "00:10"
+        }
+      ]
+    },
+    "Colombia - Primera B": {
+      "2026-09-21": [
+        {
+          "eventId": "30918235",
+          "leagueId": "1816",
+          "home": "Bogota FC",
+          "away": "CD Barranquilla FC",
+          "time": "23:30"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30918549",
+          "leagueId": "1816",
+          "home": "Real Cundinamarca",
+          "away": "Deportes Quindio",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30919452",
+          "leagueId": "1816",
+          "home": "Real Cartagena",
+          "away": "Envigado FC",
+          "time": "03:30"
+        }
+      ]
+    },
+    "Costa Rica - Primera Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30896971",
+          "leagueId": "1819",
+          "home": "LD Alajuelense",
+          "away": "Inter San Carlos",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30897496",
+          "leagueId": "1819",
+          "home": "AD San Carlos",
+          "away": "CS Cartagines",
+          "time": "04:00"
+        }
+      ]
+    },
+    "Denmark - 1st Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30890646",
+          "leagueId": "1830",
+          "home": "HB Koge",
+          "away": "Hobro IK",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Dominican Republic - LDF": {
+      "2026-09-21": [
+        {
+          "eventId": "30918554",
+          "leagueId": "17975",
+          "home": "Cibao FC",
+          "away": "Universidad O&M FC",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Ecuador - Serie A": {
+      "2026-09-21": [
+        {
+          "eventId": "30916020",
+          "leagueId": "1834",
+          "home": "LDU Quito",
+          "away": "CD Universidad Catolica Quito",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30952542",
+          "leagueId": "1834",
+          "home": "Manta FC",
+          "away": "Orense SC",
+          "time": "22:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30922825",
+          "leagueId": "1834",
+          "home": "Barcelona Guayaquil",
+          "away": "Independiente del Valle",
+          "time": "03:30"
+        }
+      ]
+    },
+    "El Salvador - Premiera Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30941645",
+          "leagueId": "1838",
+          "home": "CD Luis Angel Firpo",
+          "away": "Atletico Balboa",
+          "time": "02:30"
+        }
+      ]
+    },
+    "England - EFL Trophy": {
+      "2026-09-22": [
+        {
+          "eventId": "30831731",
+          "leagueId": "1842",
+          "home": "Accrington Stanley",
+          "away": "Sunderland U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831711",
+          "leagueId": "1842",
+          "home": "Barnsley",
+          "away": "Leeds United U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831727",
+          "leagueId": "1842",
+          "home": "Burton Albion",
+          "away": "Nottingham Forest U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831726",
+          "leagueId": "1842",
+          "home": "Cheltenham Town",
+          "away": "Exeter City",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831725",
+          "leagueId": "1842",
+          "home": "Chesterfield FC",
+          "away": "Port Vale",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831724",
+          "leagueId": "1842",
+          "home": "Crewe Alexandra",
+          "away": "Aston Villa U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831721",
+          "leagueId": "1842",
+          "home": "Gillingham",
+          "away": "Cambridge United",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831729",
+          "leagueId": "1842",
+          "home": "Leicester City",
+          "away": "Fulham U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831728",
+          "leagueId": "1842",
+          "home": "Luton Town",
+          "away": "Ipswich Town U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831720",
+          "leagueId": "1842",
+          "home": "Milton Keynes Dons",
+          "away": "Crawley Town",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831719",
+          "leagueId": "1842",
+          "home": "Notts County",
+          "away": "Grimsby Town",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831718",
+          "leagueId": "1842",
+          "home": "Oldham Athletic",
+          "away": "Fleetwood Town",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831717",
+          "leagueId": "1842",
+          "home": "Peterborough United",
+          "away": "Colchester United",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831730",
+          "leagueId": "1842",
+          "home": "Plymouth Argyle",
+          "away": "Crystal Palace U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831710",
+          "leagueId": "1842",
+          "home": "Rochdale",
+          "away": "Liverpool U21",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831716",
+          "leagueId": "1842",
+          "home": "Salford City",
+          "away": "Sheffield Wednesday",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831715",
+          "leagueId": "1842",
+          "home": "Swindon Town",
+          "away": "Newport County",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831714",
+          "leagueId": "1842",
+          "home": "Tranmere Rovers",
+          "away": "Shrewsbury Town",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831713",
+          "leagueId": "1842",
+          "home": "Walsall",
+          "away": "Stevenage",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831709",
+          "leagueId": "1842",
+          "home": "Wigan Athletic",
+          "away": "Blackpool",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831712",
+          "leagueId": "1842",
+          "home": "York City FC",
+          "away": "Rotherham United",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30831723",
+          "leagueId": "1842",
+          "home": "Bradford City",
+          "away": "Newcastle United U21",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30831722",
+          "leagueId": "1842",
+          "home": "Bromley FC",
+          "away": "Brentford U21",
+          "time": "21:30"
+        }
+      ]
+    },
+    "England - FA WSL": {
+      "2026-09-26": [
+        {
+          "eventId": "30878998",
+          "leagueId": "1849",
+          "home": "London City Lionesses (Wom)",
+          "away": "Brighton and Hove Albion WFC (Wom)",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30887622",
+          "leagueId": "1849",
+          "home": "Manchester United LFC (Wom)",
+          "away": "West Ham United (Wom)",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30887623",
+          "leagueId": "1849",
+          "home": "Liverpool LFC (Wom)",
+          "away": "Everton LFC (Wom)",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30887625",
+          "leagueId": "1849",
+          "home": "Tottenham Hotspur LFC (Wom)",
+          "away": "Aston Villa (Wom)",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30887626",
+          "leagueId": "1849",
+          "home": "Chelsea LFC (Wom)",
+          "away": "Arsenal (Wom)",
+          "time": "18:30"
+        }
+      ]
+    },
+    "England - League One": {
+      "2026-09-26": [
+        {
+          "eventId": "30878969",
+          "leagueId": "1843",
+          "home": "Cambridge United",
+          "away": "AFC Wimbledon",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878962",
+          "leagueId": "1843",
+          "home": "Plymouth Argyle",
+          "away": "Burton Albion",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878960",
+          "leagueId": "1843",
+          "home": "Stockport County",
+          "away": "Peterborough United",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878959",
+          "leagueId": "1843",
+          "home": "Wycombe Wanderers",
+          "away": "Reading",
+          "time": "17:00"
+        }
+      ]
+    },
+    "England - League Two": {
+      "2026-09-26": [
+        {
+          "eventId": "30878980",
+          "leagueId": "1844",
+          "home": "Crawley Town",
+          "away": "Barnet FC",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30878982",
+          "leagueId": "1844",
+          "home": "Bristol Rovers",
+          "away": "Exeter City",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878981",
+          "leagueId": "1844",
+          "home": "Cheltenham Town",
+          "away": "Chesterfield FC",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878979",
+          "leagueId": "1844",
+          "home": "Fleetwood Town",
+          "away": "Rochdale",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878978",
+          "leagueId": "1844",
+          "home": "Newport County",
+          "away": "Grimsby Town",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878976",
+          "leagueId": "1844",
+          "home": "Port Vale",
+          "away": "Northampton Town",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878975",
+          "leagueId": "1844",
+          "home": "Rotherham United",
+          "away": "Crewe Alexandra",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878974",
+          "leagueId": "1844",
+          "home": "Shrewsbury Town",
+          "away": "Colchester United",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878973",
+          "leagueId": "1844",
+          "home": "Swindon Town",
+          "away": "Accrington Stanley",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878972",
+          "leagueId": "1844",
+          "home": "Tranmere Rovers",
+          "away": "Walsall",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878971",
+          "leagueId": "1844",
+          "home": "York City FC",
+          "away": "Gillingham",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30878977",
+          "leagueId": "1844",
+          "home": "Oldham Athletic",
+          "away": "Salford City",
+          "time": "19:30"
+        }
+      ]
+    },
+    "England - Northern Division One": {
+      "2026-09-21": [
+        {
+          "eventId": "30819288",
+          "leagueId": "10510",
+          "home": "Coleshill Town FC",
+          "away": "Sutton Coldfield Town FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30819285",
+          "leagueId": "10510",
+          "home": "St. Ives Town FC",
+          "away": "Corby Town FC",
+          "time": "21:45"
+        }
+      ]
+    },
+    "England - Premier League": {
+      "2026-10-10": [
+        {
+          "eventId": "30884778",
+          "leagueId": "538",
+          "home": "Arsenal",
+          "away": "Leeds United",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30884775",
+          "leagueId": "538",
+          "home": "Aston Villa",
+          "away": "Brentford",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30884777",
+          "leagueId": "538",
+          "home": "Chelsea",
+          "away": "Bournemouth",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30884773",
+          "leagueId": "538",
+          "home": "Ipswich Town",
+          "away": "Fulham",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30884776",
+          "leagueId": "538",
+          "home": "Sunderland",
+          "away": "Brighton and Hove Albion",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30884779",
+          "leagueId": "538",
+          "home": "Manchester United",
+          "away": "Tottenham Hotspur",
+          "time": "19:30"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30884780",
+          "leagueId": "538",
+          "home": "Crystal Palace",
+          "away": "Nottingham Forest",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30884781",
+          "leagueId": "538",
+          "home": "Hull City",
+          "away": "Everton",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30893905",
+          "leagueId": "538",
+          "home": "Liverpool",
+          "away": "Manchester City",
+          "time": "18:30"
+        }
+      ],
+      "2026-10-12": [
+        {
+          "eventId": "30884774",
+          "leagueId": "538",
+          "home": "Coventry City",
+          "away": "Newcastle United",
+          "time": "22:00"
+        }
+      ]
+    },
+    "England - Premier League 2": {
+      "2026-09-21": [
+        {
+          "eventId": "30819287",
+          "leagueId": "18547",
+          "home": "Bournemouth U21",
+          "away": "Stoke City U21",
+          "time": "21:00"
+        }
+      ]
+    },
+    "England - Professional Development League": {
+      "2026-09-21": [
+        {
+          "eventId": "30935929",
+          "leagueId": "18633",
+          "home": "Bolton Wanderers U21",
+          "away": "Queens Park Rangers U21",
+          "time": "15:00"
+        }
+      ]
+    },
+    "England - Southern Football League Premier Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30819289",
+          "leagueId": "1848",
+          "home": "Redditch United FC",
+          "away": "Racing Club Warwick FC",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Europe - UEFA Champions League": {
+      "2026-10-13": [
+        {
+          "eventId": "30866917",
+          "leagueId": "566",
+          "home": "Lens",
+          "away": "Sporting CP",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30866661",
+          "leagueId": "566",
+          "home": "Sabah FK",
+          "away": "SK Slavia Praha",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30866669",
+          "leagueId": "566",
+          "home": "Arsenal",
+          "away": "Lille OSC",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866731",
+          "leagueId": "566",
+          "home": "Atletico Madrid",
+          "away": "Manchester United",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866658",
+          "leagueId": "566",
+          "home": "Galatasaray",
+          "away": "Barcelona",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866670",
+          "leagueId": "566",
+          "home": "Inter Milan",
+          "away": "Club Brugge",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866662",
+          "leagueId": "566",
+          "home": "RB Leipzig",
+          "away": "PSV Eindhoven",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866663",
+          "leagueId": "566",
+          "home": "Viking FK",
+          "away": "Bayern Munich",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866674",
+          "leagueId": "566",
+          "home": "Villarreal",
+          "away": "SSC Napoli",
+          "time": "22:00"
+        }
+      ],
+      "2026-10-14": [
+        {
+          "eventId": "30866672",
+          "leagueId": "566",
+          "home": "Feyenoord Rotterdam",
+          "away": "FC Como",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30866673",
+          "leagueId": "566",
+          "home": "LASK Linz",
+          "away": "Liverpool",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30866667",
+          "leagueId": "566",
+          "home": "AS Roma",
+          "away": "Real Madrid",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866659",
+          "leagueId": "566",
+          "home": "Aston Villa",
+          "away": "Fenerbahce",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866671",
+          "leagueId": "566",
+          "home": "FK Bodo/Glimt",
+          "away": "Borussia Dortmund",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866665",
+          "leagueId": "566",
+          "home": "Manchester City",
+          "away": "Paris Saint-Germain",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866664",
+          "leagueId": "566",
+          "home": "Real Betis",
+          "away": "Porto",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866668",
+          "leagueId": "566",
+          "home": "Shakhtar Donetsk",
+          "away": "AEK Athens",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30866660",
+          "leagueId": "566",
+          "home": "SK Slovan Bratislava",
+          "away": "VfB Stuttgart",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Europe - UEFA Champions League - Women": {
+      "2026-09-22": [
+        {
+          "eventId": "30831700",
+          "leagueId": "1864",
+          "home": "Bayern Munich (Wom)",
+          "away": "Manchester City LFC (Wom)",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30831699",
+          "leagueId": "1864",
+          "home": "Inter Milan (Wom)",
+          "away": "BK Hacken (Wom)",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30831698",
+          "leagueId": "1864",
+          "home": "Arsenal (Wom)",
+          "away": "HB Koge (Wom)",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30831697",
+          "leagueId": "1864",
+          "home": "Juventus (Wom)",
+          "away": "SL Benfica (Wom)",
+          "time": "22:00"
+        }
+      ],
+      "2026-09-23": [
+        {
+          "eventId": "30843404",
+          "leagueId": "1864",
+          "home": "Servette FC Chenois (Wom)",
+          "away": "Olympique Lyonnais (Wom)",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30843402",
+          "leagueId": "1864",
+          "home": "Barcelona (Wom)",
+          "away": "Paris (Wom)",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30843403",
+          "leagueId": "1864",
+          "home": "Chelsea LFC (Wom)",
+          "away": "FK Austria Wien (Wom)",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Europe - UEFA Champions League. Matchday Statistics": {
+      "2026-10-13": [
+        {
+          "eventId": "30874607",
+          "leagueId": "22292",
+          "home": "1st Teams (Goals)",
+          "away": "2nd Teams (Goals)",
+          "time": "19:45"
+        }
+      ],
+      "2026-10-14": [
+        {
+          "eventId": "30874615",
+          "leagueId": "22292",
+          "home": "1st Teams (Goals)",
+          "away": "2nd Teams (Goals)",
+          "time": "19:45"
+        }
+      ]
+    },
+    "Europe - UEFA Conference League": {
+      "2026-10-15": [
+        {
+          "eventId": "30759504",
+          "leagueId": "18278410",
+          "home": "CSKA Sofia",
+          "away": "AS Monaco",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759503",
+          "leagueId": "18278410",
+          "home": "FC Lugano",
+          "away": "FK Crvena Zvezda",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759491",
+          "leagueId": "18278410",
+          "home": "HNK Hajduk Split",
+          "away": "Ajax Amsterdam",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759492",
+          "leagueId": "18278410",
+          "home": "KAA Gent",
+          "away": "Aarhus GF",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759496",
+          "leagueId": "18278410",
+          "home": "KF Egnatia",
+          "away": "FC Midtjylland",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759498",
+          "leagueId": "18278410",
+          "home": "KuPS Kuopio",
+          "away": "Trabzonspor",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759605",
+          "leagueId": "18278410",
+          "home": "Mjallby AIF",
+          "away": "IC d'Escaldes",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759497",
+          "leagueId": "18278410",
+          "home": "Panathinaikos",
+          "away": "FK Borac Banja Luka",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759505",
+          "leagueId": "18278410",
+          "home": "Riga FC",
+          "away": "FC Kairat Almaty",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759495",
+          "leagueId": "18278410",
+          "home": "Universitatea Craiova",
+          "away": "Getafe",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30759499",
+          "leagueId": "18278410",
+          "home": "Atalanta",
+          "away": "Pafos FC",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759506",
+          "leagueId": "18278410",
+          "home": "Brighton and Hove Albion",
+          "away": "FK Kauno Zalgiris",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759494",
+          "leagueId": "18278410",
+          "home": "FC Copenhagen",
+          "away": "Braga",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759507",
+          "leagueId": "18278410",
+          "home": "Freiburg",
+          "away": "FK Jablonec",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759501",
+          "leagueId": "18278410",
+          "home": "Heart of Midlothian FC",
+          "away": "FC Nordsjaelland",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759500",
+          "leagueId": "18278410",
+          "home": "Sint Truidense VV",
+          "away": "Iberia 1999",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759502",
+          "leagueId": "18278410",
+          "home": "SK Brann",
+          "away": "Lincoln Red Imps FC",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30759493",
+          "leagueId": "18278410",
+          "home": "Twente",
+          "away": "FC Thun 1898",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Europe - UEFA Europa League": {
+      "2026-10-15": [
+        {
+          "eventId": "30945634",
+          "leagueId": "1861",
+          "home": "AC Sparta Praha",
+          "away": "Lillestrom SK",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945636",
+          "leagueId": "1861",
+          "home": "AZ Alkmaar",
+          "away": "Hapoel Beer Sheva",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945633",
+          "leagueId": "1861",
+          "home": "KKS Lech Poznan",
+          "away": "Bayer 04 Leverkusen",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945628",
+          "leagueId": "1861",
+          "home": "NK Celje",
+          "away": "Omonia Nicosia",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945635",
+          "leagueId": "1861",
+          "home": "Olympique Lyonnais",
+          "away": "Crystal Palace",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945632",
+          "leagueId": "1861",
+          "home": "Red Bull Salzburg",
+          "away": "AC Milan",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945638",
+          "leagueId": "1861",
+          "home": "Royale Union Saint-Gilloise",
+          "away": "Real Sociedad",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945639",
+          "leagueId": "1861",
+          "home": "SCU Torreense",
+          "away": "Sunderland",
+          "time": "19:45"
+        },
+        {
+          "eventId": "30945646",
+          "leagueId": "1861",
+          "home": "Bournemouth",
+          "away": "SK Sturm Graz",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945645",
+          "leagueId": "1861",
+          "home": "Celta de Vigo",
+          "away": "Juventus",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945644",
+          "leagueId": "1861",
+          "home": "Ferencvarosi TC",
+          "away": "FC Viktoria Plzen",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945650",
+          "leagueId": "1861",
+          "home": "GNK Dinamo Zagreb",
+          "away": "RSC Anderlecht",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945649",
+          "leagueId": "1861",
+          "home": "Jagiellonia Bialystok",
+          "away": "FC Ararat-Armenia",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945647",
+          "leagueId": "1861",
+          "home": "NEC Nijmegen",
+          "away": "PFK Levski Sofia",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945643",
+          "leagueId": "1861",
+          "home": "Olympique de Marseille",
+          "away": "Olympiacos Piraeus",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945642",
+          "leagueId": "1861",
+          "home": "SL Benfica",
+          "away": "Celtic FC",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945641",
+          "leagueId": "1861",
+          "home": "Stade Rennais",
+          "away": "OFI Crete FC",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30945640",
+          "leagueId": "1861",
+          "home": "TSG 1899 Hoffenheim",
+          "away": "Besiktas",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Europe - UEFA Nations League": {
+      "2026-09-24": [
+        {
+          "eventId": "30501241",
+          "leagueId": "27844",
+          "home": "Andorra",
+          "away": "Malta",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501273",
+          "leagueId": "27844",
+          "home": "Austria",
+          "away": "Israel",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501274",
+          "leagueId": "27844",
+          "home": "Kosovo",
+          "away": "Republic of Ireland",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501264",
+          "leagueId": "27844",
+          "home": "Liechtenstein",
+          "away": "Lithuania",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501258",
+          "leagueId": "27844",
+          "home": "Netherlands",
+          "away": "Germany",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501245",
+          "leagueId": "27844",
+          "home": "Norway",
+          "away": "Denmark",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501248",
+          "leagueId": "27844",
+          "home": "Portugal",
+          "away": "Wales",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501244",
+          "leagueId": "27844",
+          "home": "Serbia",
+          "away": "Greece",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-25": [
+        {
+          "eventId": "30501249",
+          "leagueId": "27844",
+          "home": "Armenia",
+          "away": "Latvia",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501272",
+          "leagueId": "27844",
+          "home": "Georgia",
+          "away": "Northern Ireland",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501270",
+          "leagueId": "27844",
+          "home": "Hungary",
+          "away": "Ukraine",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501250",
+          "leagueId": "27844",
+          "home": "Italy",
+          "away": "Belgium",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501254",
+          "leagueId": "27844",
+          "home": "Montenegro",
+          "away": "Cyprus",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501271",
+          "leagueId": "27844",
+          "home": "Poland",
+          "away": "Bosnia and Herzegovina",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501269",
+          "leagueId": "27844",
+          "home": "Sweden",
+          "away": "Romania",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501260",
+          "leagueId": "27844",
+          "home": "Turkiye",
+          "away": "France",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30501243",
+          "leagueId": "27844",
+          "home": "Slovenia",
+          "away": "Scotland",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30501262",
+          "leagueId": "27844",
+          "home": "Bulgaria",
+          "away": "Luxembourg",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30878908",
+          "leagueId": "27844",
+          "home": "Faroe Islands",
+          "away": "Kazakhstan",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501253",
+          "leagueId": "27844",
+          "home": "Iceland",
+          "away": "Estonia",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501256",
+          "leagueId": "27844",
+          "home": "San Marino",
+          "away": "Finland",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501261",
+          "leagueId": "27844",
+          "home": "Albania",
+          "away": "Belarus",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501252",
+          "leagueId": "27844",
+          "home": "Czechia",
+          "away": "Croatia",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501255",
+          "leagueId": "27844",
+          "home": "England",
+          "away": "Spain",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501242",
+          "leagueId": "27844",
+          "home": "North Macedonia",
+          "away": "Switzerland",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501251",
+          "leagueId": "27844",
+          "home": "Slovakia",
+          "away": "Moldova",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30501268",
+          "leagueId": "27844",
+          "home": "Lithuania",
+          "away": "Azerbaijan",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30501265",
+          "leagueId": "27844",
+          "home": "Austria",
+          "away": "Kosovo",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501257",
+          "leagueId": "27844",
+          "home": "Denmark",
+          "away": "Wales",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501263",
+          "leagueId": "27844",
+          "home": "Gibraltar",
+          "away": "Andorra",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501247",
+          "leagueId": "27844",
+          "home": "Serbia",
+          "away": "Netherlands",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30501246",
+          "leagueId": "27844",
+          "home": "Germany",
+          "away": "Greece",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501266",
+          "leagueId": "27844",
+          "home": "Israel",
+          "away": "Republic of Ireland",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30501259",
+          "leagueId": "27844",
+          "home": "Norway",
+          "away": "Portugal",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-28": [
+        {
+          "eventId": "30501267",
+          "leagueId": "27844",
+          "home": "Georgia",
+          "away": "Ukraine",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30896311",
+          "leagueId": "27844",
+          "home": "Northern Ireland",
+          "away": "Hungary",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30896310",
+          "leagueId": "27844",
+          "home": "Romania",
+          "away": "Bosnia and Herzegovina",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30896309",
+          "leagueId": "27844",
+          "home": "Sweden",
+          "away": "Poland",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30896321",
+          "leagueId": "27844",
+          "home": "Turkiye",
+          "away": "Italy",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-29": [
+        {
+          "eventId": "30908166",
+          "leagueId": "27844",
+          "home": "Scotland",
+          "away": "Switzerland",
+          "time": "21:45"
+        }
+      ]
+    },
+    "France - Ligue 1": {
+      "2026-10-09": [
+        {
+          "eventId": "30903270",
+          "leagueId": "548",
+          "home": "Lens",
+          "away": "Olympique Lyonnais",
+          "time": "21:45"
+        }
+      ],
+      "2026-10-10": [
+        {
+          "eventId": "30903272",
+          "leagueId": "548",
+          "home": "Lille OSC",
+          "away": "Le Havre",
+          "time": "18:15"
+        },
+        {
+          "eventId": "30903273",
+          "leagueId": "548",
+          "home": "AS Monaco",
+          "away": "Toulouse",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30903271",
+          "leagueId": "548",
+          "home": "Lorient",
+          "away": "Paris FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30903269",
+          "leagueId": "548",
+          "home": "Paris Saint-Germain",
+          "away": "Le Mans",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30903195",
+          "leagueId": "548",
+          "home": "Stade Brestois",
+          "away": "Angers SCO",
+          "time": "21:45"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30935735",
+          "leagueId": "548",
+          "home": "OGC Nice",
+          "away": "Strasbourg Alsace",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30935736",
+          "leagueId": "548",
+          "home": "Stade Rennais",
+          "away": "AJ Auxerre",
+          "time": "18:15"
+        },
+        {
+          "eventId": "30935737",
+          "leagueId": "548",
+          "home": "ES Troyes",
+          "away": "Olympique de Marseille",
+          "time": "21:45"
+        }
+      ]
+    },
+    "France - Ligue 3": {
+      "2026-09-24": [
+        {
+          "eventId": "30960213",
+          "leagueId": "554",
+          "home": "SM Caen",
+          "away": "FC Rouen 1899",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Georgia - Erovnuli Liga": {
+      "2026-09-21": [
+        {
+          "eventId": "30936130",
+          "leagueId": "3107",
+          "home": "FC Spaeri",
+          "away": "FC Dila Gori",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Germany - 3. Liga": {
+      "2026-09-25": [
+        {
+          "eventId": "30912097",
+          "leagueId": "568",
+          "home": "TSV Havelse",
+          "away": "SC Fortuna Koln",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Germany - Bundesliga": {
+      "2026-10-09": [
+        {
+          "eventId": "30935729",
+          "leagueId": "541",
+          "home": "Borussia Dortmund",
+          "away": "Werder Bremen",
+          "time": "21:30"
+        }
+      ],
+      "2026-10-10": [
+        {
+          "eventId": "30900849",
+          "leagueId": "541",
+          "home": "1. FC Union Berlin",
+          "away": "SV Elversberg",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30900674",
+          "leagueId": "541",
+          "home": "1. FSV Mainz 05",
+          "away": "Bayer 04 Leverkusen",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30900542",
+          "leagueId": "541",
+          "home": "Augsburg",
+          "away": "Bayern Munich",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30900675",
+          "leagueId": "541",
+          "home": "Paderborn 07",
+          "away": "VfB Stuttgart",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30900633",
+          "leagueId": "541",
+          "home": "TSG 1899 Hoffenheim",
+          "away": "Hamburger SV",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30900799",
+          "leagueId": "541",
+          "home": "RB Leipzig",
+          "away": "Eintracht Frankfurt",
+          "time": "19:30"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30935730",
+          "leagueId": "541",
+          "home": "1.FC Koln",
+          "away": "Borussia Monchengladbach",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30935731",
+          "leagueId": "541",
+          "home": "Freiburg",
+          "away": "Schalke 04",
+          "time": "18:30"
+        }
+      ]
+    },
+    "Germany - Regionalliga West": {
+      "2026-09-21": [
+        {
+          "eventId": "30911993",
+          "leagueId": "1879",
+          "home": "Paderborn 07 II",
+          "away": "Borussia Dortmund II",
+          "time": "19:00"
+        }
+      ]
+    },
+    "Greece - Super League 2": {
+      "2026-09-21": [
+        {
+          "eventId": "30909296",
+          "leagueId": "27887",
+          "home": "Pyrgos AFC",
+          "away": "AEL Larissa 1964",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30909297",
+          "leagueId": "27887",
+          "home": "Panthrakikos FC",
+          "away": "Niki Volos FC",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30909301",
+          "leagueId": "27887",
+          "home": "PAOK FC B",
+          "away": "Nestos Chrysoupoli FC",
+          "time": "17:00"
+        }
+      ]
+    },
+    "Guatemala - Liga Nacional": {
+      "2026-09-21": [
+        {
+          "eventId": "30867033",
+          "leagueId": "1886",
+          "home": "CD Suchitepequez",
+          "away": "Xelaju MC",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30868206",
+          "leagueId": "1886",
+          "home": "Deportivo Malacateco",
+          "away": "FC Deportivo Mixco",
+          "time": "04:00"
+        }
+      ]
+    },
+    "Honduras - Liga Nacional": {
+      "2026-09-21": [
+        {
+          "eventId": "30918852",
+          "leagueId": "1887",
+          "home": "CD Olimpia Tegucigalpa",
+          "away": "CA Independiente Siguatepeque",
+          "time": "02:15"
+        },
+        {
+          "eventId": "30918348",
+          "leagueId": "1887",
+          "home": "Juticalpa FC",
+          "away": "CD Marathon",
+          "time": "04:30"
+        }
+      ]
+    },
+    "Iran - Azadegan League": {
+      "2026-09-21": [
+        {
+          "eventId": "30949527",
+          "leagueId": "11116",
+          "home": "Niroye Zamini Tehran",
+          "away": "Fard Alborz",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30949632",
+          "leagueId": "11116",
+          "home": "Shahin Bandar Ameri",
+          "away": "FC Pars Jonoubi Jam Bushehr",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30949633",
+          "leagueId": "11116",
+          "home": "Sanat Mes Kerman FC",
+          "away": "Saipa Karaj",
+          "time": "17:30"
+        },
+        {
+          "eventId": "30949634",
+          "leagueId": "11116",
+          "home": "Havadar SC",
+          "away": "Besat Kermanshah FC",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30949635",
+          "leagueId": "11116",
+          "home": "Kara Gostar FC",
+          "away": "Mes Rafsanjan",
+          "time": "18:15"
+        },
+        {
+          "eventId": "30949636",
+          "leagueId": "11116",
+          "home": "Naft Gachsaran",
+          "away": "Ario Eslamshahr",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30949637",
+          "leagueId": "11116",
+          "home": "Naft Masjed Soleyman FC",
+          "away": "Palayesh Naft Bandar Abbas",
+          "time": "19:00"
+        }
+      ]
+    },
+    "Italy - Serie A": {
+      "2026-10-10": [
+        {
+          "eventId": "30927184",
+          "leagueId": "543",
+          "home": "Genoa",
+          "away": "Fiorentina",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30927180",
+          "leagueId": "543",
+          "home": "Inter Milan",
+          "away": "Parma Calcio 1913",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30927178",
+          "leagueId": "543",
+          "home": "SSC Napoli",
+          "away": "Frosinone Calcio",
+          "time": "21:45"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30927177",
+          "leagueId": "543",
+          "home": "FC Como",
+          "away": "AS Roma",
+          "time": "13:30"
+        },
+        {
+          "eventId": "30927179",
+          "leagueId": "543",
+          "home": "Lazio",
+          "away": "AC Monza",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30927183",
+          "leagueId": "543",
+          "home": "Lecce",
+          "away": "Bologna",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30927182",
+          "leagueId": "543",
+          "home": "Sassuolo",
+          "away": "AC Milan",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30927181",
+          "leagueId": "543",
+          "home": "Cagliari",
+          "away": "Juventus",
+          "time": "21:45"
+        }
+      ],
+      "2026-10-12": [
+        {
+          "eventId": "30927176",
+          "leagueId": "543",
+          "home": "Atalanta",
+          "away": "Venezia",
+          "time": "19:30"
+        },
+        {
+          "eventId": "30929408",
+          "leagueId": "543",
+          "home": "Torino",
+          "away": "Udinese",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Italy - Serie C": {
+      "2026-09-21": [
+        {
+          "eventId": "30939156",
+          "leagueId": "1913",
+          "home": "AC Dolomiti Bellunesi",
+          "away": "AC Lumezzane",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30939151",
+          "leagueId": "1913",
+          "home": "AC Spezia",
+          "away": "Vis Pesaro",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30939155",
+          "leagueId": "1913",
+          "home": "AC Trento",
+          "away": "Pro Vercelli 1892 FC",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30939153",
+          "leagueId": "1913",
+          "home": "Guidonia Montecelio 1937 Fc",
+          "away": "AS Livorno",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30939154",
+          "leagueId": "1913",
+          "home": "Treviso",
+          "away": "Desenzano Calvina",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30939152",
+          "leagueId": "1913",
+          "home": "US Pianese",
+          "away": "ASD Sambenedettese",
+          "time": "21:30"
+        }
+      ]
+    },
+    "Japan - J2 League": {
+      "2026-09-26": [
+        {
+          "eventId": "30965591",
+          "leagueId": "1923",
+          "home": "Blaublitz Akita",
+          "away": "Albirex Niigata",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965590",
+          "leagueId": "1923",
+          "home": "FC Imabari",
+          "away": "Shonan Bellmare",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965589",
+          "leagueId": "1923",
+          "home": "Iwaki FC",
+          "away": "Vegalta Sendai",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965588",
+          "leagueId": "1923",
+          "home": "Jubilo Iwata",
+          "away": "Vanraure Hachinohe",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965587",
+          "leagueId": "1923",
+          "home": "Kataller Toyama",
+          "away": "Yokohama FC",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965586",
+          "leagueId": "1923",
+          "home": "Montedio Yamagata",
+          "away": "Sagan Tosu",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965585",
+          "leagueId": "1923",
+          "home": "Oita Trinita",
+          "away": "Fujieda MYFC",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965584",
+          "leagueId": "1923",
+          "home": "Omiya Ardija",
+          "away": "Ventforet Kofu",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965583",
+          "leagueId": "1923",
+          "home": "Tegevajaro Miyazaki",
+          "away": "Consadole Sapporo",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30965582",
+          "leagueId": "1923",
+          "home": "Tokushima Vortis",
+          "away": "Tochigi City FC",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Japan - JFL": {
+      "2026-09-21": [
+        {
+          "eventId": "30889857",
+          "leagueId": "10835",
+          "home": "Okinawa SV",
+          "away": "FC Tiamo Hirakata",
+          "time": "09:00"
+        }
+      ]
+    },
+    "Japan - Regional League": {
+      "2026-09-21": [
+        {
+          "eventId": "30970150",
+          "leagueId": "12309",
+          "home": "Tokyo 23 FC",
+          "away": "Edo All United",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Korea (South) - K League 1": {
+      "2026-09-27": [
+        {
+          "eventId": "30912567",
+          "leagueId": "1933",
+          "home": "Gangwon FC",
+          "away": "Incheon United FC",
+          "time": "13:00"
+        }
+      ]
+    },
+    "Mexico - Liga de Expansion MX": {
+      "2026-09-21": [
+        {
+          "eventId": "30859103",
+          "leagueId": "18275708",
+          "home": "CD Tapatio",
+          "away": "Tlaxcala FC",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-25": [
+        {
+          "eventId": "30867838",
+          "leagueId": "18275708",
+          "home": "Alebrijes de Oaxaca",
+          "away": "CA La Paz",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30867837",
+          "leagueId": "18275708",
+          "home": "CD Mineros de Zacatecas",
+          "away": "Piratas FC de Veracruz",
+          "time": "04:00"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30878983",
+          "leagueId": "18275708",
+          "home": "Correcaminos UAT",
+          "away": "Jaiba Brava",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30878991",
+          "leagueId": "18275708",
+          "home": "Cruz Azul Hidalgo",
+          "away": "Leones Negros UDG",
+          "time": "21:00"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30878989",
+          "leagueId": "18275708",
+          "home": "Venados FC",
+          "away": "Atletico Morelia",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30887628",
+          "leagueId": "18275708",
+          "home": "Dorados de Sinaloa",
+          "away": "Alacranes de Durango",
+          "time": "04:00"
+        }
+      ]
+    },
+    "Mexico - Liga MX": {
+      "2026-09-21": [
+        {
+          "eventId": "30867852",
+          "leagueId": "1951",
+          "home": "CF Pachuca",
+          "away": "Club Tijuana",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30867851",
+          "leagueId": "1951",
+          "home": "Deportivo Toluca",
+          "away": "Santos Laguna",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30868496",
+          "leagueId": "1951",
+          "home": "Queretaro FC",
+          "away": "Club Leon",
+          "time": "05:10"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30920029",
+          "leagueId": "1951",
+          "home": "CF Atlante",
+          "away": "CF Monterrey",
+          "time": "04:00"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30931053",
+          "leagueId": "1951",
+          "home": "Tigres UANL",
+          "away": "Puebla FC",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30938992",
+          "leagueId": "1951",
+          "home": "Pumas UNAM",
+          "away": "Atletico San Luis",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Mexico - Liga MX - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30895807",
+          "leagueId": "11251",
+          "home": "Club America (Wom)",
+          "away": "Club Atlas De Guadalajara (Wom)",
+          "time": "00:45"
+        },
+        {
+          "eventId": "30896028",
+          "leagueId": "11251",
+          "home": "Atletico San Luis (Wom)",
+          "away": "CF Pachuca (Wom)",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30907650",
+          "leagueId": "11251",
+          "home": "Club Leon (Wom)",
+          "away": "FC Juarez (Wom)",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30908131",
+          "leagueId": "11251",
+          "home": "Deportivo Toluca (Wom)",
+          "away": "Tigres UANL (Wom)",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30908915",
+          "leagueId": "11251",
+          "home": "Santos Laguna (Wom)",
+          "away": "Cruz Azul AC (Wom)",
+          "time": "04:06"
+        }
+      ]
+    },
+    "Mexico - Liga Premier": {
+      "2026-09-21": [
+        {
+          "eventId": "30952700",
+          "leagueId": "10840",
+          "home": "Deportivo Delfines de Coatzacoalcos",
+          "away": "Real Refineros",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30952699",
+          "leagueId": "10840",
+          "home": "Real Apodaca FC",
+          "away": "Guerreros de Autlan",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Mexico - Liga TDP": {
+      "2026-09-21": [
+        {
+          "eventId": "30968778",
+          "leagueId": "18280530",
+          "home": "Caudillos de Morelos",
+          "away": "Atletico Toltecas FC",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Netherlands - Eerste Divisie": {
+      "2026-09-25": [
+        {
+          "eventId": "30867853",
+          "leagueId": "1958",
+          "home": "FC Dordrecht",
+          "away": "Almere City FC",
+          "time": "22:00"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30878915",
+          "leagueId": "1958",
+          "home": "Heracles Almelo",
+          "away": "Vitesse Arnhem",
+          "time": "17:30"
+        },
+        {
+          "eventId": "30878914",
+          "leagueId": "1958",
+          "home": "Emmen",
+          "away": "TOP Oss",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30878913",
+          "leagueId": "1958",
+          "home": "FC Volendam",
+          "away": "VVV-Venlo",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30878912",
+          "leagueId": "1958",
+          "home": "MVV Maastricht",
+          "away": "Helmond Sport",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30878911",
+          "leagueId": "1958",
+          "home": "NAC Breda",
+          "away": "FC Eindhoven",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30878910",
+          "leagueId": "1958",
+          "home": "Roda JC Kerkrade",
+          "away": "Waalwijk",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Nicaragua - Liga Primera": {
+      "2026-09-21": [
+        {
+          "eventId": "30948687",
+          "leagueId": "10486",
+          "home": "Rancho Santana FC",
+          "away": "Managua FC",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Northern Ireland - Premiership Development League": {
+      "2026-09-21": [
+        {
+          "eventId": "30969380",
+          "leagueId": "4680",
+          "home": "Carrick Rangers FC (Reserves)",
+          "away": "Coleraine FC (Reserves)",
+          "time": "22:00"
+        },
+        {
+          "eventId": "30953475",
+          "leagueId": "4680",
+          "home": "Cliftonville Olympic",
+          "away": "Bangor FC (Reserves)",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Norway - 3rd Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30948265",
+          "leagueId": "10926",
+          "home": "Odds BK 2",
+          "away": "Stabaek Fotball 2",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30949720",
+          "leagueId": "10926",
+          "home": "Brumunddal",
+          "away": "Sandefjord Fotball 2",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30950128",
+          "leagueId": "10926",
+          "home": "Nardo FK",
+          "away": "Ranheim IL 2",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Panama - LPF": {
+      "2026-09-21": [
+        {
+          "eventId": "30948686",
+          "leagueId": "3064",
+          "home": "Independiente FC La Chorrera",
+          "away": "Sporting San Miguelito",
+          "time": "02:15"
+        }
+      ]
+    },
+    "Peru - Liga 1": {
+      "2026-09-23": [
+        {
+          "eventId": "30896266",
+          "leagueId": "1974",
+          "home": "ADT Tarma",
+          "away": "Cienciano del Cusco",
+          "time": "23:00"
+        }
+      ]
+    },
+    "Poland - III Liga - Group IV": {
+      "2026-09-25": [
+        {
+          "eventId": "30966371",
+          "leagueId": "22222",
+          "home": "Wisla Krakow II",
+          "away": "Czarni Polaniec",
+          "time": "14:00"
+        },
+        {
+          "eventId": "30968147",
+          "leagueId": "22222",
+          "home": "Wislanie Skawina",
+          "away": "KS Wisloka Debica",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Poland - IV Liga": {
+      "2026-09-23": [
+        {
+          "eventId": "30956942",
+          "leagueId": "11846",
+          "home": "AKS Beskid Andrychow",
+          "away": "KS Dalin Myslenice",
+          "time": "17:30"
+        }
+      ]
+    },
+    "Poland - Polish Cup": {
+      "2026-10-29": [
+        {
+          "eventId": "30939250",
+          "leagueId": "1977",
+          "home": "Arka Gdynia",
+          "away": "Stal Rzeszow",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939260",
+          "leagueId": "1977",
+          "home": "Avia Swidnik",
+          "away": "RKS Radomiak Radom",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939253",
+          "leagueId": "1977",
+          "home": "Chrobry Glogow",
+          "away": "Polonia Bytom",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939259",
+          "leagueId": "1977",
+          "home": "GKS Olimpia Grudziadz",
+          "away": "Bruk-Bet Termalica Nieciecza",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939252",
+          "leagueId": "1977",
+          "home": "GKS Tychy",
+          "away": "Pogon Siedlce",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939247",
+          "leagueId": "1977",
+          "home": "Gornik Leczna",
+          "away": "GKS Katowice",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939256",
+          "leagueId": "1977",
+          "home": "KS Siarka Tarnobrzeg",
+          "away": "KKS Lech Poznan",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939258",
+          "leagueId": "1977",
+          "home": "KS Sokol Kleczew",
+          "away": "NKP Podhale Nowy Targ",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939254",
+          "leagueId": "1977",
+          "home": "KSP Polonia Warszawa",
+          "away": "Korona Kielce",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939255",
+          "leagueId": "1977",
+          "home": "Lechia Gdansk",
+          "away": "Jagiellonia Bialystok",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939240",
+          "leagueId": "1977",
+          "home": "LKP Motor Lublin",
+          "away": "KS Rakow Czestochowa",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939249",
+          "leagueId": "1977",
+          "home": "MKS Znicz Pruszkow",
+          "away": "Ruch Chorzow",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939246",
+          "leagueId": "1977",
+          "home": "Odra Opole",
+          "away": "Slask Wroclaw",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939257",
+          "leagueId": "1977",
+          "home": "Piast Gliwice",
+          "away": "Gornik Zabrze",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939251",
+          "leagueId": "1977",
+          "home": "Polonia Sroda WLKP",
+          "away": "Slask II Wroclaw",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30939248",
+          "leagueId": "1977",
+          "home": "Puszcza Niepolomice",
+          "away": "Wisla Plock",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Portugal - Campeonato Nacional - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30950891",
+          "leagueId": "11837",
+          "home": "Porto (Wom)",
+          "away": "Braga (Wom)",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Portugal - U19 Championship": {
+      "2026-09-26": [
+        {
+          "eventId": "30957602",
+          "leagueId": "9286",
+          "home": "Santa Clara U19",
+          "away": "FC Alverca U19",
+          "time": "14:00"
+        }
+      ]
+    },
+    "Puerto Rico - PRSL": {
+      "2026-09-21": [
+        {
+          "eventId": "30963171",
+          "leagueId": "18280087",
+          "home": "PR Surf",
+          "away": "Caguas Sporting FC",
+          "time": "03:30"
+        }
+      ]
+    },
+    "Republic of Ireland - First Division": {
+      "2026-09-25": [
+        {
+          "eventId": "30916632",
+          "leagueId": "1986",
+          "home": "Cobh Ramblers",
+          "away": "Athlone Town",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30916631",
+          "leagueId": "1986",
+          "home": "Kerry FC",
+          "away": "Wexford FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30916630",
+          "leagueId": "1986",
+          "home": "Treaty United",
+          "away": "Finn Harps",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30916629",
+          "leagueId": "1986",
+          "home": "UCD FC",
+          "away": "Bray Wanderers",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Republic of Ireland - Premier Division": {
+      "2026-09-25": [
+        {
+          "eventId": "30968557",
+          "leagueId": "1985",
+          "home": "Galway United FC",
+          "away": "Shelbourne FC",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Romania - Liga 2": {
+      "2026-09-22": [
+        {
+          "eventId": "30900910",
+          "leagueId": "3066",
+          "home": "CSC Dumbravita",
+          "away": "CSM Resita",
+          "time": "17:30"
+        },
+        {
+          "eventId": "30900909",
+          "leagueId": "3066",
+          "home": "ASA Targu Mures",
+          "away": "CS Dinamo Bucuresti",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Romania - Superliga": {
+      "2026-09-21": [
+        {
+          "eventId": "30837231",
+          "leagueId": "1992",
+          "home": "FC Otelul Galati",
+          "away": "Corvinul 1921 Hunedoara",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30837230",
+          "leagueId": "1992",
+          "home": "Petrolul Ploiesti",
+          "away": "AFK Csikszereda Miercurea Ciuc",
+          "time": "21:00"
+        }
+      ],
+      "2026-10-09": [
+        {
+          "eventId": "30946751",
+          "leagueId": "1992",
+          "home": "Corvinul 1921 Hunedoara",
+          "away": "FC Voluntari",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30946784",
+          "leagueId": "1992",
+          "home": "ACS Sepsi OSK",
+          "away": "FC Dinamo Bucuresti",
+          "time": "21:00"
+        }
+      ],
+      "2026-10-10": [
+        {
+          "eventId": "30946783",
+          "leagueId": "1992",
+          "home": "FC Botosani",
+          "away": "FC UTA Arad",
+          "time": "17:15"
+        },
+        {
+          "eventId": "30946782",
+          "leagueId": "1992",
+          "home": "FCSB",
+          "away": "FC Otelul Galati",
+          "time": "21:30"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30946780",
+          "leagueId": "1992",
+          "home": "AFK Csikszereda Miercurea Ciuc",
+          "away": "Universitatea Craiova",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30946785",
+          "leagueId": "1992",
+          "home": "FCV Farul Constanta",
+          "away": "Petrolul Ploiesti",
+          "time": "21:00"
+        }
+      ],
+      "2026-10-12": [
+        {
+          "eventId": "30949078",
+          "leagueId": "1992",
+          "home": "FC Arges",
+          "away": "CFR Cluj",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30946781",
+          "leagueId": "1992",
+          "home": "FC Universitatea Cluj",
+          "away": "FC Rapid Bucuresti",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Russia - FNL First League": {
+      "2026-09-26": [
+        {
+          "eventId": "30962699",
+          "leagueId": "1994",
+          "home": "FC Chelyabinsk",
+          "away": "FC Yenisey Krasnoyarsk",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30962701",
+          "leagueId": "1994",
+          "home": "FC Spartak Kostroma",
+          "away": "Ural Yekaterinburg",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30962700",
+          "leagueId": "1994",
+          "home": "FC Volga Ulyanovsk",
+          "away": "FC Leningradets",
+          "time": "16:00"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30967667",
+          "leagueId": "1994",
+          "home": "Shinnik Yaroslavl",
+          "away": "FC SKA-Khabarovsk",
+          "time": "17:00"
+        }
+      ]
+    },
+    "Russia - Premier League": {
+      "2026-10-09": [
+        {
+          "eventId": "30895823",
+          "leagueId": "1993",
+          "home": "FC Rostov",
+          "away": "FK Akron",
+          "time": "19:30"
+        }
+      ],
+      "2026-10-10": [
+        {
+          "eventId": "30895825",
+          "leagueId": "1993",
+          "home": "Orenburg",
+          "away": "FC Dynamo Makhachkala",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30895820",
+          "leagueId": "1993",
+          "home": "Fakel Voronezh",
+          "away": "Lokomotiv Moscow",
+          "time": "15:15"
+        },
+        {
+          "eventId": "30895821",
+          "leagueId": "1993",
+          "home": "Krylia Sovetov Samara",
+          "away": "Spartak Moscow",
+          "time": "17:30"
+        },
+        {
+          "eventId": "30895826",
+          "leagueId": "1993",
+          "home": "Krasnodar",
+          "away": "Zenit St. Petersburg",
+          "time": "19:30"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30895822",
+          "leagueId": "1993",
+          "home": "Akhmat Grozny",
+          "away": "FC Baltika Kaliningrad",
+          "time": "14:00"
+        },
+        {
+          "eventId": "30895827",
+          "leagueId": "1993",
+          "home": "CSKA Moscow",
+          "away": "FC Rodina Moscow",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30895824",
+          "leagueId": "1993",
+          "home": "Rubin Kazan",
+          "away": "Dynamo Moscow",
+          "time": "19:30"
+        }
+      ]
+    },
+    "Russia - Russian Cup": {
+      "2026-10-13": [
+        {
+          "eventId": "30784813",
+          "leagueId": "569",
+          "home": "Lokomotiv Moscow",
+          "away": "FK Akron",
+          "time": "18:30"
+        },
+        {
+          "eventId": "30784736",
+          "leagueId": "569",
+          "home": "Krasnodar",
+          "away": "Fakel Voronezh",
+          "time": "20:45"
+        }
+      ],
+      "2026-10-14": [
+        {
+          "eventId": "30784735",
+          "leagueId": "569",
+          "home": "Krylia Sovetov Samara",
+          "away": "FC Baltika Kaliningrad",
+          "time": "16:15"
+        },
+        {
+          "eventId": "30784738",
+          "leagueId": "569",
+          "home": "Akhmat Grozny",
+          "away": "Dynamo Moscow",
+          "time": "18:30"
+        },
+        {
+          "eventId": "30784814",
+          "leagueId": "569",
+          "home": "FC Dynamo Makhachkala",
+          "away": "Zenit St. Petersburg",
+          "time": "18:30"
+        },
+        {
+          "eventId": "30784739",
+          "leagueId": "569",
+          "home": "CSKA Moscow",
+          "away": "FC Rostov",
+          "time": "20:45"
+        }
+      ],
+      "2026-10-15": [
+        {
+          "eventId": "30784740",
+          "leagueId": "569",
+          "home": "Rubin Kazan",
+          "away": "Orenburg",
+          "time": "18:30"
+        },
+        {
+          "eventId": "30784737",
+          "leagueId": "569",
+          "home": "FC Rodina Moscow",
+          "away": "Spartak Moscow",
+          "time": "20:45"
+        }
+      ],
+      "2026-10-16": [
+        {
+          "eventId": "30915155",
+          "leagueId": "569",
+          "home": "FC Chertanovo Moscow",
+          "away": "FC Tekstilschik Ivanovo",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914364",
+          "leagueId": "569",
+          "home": "FC Leningradets",
+          "away": "Luki-Energiya",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914440",
+          "leagueId": "569",
+          "home": "FC Nizhny Novgorod",
+          "away": "Shinnik Yaroslavl",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914439",
+          "leagueId": "569",
+          "home": "FC SKA-Khabarovsk",
+          "away": "FC Dinamo Kirov",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30915195",
+          "leagueId": "569",
+          "home": "FC Spartak Kostroma",
+          "away": "FC Chelyabinsk",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914291",
+          "leagueId": "569",
+          "home": "FC Volga Ulyanovsk",
+          "away": "FC Murom",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914290",
+          "leagueId": "569",
+          "home": "FC Yenisey Krasnoyarsk",
+          "away": "FC Kaluga",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30914292",
+          "leagueId": "569",
+          "home": "FK Volna Kovernino",
+          "away": "FC Dinamo SPb",
+          "time": "15:00"
+        }
+      ]
+    },
+    "Scotland - Challenge Cup": {
+      "2026-09-22": [
+        {
+          "eventId": "30968553",
+          "leagueId": "2972",
+          "home": "Bonnyrigg Rose FC",
+          "away": "Airdrieonians FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968552",
+          "leagueId": "2972",
+          "home": "Clachnacuddin FC",
+          "away": "Ross County FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968548",
+          "leagueId": "2972",
+          "home": "East Kilbride FC",
+          "away": "Celtic B",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968547",
+          "leagueId": "2972",
+          "home": "Edinburgh City FC",
+          "away": "Dundee United B",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968546",
+          "leagueId": "2972",
+          "home": "Elgin City FC",
+          "away": "FC Dundee B",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968545",
+          "leagueId": "2972",
+          "home": "Forfar Athletic FC",
+          "away": "Peterhead FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968544",
+          "leagueId": "2972",
+          "home": "Formartine United FC",
+          "away": "Montrose FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968563",
+          "leagueId": "2972",
+          "home": "Fraserburgh FC",
+          "away": "Cove Rangers FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968562",
+          "leagueId": "2972",
+          "home": "Gala Fairydean Rovers FC",
+          "away": "Spartans FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968561",
+          "leagueId": "2972",
+          "home": "Kelty Hearts FC",
+          "away": "Heart of Midlothian B",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968560",
+          "leagueId": "2972",
+          "home": "Queen Of The South",
+          "away": "Annan Athletic FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30968559",
+          "leagueId": "2972",
+          "home": "Stirling Albion FC",
+          "away": "Cumbernauld Colts FC",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Scotland - Scottish Championship": {
+      "2026-09-25": [
+        {
+          "eventId": "30893923",
+          "leagueId": "552",
+          "home": "Arbroath FC",
+          "away": "Queens Park FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30893922",
+          "leagueId": "552",
+          "home": "Ayr United FC",
+          "away": "Stenhousemuir FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30893921",
+          "leagueId": "552",
+          "home": "Dunfermline Athletic FC",
+          "away": "Partick Thistle FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30893920",
+          "leagueId": "552",
+          "home": "Inverness Caledonian Thistle FC",
+          "away": "Greenock Morton FC",
+          "time": "21:45"
+        },
+        {
+          "eventId": "30893919",
+          "leagueId": "552",
+          "home": "Raith Rovers",
+          "away": "Livingston FC",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Serbia - First League": {
+      "2026-09-21": [
+        {
+          "eventId": "30967278",
+          "leagueId": "9257",
+          "home": "OFK Vrsac",
+          "away": "OFK Bor",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30967277",
+          "leagueId": "9257",
+          "home": "TSC Backa Topola",
+          "away": "GFK Dubocica",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30967945",
+          "leagueId": "9257",
+          "home": "FK Javor Ivanjica",
+          "away": "FK Proleter 023",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30967944",
+          "leagueId": "9257",
+          "home": "FK Jedinstvo Ub",
+          "away": "FK Loznica",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30967943",
+          "leagueId": "9257",
+          "home": "FK Metalac GM",
+          "away": "FK Graficar Beograd",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30967942",
+          "leagueId": "9257",
+          "home": "Napredak Krusevac",
+          "away": "FK Smederevo 1924",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30968408",
+          "leagueId": "9257",
+          "home": "FK Spartak Subotica",
+          "away": "FK Vozdovac",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Slovakia - 2.Liga": {
+      "2026-09-21": [
+        {
+          "eventId": "30959126",
+          "leagueId": "9258",
+          "home": "FC Petrzalka",
+          "away": "FK Pohronie",
+          "time": "18:00"
+        }
+      ]
+    },
+    "South America - Copa Libertadores": {
+      "2026-10-14": [
+        {
+          "eventId": "30943081",
+          "leagueId": "2988",
+          "home": "Estudiantes La Plata",
+          "away": "Regatas Flamengo RJ",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30931110",
+          "leagueId": "2988",
+          "home": "Fluminense",
+          "away": "SE Palmeiras",
+          "time": "01:00"
+        }
+      ]
+    },
+    "South America - Copa Sudamericana": {
+      "2026-10-15": [
+        {
+          "eventId": "30947742",
+          "leagueId": "2985",
+          "home": "Atletico MG",
+          "away": "Montevideo City Torque",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30935627",
+          "leagueId": "2985",
+          "home": "Boca Juniors",
+          "away": "CR Vasco da Gama",
+          "time": "01:00"
+        }
+      ]
+    },
+    "Spain - La Liga": {
+      "2026-10-09": [
+        {
+          "eventId": "30936492",
+          "leagueId": "545",
+          "home": "Malaga CF",
+          "away": "Espanyol",
+          "time": "22:00"
+        }
+      ],
+      "2026-10-10": [
+        {
+          "eventId": "30936413",
+          "leagueId": "545",
+          "home": "Real Madrid",
+          "away": "Villarreal",
+          "time": "22:00"
+        }
+      ],
+      "2026-10-11": [
+        {
+          "eventId": "30936412",
+          "leagueId": "545",
+          "home": "Elche CF",
+          "away": "Celta de Vigo",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30936410",
+          "leagueId": "545",
+          "home": "Real Sociedad",
+          "away": "Deportivo de A Coruna",
+          "time": "17:15"
+        },
+        {
+          "eventId": "30936411",
+          "leagueId": "545",
+          "home": "Real Betis",
+          "away": "Osasuna",
+          "time": "19:30"
+        }
+      ]
+    },
+    "Spain - Primera Federacion": {
+      "2026-09-23": [
+        {
+          "eventId": "30950747",
+          "leagueId": "18279575",
+          "home": "UE Sant Andreu",
+          "away": "Real Madrid Castilla",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Spain - Segunda Division": {
+      "2026-09-25": [
+        {
+          "eventId": "30882236",
+          "leagueId": "553",
+          "home": "Girona FC",
+          "away": "Albacete Balompie",
+          "time": "21:30"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30882248",
+          "leagueId": "553",
+          "home": "AD Ceuta FC",
+          "away": "Real Sociedad B",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30882247",
+          "leagueId": "553",
+          "home": "Granada",
+          "away": "FC Andorra",
+          "time": "17:15"
+        },
+        {
+          "eventId": "30882246",
+          "leagueId": "553",
+          "home": "CD Tenerife",
+          "away": "Cadiz CF",
+          "time": "19:30"
+        },
+        {
+          "eventId": "30882245",
+          "leagueId": "553",
+          "home": "Celta de Vigo B",
+          "away": "CE Sabadell FC",
+          "time": "19:30"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30887500",
+          "leagueId": "553",
+          "home": "Real Valladolid",
+          "away": "Cordoba CF",
+          "time": "15:00"
+        },
+        {
+          "eventId": "30887502",
+          "leagueId": "553",
+          "home": "Mallorca",
+          "away": "UD Almeria",
+          "time": "17:15"
+        },
+        {
+          "eventId": "30887504",
+          "leagueId": "553",
+          "home": "Burgos CF",
+          "away": "CD Eldense",
+          "time": "19:30"
+        },
+        {
+          "eventId": "30887503",
+          "leagueId": "553",
+          "home": "Eibar",
+          "away": "UD Las Palmas",
+          "time": "19:30"
+        },
+        {
+          "eventId": "30887501",
+          "leagueId": "553",
+          "home": "Real Oviedo",
+          "away": "Sporting Gijon",
+          "time": "22:00"
+        }
+      ]
+    },
+    "Sweden - 1st Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30819291",
+          "leagueId": "2998",
+          "home": "Angelholms FF",
+          "away": "Eskilsminne IF",
+          "time": "20:00"
+        },
+        {
+          "eventId": "30819294",
+          "leagueId": "2998",
+          "home": "FC Arlanda",
+          "away": "Hammarby TFF",
+          "time": "20:00"
+        },
+        {
+          "eventId": "30819292",
+          "leagueId": "2998",
+          "home": "Jonkopings Sodra",
+          "away": "Skovde AIK",
+          "time": "20:00"
+        },
+        {
+          "eventId": "30819293",
+          "leagueId": "2998",
+          "home": "Vasalunds IF",
+          "away": "Assyriska FF",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Ukraine - First League": {
+      "2026-09-21": [
+        {
+          "eventId": "30948685",
+          "leagueId": "3018",
+          "home": "FC Viktoriya Sumy",
+          "away": "FC Nyva Ternopil",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Ukraine - U21 Premier League 2": {
+      "2026-09-21": [
+        {
+          "eventId": "30948755",
+          "leagueId": "18296679",
+          "home": "Karpaty Lviv U21",
+          "away": "FC Veres Rivne U21",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30944175",
+          "leagueId": "18296679",
+          "home": "Shakhtar Donetsk U21",
+          "away": "FC LNZ Cherkasy U21",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30930072",
+          "leagueId": "18296679",
+          "home": "FK Kudrivka U21",
+          "away": "FC Kolos Kovalivka U21",
+          "time": "13:00"
+        }
+      ]
+    },
+    "Uruguay - Primera Division": {
+      "2026-09-21": [
+        {
+          "eventId": "30929717",
+          "leagueId": "3023",
+          "home": "Liverpool Montevideo",
+          "away": "Racing Club Montevideo",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30935765",
+          "leagueId": "3023",
+          "home": "Central Espanol FC",
+          "away": "Montevideo City Torque",
+          "time": "01:30"
+        }
+      ]
+    },
+    "USA - MLS": {
+      "2026-09-21": [
+        {
+          "eventId": "30896358",
+          "leagueId": "3025",
+          "home": "Inter Miami CF",
+          "away": "San Diego FC",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-24": [
+        {
+          "eventId": "30931298",
+          "leagueId": "3025",
+          "home": "Seattle Sounders",
+          "away": "Real Salt Lake",
+          "time": "04:30"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30962705",
+          "leagueId": "3025",
+          "home": "Atlanta United FC",
+          "away": "New York City FC",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30962703",
+          "leagueId": "3025",
+          "home": "CF Montreal",
+          "away": "FC Cincinnati",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30962702",
+          "leagueId": "3025",
+          "home": "Charlotte FC",
+          "away": "Chicago Fire",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30962706",
+          "leagueId": "3025",
+          "home": "New York Red Bulls",
+          "away": "St Louis City SC",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30962704",
+          "leagueId": "3025",
+          "home": "Philadelphia Union",
+          "away": "Orlando City SC",
+          "time": "02:30"
+        }
+      ]
+    },
+    "USA - NWSL - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30896027",
+          "leagueId": "4752",
+          "home": "Bay FC (Wom)",
+          "away": "Racing Louisville (Wom)",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30896026",
+          "leagueId": "4752",
+          "home": "Utah Royals FC (Wom)",
+          "away": "Angel City FC (Wom)",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30953294",
+          "leagueId": "4752",
+          "home": "NJ/NY Gotham FC (Wom)",
+          "away": "Chicago Red Stars (Wom)",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30953690",
+          "leagueId": "4752",
+          "home": "Seattle Reign FC (Wom)",
+          "away": "Boston Legacy FC (Wom)",
+          "time": "03:30"
+        },
+        {
+          "eventId": "30959669",
+          "leagueId": "4752",
+          "home": "Kansas City Current (Wom)",
+          "away": "Denver Summit FC (Wom)",
+          "time": "19:30"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30963238",
+          "leagueId": "4752",
+          "home": "Portland Thorns (Wom)",
+          "away": "Houston Dash (Wom)",
+          "time": "03:45"
+        }
+      ]
+    },
+    "USA - USL Championship": {
+      "2026-09-21": [
+        {
+          "eventId": "30818904",
+          "leagueId": "6074",
+          "home": "Sacramento Republic FC",
+          "away": "San Antonio FC",
+          "time": "02:00"
+        }
+      ],
+      "2026-09-23": [
+        {
+          "eventId": "30851846",
+          "leagueId": "6074",
+          "home": "Birmingham Legion FC",
+          "away": "Brooklyn FC",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-26": [
+        {
+          "eventId": "30878287",
+          "leagueId": "6074",
+          "home": "Hartford Athletic",
+          "away": "Louisville City FC",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30962251",
+          "leagueId": "6074",
+          "home": "Sporting JAX",
+          "away": "Loudoun United FC",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30879606",
+          "leagueId": "6074",
+          "home": "El Paso Locomotive FC",
+          "away": "Tulsa Roughnecks FC",
+          "time": "04:00"
+        }
+      ],
+      "2026-09-27": [
+        {
+          "eventId": "30887237",
+          "leagueId": "6074",
+          "home": "Charleston Battery",
+          "away": "Rhode Island FC",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30887236",
+          "leagueId": "6074",
+          "home": "Detroit City FC",
+          "away": "Colorado Springs Switchbacks FC",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30887235",
+          "leagueId": "6074",
+          "home": "Indy Eleven",
+          "away": "Miami FC",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30888609",
+          "leagueId": "6074",
+          "home": "Monterey Bay Union",
+          "away": "Lexington SC",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30888608",
+          "leagueId": "6074",
+          "home": "Oakland Roots",
+          "away": "Phoenix Rising FC",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30888607",
+          "leagueId": "6074",
+          "home": "Orange County SC",
+          "away": "Pittsburgh Riverhounds",
+          "time": "05:00"
+        }
+      ]
+    },
+    "USA - USL League One": {
+      "2026-09-21": [
+        {
+          "eventId": "30929721",
+          "leagueId": "18262141",
+          "home": "Spokane Velocity FC",
+          "away": "AC Boise",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Uzbekistan - Pro League": {
+      "2026-09-21": [
+        {
+          "eventId": "30935475",
+          "leagueId": "11086",
+          "home": "Lochin FK",
+          "away": "Respublika FA",
+          "time": "14:00"
+        }
+      ]
+    },
+    "Uzbekistan - Super League": {
+      "2026-09-21": [
+        {
+          "eventId": "30926307",
+          "leagueId": "4698",
+          "home": "Xorazm Urganch",
+          "away": "Qizilqum Zarafshon",
+          "time": "18:15"
+        }
+      ]
+    },
+    "World - International Friendlies": {
+      "2026-09-21": [
+        {
+          "eventId": "30899370",
+          "leagueId": "3042",
+          "home": "Fiji",
+          "away": "Vanuatu",
+          "time": "10:00"
+        }
+      ],
+      "2026-09-23": [
+        {
+          "eventId": "30891918",
+          "leagueId": "3042",
+          "home": "Azerbaijan",
+          "away": "Tajikistan",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-25": [
+        {
+          "eventId": "30912568",
+          "leagueId": "3042",
+          "home": "Australia",
+          "away": "Brazil",
+          "time": "13:00"
+        }
+      ],
+      "2026-09-29": [
+        {
+          "eventId": "30910521",
+          "leagueId": "3042",
+          "home": "Russia",
+          "away": "Iran",
+          "time": "18:00"
+        }
+      ]
+    }
+  },
+  "BASKETBOL": {
+    "Asia - Asian Games - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30898174",
+          "leagueId": "9164",
+          "home": "Mongolia (Wom)",
+          "away": "South Korea (Wom)",
+          "time": "07:00"
+        },
+        {
+          "eventId": "30930330",
+          "leagueId": "9164",
+          "home": "Malaysia (Wom)",
+          "away": "Chinese Taipei (Wom)",
+          "time": "10:00"
+        },
+        {
+          "eventId": "30930331",
+          "leagueId": "9164",
+          "home": "China (Wom)",
+          "away": "Indonesia (Wom)",
+          "time": "13:00"
+        }
+      ]
+    },
+    "Australia - NBL": {
+      "2026-09-21": [
+        {
+          "eventId": "30871358",
+          "leagueId": "637",
+          "home": "Tasmania JackJumpers",
+          "away": "South East Melbourne Phoenix",
+          "time": "12:30"
+        }
+      ]
+    },
+    "Denmark - Basketligaen": {
+      "2026-09-22": [
+        {
+          "eventId": "30884444",
+          "leagueId": "672",
+          "home": "BC Copenhagen",
+          "away": "Vaerlose BBK",
+          "time": "19:00"
+        }
+      ]
+    },
+    "Dominican Republic - Torneo Superior del Distrito Nacional": {
+      "2026-09-21": [
+        {
+          "eventId": "30956596",
+          "leagueId": "29201",
+          "home": "Club Huellas Del Siglo",
+          "away": "San Carlos",
+          "time": "01:00"
+        }
+      ]
+    },
+    "El Salvador - Liga Mayor": {
+      "2026-09-21": [
+        {
+          "eventId": "30953163",
+          "leagueId": "13445",
+          "home": "BC Cojute",
+          "away": "AD Isidro Metapan",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30953164",
+          "leagueId": "13445",
+          "home": "BC Santa Tecla",
+          "away": "Ahuachapan",
+          "time": "03:00"
+        }
+      ]
+    },
+    "Europe - Euroleague": {
+      "2026-09-24": [
+        {
+          "eventId": "30584407",
+          "leagueId": "686",
+          "home": "BC Dubai",
+          "away": "Real Madrid",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30584404",
+          "leagueId": "686",
+          "home": "Hapoel Tel-Aviv",
+          "away": "Bayern Munich",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30584402",
+          "leagueId": "686",
+          "home": "KK Crvena Zvezda",
+          "away": "BC Zalgiris",
+          "time": "21:00"
+        },
+        {
+          "eventId": "30584406",
+          "leagueId": "686",
+          "home": "Panathinaikos BC",
+          "away": "Paris Basketball",
+          "time": "21:15"
+        },
+        {
+          "eventId": "30584399",
+          "leagueId": "686",
+          "home": "FC Barcelona Basquet",
+          "away": "Anadolu Efes SK",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30584401",
+          "leagueId": "686",
+          "home": "Saski Baskonia",
+          "away": "Olympiacos Piraeus BC",
+          "time": "21:30"
+        },
+        {
+          "eventId": "30682057",
+          "leagueId": "686",
+          "home": "Asvel Lyon-Villeurbanne",
+          "away": "Maccabi Tel Aviv",
+          "time": "21:45"
+        }
+      ],
+      "2026-09-25": [
+        {
+          "eventId": "30584400",
+          "leagueId": "686",
+          "home": "Besiktas JK",
+          "away": "Valencia Basket",
+          "time": "20:00"
+        },
+        {
+          "eventId": "30584405",
+          "leagueId": "686",
+          "home": "Fenerbahce",
+          "away": "Virtus Bologna",
+          "time": "20:45"
+        },
+        {
+          "eventId": "30584403",
+          "leagueId": "686",
+          "home": "KK Partizan Belgrade",
+          "away": "Olimpia Milano",
+          "time": "21:45"
+        }
+      ]
+    },
+    "Greece - Basket League": {
+      "2026-10-03": [
+        {
+          "eventId": "30926420",
+          "leagueId": "721",
+          "home": "AEK Athens BC",
+          "away": "Maroussi BC",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30926421",
+          "leagueId": "721",
+          "home": "Kolossos Rodou BC",
+          "away": "Doxa Leukadas",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30926424",
+          "leagueId": "721",
+          "home": "Promitheas Patras BC",
+          "away": "Peristeri BC",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30926425",
+          "leagueId": "721",
+          "home": "AS Karditsas",
+          "away": "Aris BC",
+          "time": "17:30"
+        }
+      ],
+      "2026-10-04": [
+        {
+          "eventId": "30926423",
+          "leagueId": "721",
+          "home": "Panathinaikos BC",
+          "away": "Vikos BC",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30926422",
+          "leagueId": "721",
+          "home": "Iraklis BC",
+          "away": "Olympiacos Piraeus BC",
+          "time": "17:30"
+        }
+      ]
+    },
+    "Greece - Super Cup": {
+      "2026-09-26": [
+        {
+          "eventId": "30930326",
+          "leagueId": "18276090",
+          "home": "Olympiacos Piraeus BC",
+          "away": "AEK Athens BC",
+          "time": "16:45"
+        },
+        {
+          "eventId": "30930327",
+          "leagueId": "18276090",
+          "home": "Panathinaikos BC",
+          "away": "PAOK BC",
+          "time": "21:00"
+        }
+      ]
+    },
+    "Lithuania - LKL": {
+      "2026-09-22": [
+        {
+          "eventId": "30831742",
+          "leagueId": "749",
+          "home": "BC Jonava",
+          "away": "BC Nevezis Kedainiai",
+          "time": "18:50"
+        }
+      ]
+    },
+    "Mexico - CIBAPAC": {
+      "2026-09-21": [
+        {
+          "eventId": "30959164",
+          "leagueId": "35558",
+          "home": "Serpientes Tijuana",
+          "away": "Los Colorados de San Luis RC",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Mexico - LNBP": {
+      "2026-09-21": [
+        {
+          "eventId": "30960521",
+          "leagueId": "751",
+          "home": "El Calor de Cancun",
+          "away": "Diablos Rojos del Mexico",
+          "time": "01:15"
+        },
+        {
+          "eventId": "30965325",
+          "leagueId": "751",
+          "home": "Astros de Jalisco",
+          "away": "Dorados de Chihuahua",
+          "time": "02:15"
+        },
+        {
+          "eventId": "30960147",
+          "leagueId": "751",
+          "home": "Abejas de Leon",
+          "away": "Freseras Irapuato",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30960328",
+          "leagueId": "751",
+          "home": "Soles de Mexicali",
+          "away": "Panteras de Aguascalientes",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30960219",
+          "leagueId": "751",
+          "home": "Mineros de Zacatecas",
+          "away": "Gambusinos Fresnillo",
+          "time": "03:05"
+        },
+        {
+          "eventId": "30960185",
+          "leagueId": "751",
+          "home": "Correcaminos UAT Victoria",
+          "away": "Fuerza Regia de Monterrey",
+          "time": "03:15"
+        },
+        {
+          "eventId": "30961572",
+          "leagueId": "751",
+          "home": "CB Santos San Luis",
+          "away": "Lobos Plateados",
+          "time": "04:00"
+        }
+      ]
+    },
+    "North America - NBA": {
+      "2026-10-20": [
+        {
+          "eventId": "30692056",
+          "leagueId": "756",
+          "home": "Boston Celtics",
+          "away": "Detroit Pistons",
+          "time": "22:00"
+        }
+      ],
+      "2026-10-21": [
+        {
+          "eventId": "30692055",
+          "leagueId": "756",
+          "home": "Philadelphia 76ers",
+          "away": "New York Knicks",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30692053",
+          "leagueId": "756",
+          "home": "Oklahoma City Thunder",
+          "away": "San Antonio Spurs",
+          "time": "04:30"
+        }
+      ],
+      "2026-10-22": [
+        {
+          "eventId": "30692054",
+          "leagueId": "756",
+          "home": "Minnesota Timberwolves",
+          "away": "Miami Heat",
+          "time": "02:30"
+        },
+        {
+          "eventId": "30692057",
+          "leagueId": "756",
+          "home": "Golden State Warriors",
+          "away": "Los Angeles Lakers",
+          "time": "05:00"
+        }
+      ],
+      "2026-12-25": [
+        {
+          "eventId": "30692835",
+          "leagueId": "756",
+          "home": "San Antonio Spurs",
+          "away": "New York Knicks",
+          "time": "20:00"
+        },
+        {
+          "eventId": "30692834",
+          "leagueId": "756",
+          "home": "Miami Heat",
+          "away": "Boston Celtics",
+          "time": "22:30"
+        }
+      ],
+      "2026-12-26": [
+        {
+          "eventId": "30692833",
+          "leagueId": "756",
+          "home": "Philadelphia 76ers",
+          "away": "Los Angeles Lakers",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30692832",
+          "leagueId": "756",
+          "home": "Oklahoma City Thunder",
+          "away": "Minnesota Timberwolves",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30692827",
+          "leagueId": "756",
+          "home": "Denver Nuggets",
+          "away": "Golden State Warriors",
+          "time": "06:30"
+        }
+      ]
+    },
+    "North America - WNBA": {
+      "2026-09-21": [
+        {
+          "eventId": "30810938",
+          "leagueId": "755",
+          "home": "Portland Fire",
+          "away": "Los Angeles Sparks",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30819296",
+          "leagueId": "755",
+          "home": "Seattle Storm",
+          "away": "Las Vegas Aces",
+          "time": "04:00"
+        }
+      ]
+    },
+    "Poland - 1 Liga": {
+      "2026-09-21": [
+        {
+          "eventId": "30959935",
+          "leagueId": "11175",
+          "home": "Polonia Warszawa",
+          "away": "Sokol Lancut",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Puerto Rico - BSN - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30965314",
+          "leagueId": "19018",
+          "home": "Cariduros de Fajardo (Wom)",
+          "away": "Explosivas de Moca (Wom)",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30965315",
+          "leagueId": "19018",
+          "home": "Criollos de Caguas (Wom)",
+          "away": "Pollitas de Isabela (Wom)",
+          "time": "02:00"
+        },
+        {
+          "eventId": "30965318",
+          "leagueId": "19018",
+          "home": "Monarcas Juana Diaz (Wom)",
+          "away": "Atenienses de Manati (Wom)",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Sweden - Superettan": {
+      "2026-09-21": [
+        {
+          "eventId": "30913099",
+          "leagueId": "28861",
+          "home": "Djurgarden IF",
+          "away": "AIK Basket",
+          "time": "20:00"
+        }
+      ]
+    },
+    "Uruguay - League - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30942583",
+          "leagueId": "25404",
+          "home": "Defensor Sporting (Wom)",
+          "away": "Club Malvin (Wom)",
+          "time": "03:30"
+        }
+      ]
+    },
+    "Uruguay - Tercera de Ascenso": {
+      "2026-09-21": [
+        {
+          "eventId": "30953419",
+          "leagueId": "25925",
+          "home": "CA 25 DE Agosto",
+          "away": "BC Auriblanco",
+          "time": "01:45"
+        },
+        {
+          "eventId": "30953417",
+          "leagueId": "25925",
+          "home": "CD Reducto",
+          "away": "BBC Layva",
+          "time": "01:45"
+        }
+      ]
+    },
+    "World - Club Friendlies": {
+      "2026-09-21": [
+        {
+          "eventId": "30966363",
+          "leagueId": "825",
+          "home": "El Ceibo de San Francisco",
+          "away": "Atletico San Isidro",
+          "time": "03:00"
+        },
+        {
+          "eventId": "30959177",
+          "leagueId": "825",
+          "home": "Chien Hsin University of Science and Technology",
+          "away": "National Taiwan Sport University",
+          "time": "05:40"
+        },
+        {
+          "eventId": "30967118",
+          "leagueId": "825",
+          "home": "Huaqiao University",
+          "away": "National Formosa University",
+          "time": "09:00"
+        },
+        {
+          "eventId": "30967116",
+          "leagueId": "825",
+          "home": "Shanghai Jiao Tong University",
+          "away": "National Taiwan University of Arts",
+          "time": "12:40"
+        },
+        {
+          "eventId": "30967117",
+          "leagueId": "825",
+          "home": "Lee-Ming Institute of Technology",
+          "away": "National Chengchi University",
+          "time": "14:30"
+        }
+      ]
+    },
+    "World - Club Friendlies - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30965327",
+          "leagueId": "9358",
+          "home": "University of Taipei (Wom)",
+          "away": "Shih Hsin University (Wom)",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30966489",
+          "leagueId": "9358",
+          "home": "National Taiwan Normal University (Wom)",
+          "away": "CTBC Business School (Wom)",
+          "time": "10:50"
+        }
+      ]
+    }
+  },
+  "VOLEYBOL": {
+    "Asia - Asian Games - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30967049",
+          "leagueId": "9173",
+          "home": "Chinese Taipei (Wom)",
+          "away": "Kazakhstan (Wom)",
+          "time": "07:00"
+        },
+        {
+          "eventId": "30965357",
+          "leagueId": "9173",
+          "home": "Indonesia (Wom)",
+          "away": "Vietnam (Wom)",
+          "time": "07:00"
+        }
+      ]
+    },
+    "Costa Rica - Championship": {
+      "2026-09-21": [
+        {
+          "eventId": "30962686",
+          "leagueId": "18270245",
+          "home": "UNED",
+          "away": "Atenas",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30965521",
+          "leagueId": "18270245",
+          "home": "Asovol Belen",
+          "away": "ADV San Jose",
+          "time": "05:00"
+        }
+      ]
+    },
+    "Costa Rica - Championship - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30964940",
+          "leagueId": "18272296",
+          "home": "UNED (Wom)",
+          "away": "ADV San Jose (Wom)",
+          "time": "03:00"
+        }
+      ]
+    },
+    "Europe - CEV European Championship": {
+      "2026-09-21": [
+        {
+          "eventId": "30939691",
+          "leagueId": "1468",
+          "home": "Belgium",
+          "away": "Czechia",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30940932",
+          "leagueId": "1468",
+          "home": "Slovenia",
+          "away": "Serbia",
+          "time": "22:00"
+        }
+      ]
+    },
+    "North America - NCAA - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30953448",
+          "leagueId": "12773",
+          "home": "Hawaii Rainbow Warriors (Wom)",
+          "away": "UCLA Bruins (Wom)",
+          "time": "00:30"
+        }
+      ]
+    },
+    "Uruguay - Primera Division - Women": {
+      "2026-09-21": [
+        {
+          "eventId": "30967521",
+          "leagueId": "18514",
+          "home": "CSD Juan Ferreira (Wom)",
+          "away": "CA Bohemios (Wom)",
+          "time": "01:30"
+        }
+      ]
+    },
+    "Virtual Matches - Betual Sultanlar Ligi": {
+      "2026-09-21": [
+        {
+          "eventId": "30969885",
+          "leagueId": "18296928",
+          "home": "Besiktas (Wom) Virtual",
+          "away": "Nilufer Bld (Wom) Virtual",
+          "time": "00:20"
+        },
+        {
+          "eventId": "30969886",
+          "leagueId": "18296928",
+          "home": "Galatasaray (Wom) Virtual",
+          "away": "Iller Bankasi (Wom) Virtual",
+          "time": "00:20"
+        }
+      ]
+    }
+  },
+  "TENIS": {
+    "Argentina - ATP Challenger Buenos Aires - Clay (Doubles)": {
+      "2026-09-21": [
+        {
+          "eventId": "30967023",
+          "leagueId": "9398",
+          "home": "Tomas Martinez/Ezequiel Monferrer",
+          "away": "Murkel Dellien/Federico Zeballos",
+          "time": "16:00"
+        }
+      ]
+    },
+    "Brazil - WTA Sao Paulo - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30961524",
+          "leagueId": "18294056",
+          "home": "Kaitlin Quevedo",
+          "away": "Nadia Podoroska",
+          "time": "02:00"
+        }
+      ]
+    },
+    "Bulgaria - ATP Challenger Plovdiv - Clay": {
+      "2026-09-21": [
+        {
+          "eventId": "30966301",
+          "leagueId": "18296379",
+          "home": "Filip Misolic",
+          "away": "Sebastian Gima",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30966139",
+          "leagueId": "18296379",
+          "home": "Izan Almazan Valiente",
+          "away": "George Lazarov",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967385",
+          "leagueId": "18296379",
+          "home": "Dusan Obradovic",
+          "away": "Adrian Andreev",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30966757",
+          "leagueId": "18296379",
+          "home": "Luca Wiedenmann",
+          "away": "Yanaki Milev",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30968106",
+          "leagueId": "18296379",
+          "home": "Pavlos Tsitsipas",
+          "away": "Nikita Mashtakov",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30962677",
+          "leagueId": "18296379",
+          "home": "Benjamin Hassan",
+          "away": "Pol Martin Tiffon",
+          "time": "16:30"
+        }
+      ]
+    },
+    "Egypt - WTT Men - Sharm El Sheikh - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30969945",
+          "leagueId": "9307",
+          "home": "Matteo Fondriest",
+          "away": "Filippo Crippa",
+          "time": "11:30"
+        }
+      ]
+    },
+    "France - ATP Challenger St. Tropez - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30966389",
+          "leagueId": "18279626",
+          "home": "Mathys Domenc",
+          "away": "Daniel Jade",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30966379",
+          "leagueId": "18279626",
+          "home": "Matteo Martineau",
+          "away": "Justin Boulais",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967111",
+          "leagueId": "18279626",
+          "home": "Maxime Janvier",
+          "away": "Daniel Masur",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30968023",
+          "leagueId": "18279626",
+          "home": "Moez Echargui",
+          "away": "Karl Poling",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30968046",
+          "leagueId": "18279626",
+          "home": "Murphy Cassone",
+          "away": "Patrick Zahraj",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30960184",
+          "leagueId": "18279626",
+          "home": "David Goffin",
+          "away": "Mark Lajal",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30960178",
+          "leagueId": "18279626",
+          "home": "Grigor Dimitrov",
+          "away": "Edas Butvilas",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30960179",
+          "leagueId": "18279626",
+          "home": "Nicolai Budkov Kjaer",
+          "away": "Billy Harris",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30960176",
+          "leagueId": "18279626",
+          "home": "Remy Bertola",
+          "away": "Jesper De Jong",
+          "time": "11:00"
+        }
+      ]
+    },
+    "France - ATP Challenger St. Tropez - Hard (Doubles)": {
+      "2026-09-22": [
+        {
+          "eventId": "30966760",
+          "leagueId": "18279627",
+          "home": "Erik Grevelius/Adam Heinonen",
+          "away": "Yanis Ghazouani Durand/Mathieu Scaglia",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Italy - ATP Challenger Genoa - Clay": {
+      "2026-09-21": [
+        {
+          "eventId": "30967837",
+          "leagueId": "1261",
+          "home": "Lorenzo Rottoli",
+          "away": "Stefano D'Agostino",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30967186",
+          "leagueId": "1261",
+          "home": "Maximo Zeitune",
+          "away": "Federico Iannaccone",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30967537",
+          "leagueId": "1261",
+          "home": "Pierluigi Basile",
+          "away": "Giovanni Oradini",
+          "time": "14:30"
+        }
+      ]
+    },
+    "Italy - ATP Challenger Genoa - Clay (Doubles)": {
+      "2026-09-22": [
+        {
+          "eventId": "30963915",
+          "leagueId": "9540",
+          "home": "Inigo Cervantes/Denys Molchanov",
+          "away": "Francesco Forti/Filippo Romano",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Italy - WTA Tolentino - Clay": {
+      "2026-09-21": [
+        {
+          "eventId": "30968007",
+          "leagueId": "18294208",
+          "home": "Dalila Spiteri",
+          "away": "Iva Primorac Pavicic",
+          "time": "11:05"
+        },
+        {
+          "eventId": "30967904",
+          "leagueId": "18294208",
+          "home": "Lisa Zaar",
+          "away": "Enola Chiesa",
+          "time": "11:05"
+        },
+        {
+          "eventId": "30968001",
+          "leagueId": "18294208",
+          "home": "Aneta Laboutkova",
+          "away": "Katerina Tsygourova",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30967690",
+          "leagueId": "18294208",
+          "home": "Jessica Pieri",
+          "away": "Aneta Kucmova",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30967565",
+          "leagueId": "18294208",
+          "home": "Guiomar Maristany Zuleta de Reales",
+          "away": "Despina Papamichail",
+          "time": "14:00"
+        },
+        {
+          "eventId": "30967571",
+          "leagueId": "18294208",
+          "home": "Mia Ristic",
+          "away": "Arantxa Rus",
+          "time": "14:00"
+        },
+        {
+          "eventId": "30967569",
+          "leagueId": "18294208",
+          "home": "Polona Hercog",
+          "away": "Leyre Romero Gormaz",
+          "time": "16:30"
+        },
+        {
+          "eventId": "30967575",
+          "leagueId": "18294208",
+          "home": "Federica Urgesi",
+          "away": "Oksana Selekhmeteva",
+          "time": "19:00"
+        },
+        {
+          "eventId": "30967572",
+          "leagueId": "18294208",
+          "home": "Laura Samson",
+          "away": "Noemi Basiletti",
+          "time": "21:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30967570",
+          "leagueId": "18294208",
+          "home": "Aurora Zantedeschi",
+          "away": "Marta Lombardini",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967566",
+          "leagueId": "18294208",
+          "home": "Barbora Palicova",
+          "away": "Alicia Herrero Linana",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967574",
+          "leagueId": "18294208",
+          "home": "Ekaterine Gorgodze",
+          "away": "Laura Pigossi",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967573",
+          "leagueId": "18294208",
+          "home": "Jennifer Ruggeri",
+          "away": "Julia Grabher",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967567",
+          "leagueId": "18294208",
+          "home": "Julie Struplova",
+          "away": "Samira De Stefano",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967568",
+          "leagueId": "18294208",
+          "home": "Nuria Brancaccio",
+          "away": "Maria Lourdes Carle",
+          "time": "11:00"
+        }
+      ]
+    },
+    "Japan - UTR Pro Series Kawaguchi": {
+      "2026-09-21": [
+        {
+          "eventId": "30966994",
+          "leagueId": "18288514",
+          "home": "Kotaro Mochizuki",
+          "away": "Kenta Kawada",
+          "time": "05:35"
+        },
+        {
+          "eventId": "30967464",
+          "leagueId": "18288514",
+          "home": "Mirgiiaz Mirdzhaliev",
+          "away": "Masaki Ishikawa",
+          "time": "05:35"
+        },
+        {
+          "eventId": "30967088",
+          "leagueId": "18288514",
+          "home": "Taki Adachi",
+          "away": "Natsuki Yamamoto",
+          "time": "07:05"
+        },
+        {
+          "eventId": "30967893",
+          "leagueId": "18288514",
+          "home": "Takumi Katsuda",
+          "away": "Raffael Gasanov",
+          "time": "07:05"
+        }
+      ]
+    },
+    "Korea (South) - WTA Seoul - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30956190",
+          "leagueId": "10591",
+          "home": "Katie Volynets",
+          "away": "Elvina Kalieva",
+          "time": "06:00"
+        },
+        {
+          "eventId": "30956194",
+          "leagueId": "10591",
+          "home": "Lanlana Tararudee",
+          "away": "Moyuka Uchijima",
+          "time": "06:00"
+        },
+        {
+          "eventId": "30965850",
+          "leagueId": "10591",
+          "home": "Xinxin Yao",
+          "away": "Maya Joint",
+          "time": "06:00"
+        },
+        {
+          "eventId": "30956192",
+          "leagueId": "10591",
+          "home": "Alina Korneeva",
+          "away": "Mananchaya Sawangkaew",
+          "time": "07:30"
+        },
+        {
+          "eventId": "30956193",
+          "leagueId": "10591",
+          "home": "Kamilla Rakhimova",
+          "away": "Polina Kudermetova",
+          "time": "07:30"
+        },
+        {
+          "eventId": "30956191",
+          "leagueId": "10591",
+          "home": "Yue Yuan",
+          "away": "Dayeon Back",
+          "time": "08:00"
+        },
+        {
+          "eventId": "30965878",
+          "leagueId": "10591",
+          "home": "Darya Astakhova",
+          "away": "Magda Linette",
+          "time": "09:30"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30965849",
+          "leagueId": "10591",
+          "home": "Alevtina Ibragimova",
+          "away": "Yeonwoo Ku",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956198",
+          "leagueId": "10591",
+          "home": "Alina Charaeva",
+          "away": "Sofia Kenin",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956188",
+          "leagueId": "10591",
+          "home": "Anna Bondar",
+          "away": "Renata Zarazua",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30965882",
+          "leagueId": "10591",
+          "home": "Emerson Jones",
+          "away": "YeXin Ma",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956195",
+          "leagueId": "10591",
+          "home": "Eva Lys",
+          "away": "Elena Gabriela Ruse",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956197",
+          "leagueId": "10591",
+          "home": "Jelena Ostapenko",
+          "away": "Anastasia Zakharova",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956189",
+          "leagueId": "10591",
+          "home": "Sohyun Park",
+          "away": "Robin Montgomery",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956196",
+          "leagueId": "10591",
+          "home": "Tamara Zidansek",
+          "away": "Kimberly Birrell",
+          "time": "04:00"
+        },
+        {
+          "eventId": "30956187",
+          "leagueId": "10591",
+          "home": "Taylah Preston",
+          "away": "Himeno Sakatsume",
+          "time": "04:00"
+        }
+      ]
+    },
+    "Portugal - WTA Porto - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30967019",
+          "leagueId": "18293565",
+          "home": "Angelina Voloshchuk",
+          "away": "Ariana Arseneault",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30968006",
+          "leagueId": "18293565",
+          "home": "Kylie Collins",
+          "away": "Valentina Steiner",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967384",
+          "leagueId": "18293565",
+          "home": "Sofia Johnson",
+          "away": "Brantmeier Reese",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967189",
+          "leagueId": "18293565",
+          "home": "Anouk Koevermans",
+          "away": "Ayana Akli",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30967662",
+          "leagueId": "18293565",
+          "home": "Sahaja Yamalapalli",
+          "away": "Naiktha Bains",
+          "time": "14:30"
+        },
+        {
+          "eventId": "30967196",
+          "leagueId": "18293565",
+          "home": "Lizette Cabrera",
+          "away": "Sinja Kraus",
+          "time": "16:00"
+        },
+        {
+          "eventId": "30967192",
+          "leagueId": "18293565",
+          "home": "Susan Bandecchi",
+          "away": "Oceane Dodin",
+          "time": "18:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30967191",
+          "leagueId": "18293565",
+          "home": "Erika Andreeva",
+          "away": "Katie Swan",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967190",
+          "leagueId": "18293565",
+          "home": "Francisca Jorge",
+          "away": "Mia Pohankova",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967193",
+          "leagueId": "18293565",
+          "home": "Harmony Tan",
+          "away": "Carol Young Suh Lee",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967188",
+          "leagueId": "18293565",
+          "home": "Katherine Sebov",
+          "away": "Gabriela Knutson",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967212",
+          "leagueId": "18293565",
+          "home": "Matilde Jorge",
+          "away": "Celia Cervino Ruiz",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967187",
+          "leagueId": "18293565",
+          "home": "Mina Hodzic",
+          "away": "Elena Malygina",
+          "time": "13:00"
+        },
+        {
+          "eventId": "30967194",
+          "leagueId": "18293565",
+          "home": "Veronika Podrez",
+          "away": "Madalena Matias",
+          "time": "13:00"
+        }
+      ]
+    },
+    "Portugal - WTA Porto - Hard (Doubles)": {
+      "2026-09-22": [
+        {
+          "eventId": "30970163",
+          "leagueId": "18293566",
+          "home": "Ayana Akli/Angelina Voloshchuk",
+          "away": "Ariana Arseneault/Raphaelle Lacasse",
+          "time": "13:00"
+        }
+      ]
+    },
+    "Singapore - WTA Singapore - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30958799",
+          "leagueId": "18291908",
+          "home": "Daria Kasatkina",
+          "away": "Aliaksandra Sasnovich",
+          "time": "06:00"
+        },
+        {
+          "eventId": "30965817",
+          "leagueId": "18291908",
+          "home": "Kristina Mladenovic",
+          "away": "Nao Hibino",
+          "time": "07:30"
+        },
+        {
+          "eventId": "30958787",
+          "leagueId": "18291908",
+          "home": "Rebecca Sramkova",
+          "away": "Maja Chwalinska",
+          "time": "09:00"
+        },
+        {
+          "eventId": "30962664",
+          "leagueId": "18291908",
+          "home": "Talia Gibson",
+          "away": "Fiona Ferro",
+          "time": "09:00"
+        },
+        {
+          "eventId": "30965818",
+          "leagueId": "18291908",
+          "home": "Kyoka Okamura",
+          "away": "Leylah Fernandez",
+          "time": "13:30"
+        },
+        {
+          "eventId": "30965819",
+          "leagueId": "18291908",
+          "home": "Storm Hunter",
+          "away": "Joanna Garland",
+          "time": "15:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30965816",
+          "leagueId": "18291908",
+          "home": "Barbora Krejcikova",
+          "away": "Anna-Lena Friedsam",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30958798",
+          "leagueId": "18291908",
+          "home": "Donna Vekic",
+          "away": "Xinyu Wang",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30958796",
+          "leagueId": "18291908",
+          "home": "Maria Sakkari",
+          "away": "Linda Fruhvirtova",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30958785",
+          "leagueId": "18291908",
+          "home": "Tatiana Prozorova",
+          "away": "Sofia Costoulas",
+          "time": "05:00"
+        },
+        {
+          "eventId": "30958786",
+          "leagueId": "18291908",
+          "home": "Vivian Wolff",
+          "away": "Oleksandra Oliynykova",
+          "time": "05:00"
+        }
+      ]
+    },
+    "Singapore - WTA Singapore - Hard (Doubles)": {
+      "2026-09-21": [
+        {
+          "eventId": "30962672",
+          "leagueId": "18291909",
+          "home": "Fiona Ferro/Linda Fruhvirtova",
+          "away": "Qianhui Tang/Yifan Xu",
+          "time": "12:00"
+        }
+      ]
+    },
+    "Turkiye - WTA Ankara - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30966527",
+          "leagueId": "18297183",
+          "home": "Daria Egorova",
+          "away": "Melisa Ercan",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30967030",
+          "leagueId": "18297183",
+          "home": "Ksenia Zaytseva",
+          "away": "Ilay Yoruk",
+          "time": "11:00"
+        },
+        {
+          "eventId": "30966422",
+          "leagueId": "18297183",
+          "home": "Viktoria Hruncakova",
+          "away": "Polina Iatcenko",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30967098",
+          "leagueId": "18297183",
+          "home": "Weronika Falkowska",
+          "away": "Alana Smith",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30966424",
+          "leagueId": "18297183",
+          "home": "Yuki Naito",
+          "away": "Julia Avdeeva",
+          "time": "12:30"
+        },
+        {
+          "eventId": "30966416",
+          "leagueId": "18297183",
+          "home": "Aliona Falei",
+          "away": "Tian Fangran",
+          "time": "14:00"
+        },
+        {
+          "eventId": "30966425",
+          "leagueId": "18297183",
+          "home": "Aysegul Mert",
+          "away": "Isabella Shinikova",
+          "time": "17:00"
+        },
+        {
+          "eventId": "30966417",
+          "leagueId": "18297183",
+          "home": "Lina Gjorcheska",
+          "away": "Ayla Aksu",
+          "time": "19:00"
+        }
+      ],
+      "2026-09-22": [
+        {
+          "eventId": "30966420",
+          "leagueId": "18297183",
+          "home": "Anastasia Tikhonova",
+          "away": "Anastasia Gasanova",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966421",
+          "leagueId": "18297183",
+          "home": "Elena Micic",
+          "away": "Julia Riera",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966415",
+          "leagueId": "18297183",
+          "home": "Fiona Crawley",
+          "away": "Carole Monnet",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966423",
+          "leagueId": "18297183",
+          "home": "Katarina Kuzmova",
+          "away": "Cagla Buyukakcay",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966418",
+          "leagueId": "18297183",
+          "home": "Martyna Kubka",
+          "away": "Berfu Cengiz",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966414",
+          "leagueId": "18297183",
+          "home": "Solana Sierra",
+          "away": "Deniz Dilek",
+          "time": "12:00"
+        },
+        {
+          "eventId": "30966419",
+          "leagueId": "18297183",
+          "home": "Teodora Kostovic",
+          "away": "Carolyn Ansari",
+          "time": "12:00"
+        }
+      ]
+    },
+    "USA - ATP Challenger San Diego - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30963814",
+          "leagueId": "18292208",
+          "home": "Aleksi Lofman",
+          "away": "Evan Zhu",
+          "time": "01:00"
+        },
+        {
+          "eventId": "30963818",
+          "leagueId": "18292208",
+          "home": "Andrew Johnson",
+          "away": "Sebastian Gorzny",
+          "time": "01:30"
+        },
+        {
+          "eventId": "30963820",
+          "leagueId": "18292208",
+          "home": "Timo Legout",
+          "away": "Darian King",
+          "time": "01:30"
+        },
+        {
+          "eventId": "30963809",
+          "leagueId": "18292208",
+          "home": "Aidan Mayo",
+          "away": "Jordan Lee",
+          "time": "02:30"
+        }
+      ]
+    },
+    "USA - ATP Challenger Tiburon - Hard": {
+      "2026-09-21": [
+        {
+          "eventId": "30963262",
+          "leagueId": "1393",
+          "home": "Darwin Blanch",
+          "away": "Michael Mmoh",
+          "time": "01:15"
+        }
+      ]
+    },
+    "USA - UTR Pro Series Newport Beach": {
+      "2026-09-21": [
+        {
+          "eventId": "30965945",
+          "leagueId": "18277215",
+          "home": "Victor Castro",
+          "away": "Gregory Gamal",
+          "time": "00:35"
+        }
+      ]
+    },
+    "USA - UTR Pro Series Norfolk": {
+      "2026-09-21": [
+        {
+          "eventId": "30967678",
+          "leagueId": "18297234",
+          "home": "Felix Obermair",
+          "away": "Paxton Pritchard",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30967677",
+          "leagueId": "18297234",
+          "home": "Gordon Gallagher",
+          "away": "Piet Steveker",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30967680",
+          "leagueId": "18297234",
+          "home": "James Weber",
+          "away": "Ben Stecker",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30967679",
+          "leagueId": "18297234",
+          "home": "Julien Doitteau",
+          "away": "Drew Hedgecoe",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30967675",
+          "leagueId": "18297234",
+          "home": "Ryan Morgan",
+          "away": "Jean Karim Olivier De Sardan",
+          "time": "18:00"
+        },
+        {
+          "eventId": "30967676",
+          "leagueId": "18297234",
+          "home": "Zechariah Hamrouni",
+          "away": "Lukas Palovic",
+          "time": "18:00"
+        }
+      ]
+    },
+    "World - Davis Cup - Singles": {
+      "2026-09-21": [
+        {
+          "eventId": "30953428",
+          "leagueId": "1367",
+          "home": "Diego Duran",
+          "away": "Jaime Faria",
+          "time": "02:00"
+        }
+      ]
+    }
+  }
+}

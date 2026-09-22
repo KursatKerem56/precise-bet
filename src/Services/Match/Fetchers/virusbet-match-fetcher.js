@@ -1,458 +1,97 @@
 /**
- * VIRUSBET MAÇ ÇEKİCİ
+ * VIRUSBET MAC CEKICI
  *
- * Kullanım:   node virusbet-match-fetcher.js
- * Çıktı:      virusbet-matches.json
- *
- * Çıktı yapısı betist-match-fetcher.js ile BİREBİR AYNIDIR:
- *
- *   {
- *     "FUTBOL": {
- *       "Türkiye - Süper Lig": {
- *         "2026-09-18": [
- *           { "eventId": "...", "leagueId": "...", "home": "...", "away": "...", "time": "20:00" }
- *         ]
- *       }
- *     },
- *     "BASKETBOL": { ... }, "VOLEYBOL": { ... }, "TENIS": { ... }
- *   }
+ * Cikti:  virus_bet-matches.json  (betist ile birebir ayni yapi)
  *
  * ---------------------------------------------------------------------------
  * PROTOKOL
  *
- * Virusbet, BetConstruct "swarm" altyapısını kullanıyor. Veri normal HTTP
- * ile değil, tek bir WebSocket bağlantısı üzerinden JSON komutlarıyla
- * geliyor (HAR'dan doğrulandı):
+ * Virusbet, BetConstruct "swarm" altyapisini kullaniyor. Veri duz HTTP ile
+ * degil, tek bir WebSocket uzerinden JSON komutlariyla geliyor:
  *
- *   wss://eu-swarm-newm.virusbettr1139.com/     (Origin: https://www.virusbettr1139.com)
+ *   wss://eu-swarm-newm.virusbettr{N}.com/   (Origin: https://www.virusbettr{N}.com)
  *
- * Akış:
- *   1. {"command":"request_session","params":{"language":"tur","site_id":1476,"source":42},"rid":"..."}
- *      -> {"code":0,"rid":"...","data":{"sid":"...", ...}}
- *      Giriş/kimlik doğrulama GEREKMİYOR; bahis verisi herkese açık.
- *
- *   2. {"command":"get","params":{"source":"betting","what":{...},"where":{...}},"rid":"..."}
- *      Yanıt iç içe sözlük ağacı:
- *        data.data.sport[sportId].region[regionId].competition[compId].game[gameId]
- *
- * Bu dosya ayrıca node:tls üzerine yazılmış MİNİMAL bir WebSocket istemcisi
- * (RFC 6455) içeriyor; böylece `ws` paketi kurmaya gerek kalmıyor ve betist
- * dosyası gibi doğrudan `node virusbet-match-fetcher.js` çalıştırılabiliyor.
+ *   1. {"command":"request_session","params":{...}}   (giris GEREKMIYOR)
+ *   2. {"command":"get","params":{"source":"betting","what":{...},"where":{...}}}
+ *      -> data.data.sport[id].region[id].competition[id].game[id]
  *
  * ---------------------------------------------------------------------------
- * VERİ ÇEKME STRATEJİSİ (betist'teki "tüm ligleri dolaş" mantığının karşılığı)
+ * ESKI SURUME GORE NE DEGISTI
  *
- *   Her spor için:
- *     a) Önce HAFİF bir sorgu ile lig ağacı çekilir (maç sayıları ile):
- *          what  = {sport, region, competition, game:"@count"}
- *          where = {sport:{id}, game:{prematch filtresi}}
- *     b) Lig id'leri CHUNK_SIZE'lık gruplara bölünüp her grup için maçlar
- *        çekilir (tek seferde hepsini istemek çok büyük yanıt üretiyor):
- *          what  = {..., game:[id, team1_name, team2_name, start_ts, ...]}
- *          where = {sport:{id}, competition:{id:{"@in":[...]}}, game:{...}}
- *
- *   "OUTRIGHT" tipi kayıtlar (şampiyon kim olur vb.) maç değildir; iki takım
- *   içermedikleri için atlanır.
- *
- * ---------------------------------------------------------------------------
- * ORTAM DEĞİŞKENLERİ (hepsi isteğe bağlı)
- *
- *   VIRUSBET_NUMBER=1139           Site numarası değişirse sadece bunu değiştirin
- *   VIRUSBET_SITE_ID=1476          Swarm site_id
- *   VIRUSBET_OUTPUT=dosya.json     Çıktı dosyası adı
- *   VIRUSBET_CHUNK_SIZE=20         Tek sorguda kaç lig sorulacak
- *   VIRUSBET_REQUEST_DELAY_MS=120  İstekler arası bekleme
- *   VIRUSBET_DEBUG=1               Gidip gelen komutları ekrana bas
+ *   - Spor listesi SABIT DEGIL. Eskiden dort sport_id koda gomuluydu; swarm
+ *     zaten tum spor agacini veriyor. Artik tek sorguyla 50+ spor kesfediliyor
+ *     ve katalogla eslestiriliyor.
+ *   - Lig listesi icin SPOR BASINA ayri sorgu atiliyordu (N istek). Artik
+ *     TEK sorgu tum sporlarin lig agacini + mac sayilarini getiriyor (~56 KB).
+ *   - Lig gruplari sirayla degil, tek baglanti uzerinde SINIRLI es
+ *     zamanlilikla cekiliyor (swarm es zamanli rid destekliyor).
+ *   - Baglanti koparsa otomatik yeniden baglanip devam ediliyor; eskiden
+ *     bekleyen tum istekler reddedilir ve site tamamen bos donerdi.
+ *   - RFC 6455 istemcisi Core/ws.js'e tasindi (mavibet ile ortak).
  */
 
-import fs from "node:fs/promises";
-import tls from "node:tls";
 import crypto from "node:crypto";
 
-/* =========================================================================
- * AYARLAR
- * ====================================================================== */
+import { connectWebSocket } from "./Core/ws.js";
+import { createLogger } from "./Core/logger.js";
+import {
+  createRateLimiter,
+  chunkArray,
+  mapWithConcurrency,
+  withRetry,
+} from "./Core/async.js";
+import { formatEpochSeconds, DEFAULT_TIMEZONE } from "./Core/time.js";
+import { runFetcher } from "./Core/runner.js";
+import { resolveSport, resolveEnabledSportKeys } from "./Sports/catalog.js";
 
-let VIRUSBET_NUMBER = process.env.VIRUSBET_NUMBER || "1139";
-
-let SITE_URL =
-  process.env.VIRUSBET_SITE_URL ||
-  `https://www.virusbettr${VIRUSBET_NUMBER}.com`;
-
-let WS_URL =
-  process.env.VIRUSBET_WS_URL ||
-  `wss://eu-swarm-newm.virusbettr${VIRUSBET_NUMBER}.com/`;
-
-const SITE_ID = Number(process.env.VIRUSBET_SITE_ID || 1476);
+const SITE = "VIRUS_BET";
 
 const OUTPUT_FILE = process.env.VIRUSBET_OUTPUT || "virus_bet-matches.json";
 
+const SITE_ID = Number(process.env.VIRUSBET_SITE_ID || 1476);
+
 const CHUNK_SIZE = Number(process.env.VIRUSBET_CHUNK_SIZE || 20);
+
+const CONCURRENCY = Number(process.env.VIRUSBET_CONCURRENCY || 3);
 
 const REQUEST_DELAY_MS = Number(process.env.VIRUSBET_REQUEST_DELAY_MS || 120);
 
 const CALL_TIMEOUT_MS = Number(process.env.VIRUSBET_CALL_TIMEOUT_MS || 30000);
 
-// EC2 makinelerinde IPv6 rotası/DNS tercihi WebSocket bağlantısını bozabilir.
-// Varsayılan IPv4'tür; gerekirse VIRUSBET_IP_FAMILY=6 ile değiştirilebilir.
+const RETRY_ATTEMPTS = Number(process.env.VIRUSBET_RETRY_ATTEMPTS || 3);
+
+// EC2'de IPv6 rotasi/DNS tercihi WebSocket baglantisini bozabiliyor.
 const IP_FAMILY = Number(process.env.VIRUSBET_IP_FAMILY || 4);
 
-const DEBUG = process.env.VIRUSBET_DEBUG === "1";
-
 const LANGUAGE = "en";
-
-const TIMEZONE = "Europe/Istanbul";
-
-const TARGET_ORDER = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
-
-// swarm sport id'leri (HAR'dan doğrulandı)
-const SPORTS = [
-  { name: "FUTBOL", sportId: 1, alias: "Soccer" },
-  { name: "BASKETBOL", sportId: 3, alias: "Basketball" },
-  { name: "VOLEYBOL", sportId: 5, alias: "Volleyball" },
-  { name: "TENIS", sportId: 4, alias: "Tennis" },
-];
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
-// Maç öncesi (prematch) görünen oyunlar. HAR'daki filtrenin aynısı.
+/** Mac oncesi (prematch) gorunen oyunlar. */
 const PREMATCH_GAME_FILTER = {
   "@or": [{ visible_in_prematch: 1 }, { type: { "@in": [0, 2] } }],
 };
 
 /* =========================================================================
- * 1) MİNİMAL WEBSOCKET İSTEMCİSİ (RFC 6455) - harici paket gerekmez
- * ====================================================================== */
-
-const WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-
-function encodeFrame(payload, opcode = 0x1) {
-  const len = payload.length;
-
-  let header;
-
-  if (len < 126) {
-    header = Buffer.alloc(2);
-    header[1] = 0x80 | len;
-  } else if (len < 65536) {
-    header = Buffer.alloc(4);
-    header[1] = 0x80 | 126;
-    header.writeUInt16BE(len, 2);
-  } else {
-    header = Buffer.alloc(10);
-    header[1] = 0x80 | 127;
-    header.writeBigUInt64BE(BigInt(len), 2);
-  }
-
-  header[0] = 0x80 | opcode; // FIN + opcode
-
-  // İstemciden sunucuya giden çerçeveler MASKELİ olmak zorunda (RFC 6455).
-  const mask = crypto.randomBytes(4);
-
-  const masked = Buffer.allocUnsafe(len);
-
-  for (let i = 0; i < len; i++) {
-    masked[i] = payload[i] ^ mask[i & 3];
-  }
-
-  return Buffer.concat([header, mask, masked]);
-}
-
-function decodeFrames(buffer) {
-  const frames = [];
-
-  let offset = 0;
-
-  while (offset + 2 <= buffer.length) {
-    const b0 = buffer[offset];
-    const b1 = buffer[offset + 1];
-
-    const fin = (b0 & 0x80) !== 0;
-    const opcode = b0 & 0x0f;
-    const masked = (b1 & 0x80) !== 0;
-
-    let len = b1 & 0x7f;
-    let cursor = offset + 2;
-
-    if (len === 126) {
-      if (cursor + 2 > buffer.length) break;
-
-      len = buffer.readUInt16BE(cursor);
-      cursor += 2;
-    } else if (len === 127) {
-      if (cursor + 8 > buffer.length) break;
-
-      const big = buffer.readBigUInt64BE(cursor);
-
-      if (big > BigInt(Number.MAX_SAFE_INTEGER)) {
-        throw new Error("WebSocket çerçevesi çok büyük.");
-      }
-
-      len = Number(big);
-      cursor += 8;
-    }
-
-    let mask = null;
-
-    if (masked) {
-      if (cursor + 4 > buffer.length) break;
-
-      mask = buffer.subarray(cursor, cursor + 4);
-      cursor += 4;
-    }
-
-    // Çerçeve henüz tam gelmediyse tamponda bırak.
-    if (cursor + len > buffer.length) break;
-
-    let payload = buffer.subarray(cursor, cursor + len);
-
-    if (mask) {
-      const unmasked = Buffer.allocUnsafe(len);
-
-      for (let i = 0; i < len; i++) {
-        unmasked[i] = payload[i] ^ mask[i & 3];
-      }
-
-      payload = unmasked;
-    }
-
-    frames.push({ fin, opcode, payload });
-
-    offset = cursor + len;
-  }
-
-  return { frames, rest: buffer.subarray(offset) };
-}
-
-/**
- * wss:// adresine bağlanır.
- * @returns {Promise<{send(text):void, close():void, onText(cb):void, onClose(cb):void}>}
- */
-function wsConnect(url, { origin, userAgent } = {}) {
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-
-    const port = parsed.port ? Number(parsed.port) : 443;
-
-    const path = `${parsed.pathname}${parsed.search}` || "/";
-
-    const key = crypto.randomBytes(16).toString("base64");
-
-    const expectedAccept = crypto
-      .createHash("sha1")
-      .update(key + WS_GUID)
-      .digest("base64");
-
-    const socket = tls.connect(
-      {
-        host: parsed.hostname,
-        port,
-        servername: parsed.hostname,
-        family: IP_FAMILY,
-      },
-      () => {
-        const lines = [
-          `GET ${path} HTTP/1.1`,
-          `Host: ${parsed.host}`,
-          "Upgrade: websocket",
-          "Connection: Upgrade",
-          `Sec-WebSocket-Key: ${key}`,
-          "Sec-WebSocket-Version: 13",
-          ...(origin ? [`Origin: ${origin}`] : []),
-          ...(userAgent ? [`User-Agent: ${userAgent}`] : []),
-          "Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-          // permessage-deflate KASITLI olarak teklif edilmiyor: sıkıştırılmış
-          // çerçeveleri açacak kodumuz yok. Teklif etmezsek sunucu da kullanmaz.
-          "",
-          "",
-        ];
-
-        socket.write(lines.join("\r\n"));
-      }
-    );
-
-    let handshakeDone = false;
-    let buffer = Buffer.alloc(0);
-    let fragOpcode = null;
-    let fragParts = [];
-
-    const textHandlers = [];
-    const closeHandlers = [];
-
-    // El sıkışma yanıtı ile ilk mesajlar AYNI TCP paketinde gelebilir.
-    // Dinleyici bağlanana kadar biriktiriyoruz ki mesaj kaybolmasın.
-    const pendingTexts = [];
-
-    const emitText = (text) => {
-      if (textHandlers.length === 0) {
-        pendingTexts.push(text);
-        return;
-      }
-
-      textHandlers.forEach((cb) => cb(text));
-    };
-
-    const api = {
-      send(text) {
-        if (DEBUG) console.log("[VIRUS_BET]" + "  >>", text.slice(0, 200));
-
-        socket.write(encodeFrame(Buffer.from(text, "utf8"), 0x1));
-      },
-
-      close() {
-        try {
-          socket.write(encodeFrame(Buffer.alloc(0), 0x8));
-        } catch {
-          // soket zaten kapalı olabilir
-        }
-
-        socket.end();
-        socket.destroy();
-      },
-
-      onText(cb) {
-        textHandlers.push(cb);
-
-        if (pendingTexts.length) {
-          const queued = pendingTexts.splice(0, pendingTexts.length);
-
-          for (const text of queued) cb(text);
-        }
-      },
-
-      onClose(cb) {
-        closeHandlers.push(cb);
-      },
-    };
-
-    const fail = (error) => {
-      socket.destroy();
-      reject(error);
-    };
-
-    socket.setTimeout(CALL_TIMEOUT_MS + 10000, () => {
-      fail(new Error("WebSocket bağlantı zaman aşımı."));
-    });
-
-    socket.on("error", (error) => {
-      if (handshakeDone) {
-        closeHandlers.forEach((cb) => cb(error));
-      } else {
-        fail(error);
-      }
-    });
-
-    socket.on("close", () => {
-      closeHandlers.forEach((cb) => cb(null));
-    });
-
-    socket.on("data", (chunk) => {
-      buffer = Buffer.concat([buffer, chunk]);
-
-      // --- Önce HTTP Upgrade yanıtı ---
-      if (!handshakeDone) {
-        const end = buffer.indexOf("\r\n\r\n");
-
-        if (end === -1) return;
-
-        const head = buffer.subarray(0, end).toString("latin1");
-
-        buffer = buffer.subarray(end + 4);
-
-        if (!/^HTTP\/1\.1 101/i.test(head)) {
-          return fail(
-            new Error(
-              `WebSocket el sıkışması başarısız: ${head.split("\r\n")[0]}`
-            )
-          );
-        }
-
-        const accept = /sec-websocket-accept:\s*(\S+)/i.exec(head)?.[1];
-
-        if (accept !== expectedAccept) {
-          return fail(new Error("Sec-WebSocket-Accept doğrulaması başarısız."));
-        }
-
-        // Sıkıştırma açacak kodumuz yok; sunucu yine de dayatırsa erken uyar.
-        if (
-          /sec-websocket-extensions:\s*[^\r\n]*permessage-deflate/i.test(head)
-        ) {
-          return fail(
-            new Error(
-              "Sunucu permessage-deflate dayattı; bu istemci sıkıştırılmış çerçeveleri çözemiyor."
-            )
-          );
-        }
-
-        handshakeDone = true;
-
-        socket.setTimeout(0);
-
-        resolve(api);
-      }
-
-      // --- Sonra çerçeveler ---
-      let decoded;
-
-      try {
-        decoded = decodeFrames(buffer);
-      } catch (error) {
-        return closeHandlers.forEach((cb) => cb(error));
-      }
-
-      buffer = decoded.rest;
-
-      for (const frame of decoded.frames) {
-        if (frame.opcode === 0x9) {
-          socket.write(encodeFrame(frame.payload, 0xa)); // ping -> pong
-          continue;
-        }
-
-        if (frame.opcode === 0xa) continue; // pong
-
-        if (frame.opcode === 0x8) {
-          api.close();
-          continue;
-        }
-
-        // Metin/ikili çerçeveler parçalı gelebilir.
-        if (frame.opcode === 0x0) {
-          fragParts.push(frame.payload);
-        } else {
-          fragOpcode = frame.opcode;
-          fragParts = [frame.payload];
-        }
-
-        if (frame.fin) {
-          const full = Buffer.concat(fragParts);
-
-          fragParts = [];
-
-          if (fragOpcode === 0x1 || fragOpcode === 0x2) {
-            const text = full.toString("utf8");
-
-            if (DEBUG) console.log("[VIRUS_BET]" + "  <<", text.slice(0, 200));
-
-            emitText(text);
-          }
-
-          fragOpcode = null;
-        }
-      }
-    });
-  });
-}
-
-/* =========================================================================
- * 2) SWARM İSTEMCİSİ
+ * SWARM ISTEMCISI
  * ====================================================================== */
 
 class SwarmClient {
-  constructor() {
+  constructor({ wsUrl, origin, logger }) {
+    this.wsUrl = wsUrl;
+    this.origin = origin;
+    this.logger = logger;
+
     this.ws = null;
     this.pending = new Map();
     this.sessionId = null;
+    this.closedByUs = false;
+
+    /** Ayni anda yalnizca bir yeniden baglanma denemesi olsun. */
+    this.reconnecting = null;
+
+    this.stats = { calls: 0, retries: 0, reconnects: 0 };
   }
 
   static newRid() {
@@ -460,9 +99,15 @@ class SwarmClient {
   }
 
   async connect() {
-    this.ws = await wsConnect(WS_URL, {
-      origin: SITE_URL,
+    this.ws = await connectWebSocket(this.wsUrl, {
+      origin: this.origin,
       userAgent: USER_AGENT,
+      family: IP_FAMILY,
+      // permessage-deflate KASITLI olarak teklif edilmiyor: swarm sikistirmadan
+      // da calisiyor ve boylece cozme katmanina hic girmiyoruz.
+      permessageDeflate: false,
+      handshakeTimeoutMs: CALL_TIMEOUT_MS,
+      logger: this.logger,
     });
 
     this.ws.onText((text) => {
@@ -471,12 +116,13 @@ class SwarmClient {
       try {
         message = JSON.parse(text);
       } catch {
+        // Bozuk JSON tum akisi durdurmamali.
         return;
       }
 
       const rid = message?.rid;
 
-      // rid'i olmayan mesajlar abonelik push'larıdır; kullanmıyoruz.
+      // rid'siz mesajlar abonelik push'lari; kullanmiyoruz.
       if (!rid) return;
 
       const pending = this.pending.get(rid);
@@ -491,6 +137,7 @@ class SwarmClient {
             `swarm hata code=${message.code} msg=${JSON.stringify(message.msg ?? message.data ?? "")}`
           )
         );
+
         return;
       }
 
@@ -498,21 +145,57 @@ class SwarmClient {
     });
 
     this.ws.onClose(() => {
+      // Bekleyen istekleri "gecici" isaretleyerek reddet ki retry katmani
+      // bunlari yeniden denemeye deger gorsun.
       for (const [, pending] of this.pending) {
-        pending.reject(new Error("Bağlantı kapandı."));
+        const error = new Error("Baglanti kapandi.");
+        error.retryable = true;
+        pending.reject(error);
       }
 
       this.pending.clear();
     });
+
+    await this.requestSession();
   }
 
-  send(command, params) {
+  /** Kopmus baglantiyi tek seferlik yeniden kurar. */
+  async reconnect() {
+    if (this.closedByUs) throw new Error("Istemci kapatildi.");
+
+    if (!this.reconnecting) {
+      this.reconnecting = (async () => {
+        this.stats.reconnects++;
+
+        this.logger.warn("baglanti koptu, yeniden baglaniliyor...");
+
+        try {
+          this.ws?.close();
+        } catch {
+          /* zaten kapali */
+        }
+
+        await this.connect();
+
+        this.logger.info("yeniden baglanildi.");
+      })().finally(() => {
+        this.reconnecting = null;
+      });
+    }
+
+    return this.reconnecting;
+  }
+
+  #sendOnce(command, params) {
     const rid = SwarmClient.newRid();
 
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(rid);
-        reject(new Error(`"${command}" isteği zaman aşımına uğradı.`));
+
+        const error = new Error(`"${command}" istegi zaman asimina ugradi.`);
+        error.retryable = true;
+        reject(error);
       }, CALL_TIMEOUT_MS);
 
       this.pending.set(rid, {
@@ -526,13 +209,47 @@ class SwarmClient {
         },
       });
 
-      this.ws.send(JSON.stringify({ command, params, rid }));
+      try {
+        this.ws.send(JSON.stringify({ command, params, rid }));
+      } catch (error) {
+        clearTimeout(timer);
+        this.pending.delete(rid);
+
+        error.retryable = true;
+        reject(error);
+      }
     });
   }
 
-  /** Oturum açar. Giriş gerekmiyor; sadece site/dil bağlamı kuruluyor. */
+  /** Retry + gerekirse yeniden baglanma ile komut gonderir. */
+  async send(command, params) {
+    this.stats.calls++;
+
+    return withRetry(
+      async (attempt) => {
+        if (attempt > 1 && (!this.ws || this.ws.closed)) {
+          await this.reconnect();
+        }
+
+        return this.#sendOnce(command, params);
+      },
+      {
+        attempts: RETRY_ATTEMPTS,
+        baseDelayMs: 600,
+        label: command,
+        onRetry: ({ attempt, attempts, error }) => {
+          this.stats.retries++;
+
+          this.logger.warn(
+            `${command} basarisiz (${attempt}/${attempts}): ${error.message}`
+          );
+        },
+      }
+    );
+  }
+
   async requestSession() {
-    const data = await this.send("request_session", {
+    const data = await this.#sendOnce("request_session", {
       language: LANGUAGE,
       site_id: SITE_ID,
       source: 42,
@@ -544,13 +261,11 @@ class SwarmClient {
   }
 
   /**
-   * "get" sorgusu atar ve veri ağacını döndürür.
-   * Yanıt, abonelik olup olmamasına göre iki şekilde gelebiliyor:
-   *   { subid, data: {...} }   ya da   { ...ağaç... }
-   * İkisini de destekliyoruz.
+   * "get" sorgusu. Yanit abonelik olup olmamasina gore iki sekilde
+   * gelebiliyor: { subid, data: {...} } ya da dogrudan agac.
    */
-  async get(what, where, { subscribe = false } = {}) {
-    const params = { source: "betting", what, subscribe };
+  async get(what, where) {
+    const params = { source: "betting", what, subscribe: false };
 
     if (where) params.where = where;
 
@@ -560,74 +275,92 @@ class SwarmClient {
   }
 
   close() {
+    this.closedByUs = true;
     this.ws?.close();
   }
 }
 
 /* =========================================================================
- * 3) TARİH / SAAT
+ * VERI CEKME
  * ====================================================================== */
 
-const dateTimeFormatter = new Intl.DateTimeFormat("en-CA", {
-  timeZone: TIMEZONE,
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  hourCycle: "h23",
-});
+/**
+ * TEK sorguda tum sporlarin lig agacini ve mac sayilarini getirir.
+ *
+ * Eskiden bu is spor basina ayri bir sorguydu. Tum agac ~56 KB; dort ayri
+ * sorgu atmak yerine bir kere istemek hem daha az istek hem daha az
+ * toplam bayt, ve ayrica spor kesfini bedavaya getiriyor.
+ */
+async function fetchSportTree(client) {
+  const tree = await client.get(
+    {
+      sport: ["id", "name", "alias"],
+      region: ["id", "name"],
+      competition: ["id", "name"],
+      game: "@count",
+    },
+    { game: PREMATCH_GAME_FILTER }
+  );
 
-/** start_ts (unix SANİYE) -> { date: "2026-09-18", time: "20:00" } Türkiye saati */
-function formatStartTs(startTs) {
-  const date = new Date(Number(startTs) * 1000);
+  const sports = [];
 
-  if (Number.isNaN(date.getTime())) {
-    return { date: "UNKNOWN_DATE", time: "" };
+  for (const sportNode of Object.values(tree?.sport ?? {})) {
+    if (sportNode?.id == null) continue;
+
+    const competitions = [];
+
+    for (const region of Object.values(sportNode.region ?? {})) {
+      for (const competition of Object.values(region?.competition ?? {})) {
+        if (competition?.id == null) continue;
+
+        // Maci olmayan ligi sorgulamaya gerek yok.
+        if (Number(competition.game ?? 0) <= 0) continue;
+
+        competitions.push(competition.id);
+      }
+    }
+
+    sports.push({
+      sportId: sportNode.id,
+      name: String(sportNode.name ?? "").trim(),
+      alias: String(sportNode.alias ?? "").trim(),
+      competitions,
+    });
   }
 
-  const parts = dateTimeFormatter.formatToParts(date);
-
-  const get = (type) => parts.find((part) => part.type === type)?.value;
-
-  return {
-    date: `${get("year")}-${get("month")}-${get("day")}`,
-    time: `${get("hour")}:${get("minute")}`,
-  };
+  return sports;
 }
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Verilen lig id'leri icin maclari ceker. */
+async function fetchGamesForCompetitions(client, sportId, competitionIds) {
+  const tree = await client.get(
+    {
+      sport: ["id"],
+      region: ["id", "name"],
+      competition: ["id", "name"],
+      game: [
+        "id",
+        "team1_name",
+        "team2_name",
+        "start_ts",
+        "show_type",
+        "type",
+        "is_blocked",
+      ],
+    },
+    {
+      sport: { id: sportId },
+      competition: { id: { "@in": competitionIds } },
+      game: PREMATCH_GAME_FILTER,
+    }
+  );
 
-function chunkArray(items, size) {
-  const chunks = [];
-
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
-
-  return chunks;
-}
-
-/* =========================================================================
- * 4) VERİ ÇEKME
- * ====================================================================== */
-
-/** Ağaçtaki (sport -> region -> competition -> game) tüm oyunları düzleştirir. */
-function flattenGames(tree) {
   const rows = [];
 
-  const sports = tree?.sport ?? {};
-
-  for (const sport of Object.values(sports)) {
-    const regions = sport?.region ?? {};
-
-    for (const region of Object.values(regions)) {
-      const competitions = region?.competition ?? {};
-
-      for (const competition of Object.values(competitions)) {
-        const games = competition?.game ?? {};
-
-        for (const game of Object.values(games)) {
+  for (const sportNode of Object.values(tree?.sport ?? {})) {
+    for (const region of Object.values(sportNode?.region ?? {})) {
+      for (const competition of Object.values(region?.competition ?? {})) {
+        for (const game of Object.values(competition?.game ?? {})) {
           rows.push({
             regionName: String(region?.name ?? "").trim(),
             competitionId: competition?.id,
@@ -642,322 +375,167 @@ function flattenGames(tree) {
   return rows;
 }
 
-/** Bir sporun lig listesini (hafif sorgu) çeker. */
-async function fetchCompetitions(client, sport) {
-  const tree = await client.get(
-    {
-      sport: ["id", "name", "alias"],
-      region: ["id", "name", "alias"],
-      competition: ["id", "name"],
-      game: "@count",
-    },
-    {
-      sport: { id: sport.sportId },
-      game: PREMATCH_GAME_FILTER,
-    }
-  );
-
-  const competitions = [];
-
-  const sports = tree?.sport ?? {};
-
-  for (const sportNode of Object.values(sports)) {
-    for (const region of Object.values(sportNode?.region ?? {})) {
-      for (const competition of Object.values(region?.competition ?? {})) {
-        if (competition?.id == null) continue;
-
-        competitions.push({
-          id: competition.id,
-          name: String(competition.name ?? "").trim(),
-          regionName: String(region?.name ?? "").trim(),
-          gameCount: Number(competition.game ?? 0),
-        });
-      }
-    }
-  }
-
-  return competitions;
-}
-
-/** Verilen lig id'leri için maçları çeker. */
-async function fetchGamesForCompetitions(client, sport, competitionIds) {
-  const tree = await client.get(
-    {
-      sport: ["id", "name", "alias"],
-      region: ["id", "name", "alias"],
-      competition: ["id", "name"],
-      game: [
-        "id",
-        "team1_name",
-        "team2_name",
-        "start_ts",
-        "show_type",
-        "type",
-        "sport_alias",
-        "is_blocked",
-      ],
-    },
-    {
-      sport: { id: sport.sportId },
-      competition: { id: { "@in": competitionIds } },
-      game: PREMATCH_GAME_FILTER,
-    }
-  );
-
-  return flattenGames(tree);
-}
-
-/** Bir sporun tüm maçlarını toplar. */
-async function fetchSportMatches(client, sport) {
-  let competitions = [];
-
-  try {
-    competitions = await fetchCompetitions(client, sport);
-  } catch (error) {
-    console.error(
-      "[VIRUS_BET]" + `${sport.name}: lig listesi alınamadı - ${error.message}`
-    );
-    return [];
-  }
-
-  // Maçı olmayan ligi sorgulamaya gerek yok.
-  const withGames = competitions.filter((c) => c.gameCount > 0);
-
-  console.log(
-    "[VIRUS_BET]" +
-      `${sport.name}: sportId=${sport.sportId}, lig=${competitions.length} (maçı olan: ${withGames.length})`
-  );
-
-  const groups = chunkArray(
-    withGames.map((c) => c.id),
-    CHUNK_SIZE
-  );
-
-  const rows = new Map(); // gameId -> satır
-
-  for (let i = 0; i < groups.length; i++) {
-    console.log(
-      "[VIRUS_BET]" +
-        `  grup ${i + 1}/${groups.length} -> ${groups[i].length} lig`
-    );
-
-    try {
-      for (const row of await fetchGamesForCompetitions(
-        client,
-        sport,
-        groups[i]
-      )) {
-        if (row.game?.id != null) rows.set(String(row.game.id), row);
-      }
-    } catch (error) {
-      console.error(
-        "[VIRUS_BET]" + `  grup ${i + 1} alınamadı: ${error.message}`
-      );
-    }
-
-    if (REQUEST_DELAY_MS > 0 && i + 1 < groups.length) {
-      await sleep(REQUEST_DELAY_MS);
-    }
-  }
-
-  console.log("[VIRUS_BET]" + `  benzersiz maç: ${rows.size}`);
-
-  return [...rows.values()];
-}
-
 /* =========================================================================
- * 5) ÇIKTI (betist-match-fetcher.js ile aynı yapı)
+ * ANA AKIS
  * ====================================================================== */
 
-function addRowsToOutput(output, sportName, rows) {
-  let skipped = 0;
+/**
+ * @param {string} siteUrl
+ * @param {{ dateFilter?: object, write?: boolean, sports?: string }} [options]
+ */
+async function virusBetMatchFetcherMain(siteUrl, options = {}) {
+  const logger = createLogger(SITE);
 
-  for (const row of rows) {
-    const game = row.game;
+  const found = String(siteUrl).match(/virusbettr(\d+)\.com/);
 
-    // "OUTRIGHT" kayıtları (şampiyon kim olur, kupayı kim kazanır vb.)
-    // maç değildir: tek taraf içerirler.
-    if (game?.show_type === "OUTRIGHT" || !game?.team2_name) {
-      skipped++;
-      continue;
-    }
-
-    const leagueName = String(
-      row.competitionName || `LIG_${row.competitionId}`
-    ).trim();
-
-    const countryName = String(row.regionName || "").trim();
-
-    const leagueKey = countryName
-      ? `${countryName} - ${leagueName}`
-      : leagueName;
-
-    const { date, time } = formatStartTs(game.start_ts);
-
-    output[sportName][leagueKey] ??= {};
-
-    output[sportName][leagueKey][date] ??= [];
-
-    output[sportName][leagueKey][date].push({
-      eventId: String(game.id),
-
-      leagueId: row.competitionId != null ? String(row.competitionId) : "",
-
-      home: String(game.team1_name ?? "").trim(),
-
-      away: String(game.team2_name ?? "").trim(),
-
-      time,
-    });
-  }
-
-  if (skipped > 0) {
-    console.log(
-      "[VIRUS_BET]" + `  (${skipped} outright/tek taraflı kayıt atlandı)`
-    );
-  }
-}
-
-function sortOutput(output) {
-  const sorted = {};
-
-  for (const sport of TARGET_ORDER) {
-    sorted[sport] = {};
-
-    const leagueEntries = Object.entries(output[sport] || {}).sort(([a], [b]) =>
-      a.localeCompare(b, "tr")
+  if (!found) {
+    // Eski davranis: taninmayan URL sessizce atlanirdi. Artik sebebi
+    // yaziliyor, ama yine de digerlerini durdurmuyoruz.
+    logger.error(
+      `site URL'si taninmadi (virusbettr{N}.com bekleniyordu): ${siteUrl}`
     );
 
-    for (const [league, dates] of leagueEntries) {
-      sorted[sport][league] = {};
+    return null;
+  }
 
-      for (const date of Object.keys(dates).sort()) {
-        sorted[sport][league][date] = dates[date].sort((a, b) => {
-          const byTime = String(a.time).localeCompare(String(b.time));
+  const number = found[1];
 
-          if (byTime !== 0) {
-            return byTime;
+  const wsUrl =
+    process.env.VIRUSBET_WS_URL || `wss://eu-swarm-newm.virusbettr${number}.com/`;
+
+  const origin =
+    process.env.VIRUSBET_SITE_URL || `https://www.virusbettr${number}.com`;
+
+  const enabledKeys = resolveEnabledSportKeys(options.sports);
+
+  const throttle = createRateLimiter(REQUEST_DELAY_MS);
+
+  const client = new SwarmClient({ wsUrl, origin, logger });
+
+  try {
+    return await runFetcher({
+      site: SITE,
+      logger,
+      outputFile: options.outputFile ?? OUTPUT_FILE,
+      dateFilter: options.dateFilter,
+      write: options.write,
+
+      collect: async ({ output }) => {
+        logger.info(`site=${origin} ws=${wsUrl}`);
+
+        await client.connect();
+
+        logger.info(`oturum acildi (sid=${client.sessionId}).`);
+
+        const discovered = await fetchSportTree(client);
+
+        const targets = [];
+
+        const unmapped = [];
+
+        for (const entry of discovered) {
+          // Once alias ("AmericanFootball") sonra ad ("American Football")
+          // deneniyor; ikisi de katalogdaki alias listesine normalize olur.
+          const sport = resolveSport(entry.alias, entry.name);
+
+          if (!sport) {
+            if (entry.competitions.length) unmapped.push(entry.name || entry.alias);
+            continue;
           }
 
-          return `${a.home}-${a.away}`.localeCompare(
-            `${b.home}-${b.away}`,
-            "tr"
-          );
-        });
-      }
-    }
-  }
+          if (enabledKeys && !enabledKeys.has(sport.key)) continue;
 
-  return sorted;
-}
+          if (!entry.competitions.length) continue;
 
-/* =========================================================================
- * 6) ANA AKIŞ
- * ====================================================================== */
+          targets.push({ ...entry, sportKey: sport.key });
+        }
 
-async function virusBetMatchFetcherMain(siteUrl) {
-  const foundSiteNumber = siteUrl.match(/virusbettr(\d+)\.com/);
+        if (unmapped.length) {
+          logger.debug(`katalogda olmayan spor atlandi: ${unmapped.join(", ")}`);
+        }
 
-  if (!foundSiteNumber) return;
+        // Tum sporlarin lig gruplari tek is kuyrugunda: kucuk sporlar
+        // worker'lari bos birakmasin.
+        const tasks = [];
 
-  console.log("[VIRUS_BET]" + `Site URL'si: ${siteUrl}`);
-  console.log("[VIRUS_BET]" + `Site numarası bulundu: ${foundSiteNumber[1]}`);
-  const siteNumber = foundSiteNumber[1];
-  console.log("[VIRUS_BET]" + `VIRUSBET_NUMBER=${siteNumber}`);
+        for (const target of targets) {
+          for (const ids of chunkArray(target.competitions, CHUNK_SIZE)) {
+            tasks.push({ sportKey: target.sportKey, sportId: target.sportId, ids });
+          }
+        }
 
-  VIRUSBET_NUMBER = siteNumber;
-
-  SITE_URL = `https://www.virusbettr${VIRUSBET_NUMBER}.com`;
-
-  WS_URL = `wss://eu-swarm-newm.virusbettr${VIRUSBET_NUMBER}.com/`;
-
-  console.log("[VIRUS_BET]" + `Virusbet: ${SITE_URL}`);
-
-  console.log("[VIRUS_BET]" + `Swarm WS: ${WS_URL}`);
-
-  console.log("[VIRUS_BET]" + "Bağlanılıyor...");
-
-  const client = new SwarmClient();
-
-  await client.connect();
-
-  const session = await client.requestSession();
-
-  console.log(
-    "[VIRUS_BET]" +
-      `Oturum açıldı (sid=${client.sessionId}, sürüm=${session?.version ?? "?"}).\n`
-  );
-
-  const output = Object.fromEntries(TARGET_ORDER.map((sport) => [sport, {}]));
-
-  try {
-    for (const sport of SPORTS) {
-      try {
-        const rows = await fetchSportMatches(client, sport);
-
-        addRowsToOutput(output, sport.name, rows);
-      } catch (error) {
-        console.error(
-          "[VIRUS_BET]" + `${sport.name} çekilirken hata: ${error.message}`
+        logger.info(
+          `${discovered.length} spor kesfedildi, ${targets.length} hedef, ` +
+            `${tasks.length} lig grubu (es zamanli: ${CONCURRENCY})`
         );
-      }
-    }
+
+        const results = await mapWithConcurrency(
+          tasks,
+          CONCURRENCY,
+          async (task) => {
+            await throttle();
+
+            return {
+              task,
+              rows: await fetchGamesForCompetitions(
+                client,
+                task.sportId,
+                task.ids
+              ),
+            };
+          }
+        );
+
+        let failed = 0;
+
+        for (const result of results) {
+          if (result.status === "rejected") {
+            failed++;
+
+            logger.warn(`lig grubu alinamadi: ${result.reason.message}`);
+
+            continue;
+          }
+
+          const { task, rows } = result.value;
+
+          for (const row of rows) {
+            const game = row.game;
+
+            // "OUTRIGHT" kayitlari (sampiyon kim olur vb.) mac degildir.
+            if (game?.show_type === "OUTRIGHT") continue;
+
+            const { date, time } = formatEpochSeconds(
+              game?.start_ts,
+              DEFAULT_TIMEZONE
+            );
+
+            output.add(task.sportKey, {
+              eventId: game?.id,
+              leagueId: row.competitionId,
+              leagueName: row.competitionName,
+              countryName: row.regionName,
+              home: game?.team1_name,
+              away: game?.team2_name,
+              date,
+              time,
+            });
+          }
+        }
+
+        if (failed) {
+          logger.warn(`${tasks.length} gruptan ${failed} tanesi alinamadi.`);
+        }
+
+        logger.info(
+          `${client.stats.calls} sorgu, ${client.stats.retries} tekrar, ` +
+            `${client.stats.reconnects} yeniden baglanma`
+        );
+      },
+    });
   } finally {
     client.close();
   }
-
-  const finalOutput = sortOutput(output);
-
-  await fs.writeFile(
-    OUTPUT_FILE,
-    `${JSON.stringify(finalOutput, null, 2)}\n`,
-    "utf8"
-  );
-
-  console.log("[VIRUS_BET]" + "");
-
-  console.log("[VIRUS_BET]" + `JSON yazıldı: ${OUTPUT_FILE}`);
-
-  let grandTotal = 0;
-
-  for (const sport of TARGET_ORDER) {
-    const leagues = Object.keys(finalOutput[sport]);
-
-    const matchCount = leagues.reduce(
-      (sum, league) =>
-        sum +
-        Object.values(finalOutput[sport][league]).reduce(
-          (dateSum, matches) => dateSum + matches.length,
-          0
-        ),
-      0
-    );
-
-    grandTotal += matchCount;
-
-    console.log(
-      "[VIRUS_BET]" + `${sport}: ${leagues.length} lig / ${matchCount} maç`
-    );
-  }
-
-  if (grandTotal === 0) {
-    console.log("[VIRUS_BET]" + "");
-    console.log("[VIRUS_BET]" + "UYARI: Hiç maç bulunamadı. Olası sebepler:");
-    console.log(
-      "[VIRUS_BET]" +
-        "  - Site numarası değişmiş olabilir:  VIRUSBET_NUMBER=1140 node virusbet-match-fetcher.js"
-    );
-    console.log(
-      "[VIRUS_BET]" +
-        "  - site_id değişmiş olabilir:        VIRUSBET_SITE_ID=... node virusbet-match-fetcher.js"
-    );
-    console.log(
-      "[VIRUS_BET]" +
-        "  - Ayrıntılı trafik için:            VIRUSBET_DEBUG=1 node virusbet-match-fetcher.js"
-    );
-
-    process.exitCode = 1;
-  }
 }
 
-export { virusBetMatchFetcherMain };
+export { virusBetMatchFetcherMain, SwarmClient, PREMATCH_GAME_FILTER };

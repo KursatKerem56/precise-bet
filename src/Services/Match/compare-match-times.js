@@ -53,6 +53,15 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 
+// Spor adi eslemesi artik burada kopyalanmiyor; fetcher'larla AYNI katalogdan
+// geliyor. Eskiden bu dosyadaki SPORT_CANON/SPORT_ORDER listeleri fetcher'lardan
+// bagimsizdi ve yeni bir spor eklendiginde burasi guncellenmezse o spor
+// "BILINMEYEN" sayilip hic karsilastirilmazdi.
+import {
+  resolveSport,
+  SPORT_ORDER as CATALOG_SPORT_ORDER,
+} from "./Fetchers/Sports/catalog.js";
+
 export const DEFAULT_TIMEZONE_OFFSET_MINUTES = 180; // Europe/Istanbul = UTC+3 (yaz saati yok)
 
 /* =========================================================================
@@ -399,23 +408,15 @@ export const leagueSimilarity = (a, b) =>
  * 2) SPOR ADI KANONİKLEŞTİRME
  * ====================================================================== */
 
-const SPORT_CANON = new Map([
-  ["futbol", "FUTBOL"],
-  ["soccer", "FUTBOL"],
-  ["football", "FUTBOL"],
-  ["basketbol", "BASKETBOL"],
-  ["basketball", "BASKETBOL"],
-  ["voleybol", "VOLEYBOL"],
-  ["volleyball", "VOLEYBOL"],
-  ["tenis", "TENIS"],
-  ["tennis", "TENIS"],
-]);
+/** Katalogda taninan her spor anahtari (isFetcherShape icin). */
+const SPORT_KEYS = new Set(CATALOG_SPORT_ORDER);
 
 export function canonicalSport(name) {
-  return (
-    SPORT_CANON.get(foldText(name)) ??
-    (name ? String(name).toUpperCase() : "BILINMEYEN")
-  );
+  const sport = resolveSport(name);
+
+  if (sport) return sport.key;
+
+  return name ? String(name).toUpperCase() : "BILINMEYEN";
 }
 
 /* =========================================================================
@@ -464,7 +465,7 @@ const dateKeyOffset = (date, days) => {
 /** Dosya, fetcher çıktısı yapısına uyuyor mu? */
 export function isFetcherShape(data) {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
-  return Object.keys(data).some((k) => SPORT_CANON.has(foldText(k)));
+  return Object.keys(data).some((k) => SPORT_KEYS.has(canonicalSport(k)));
 }
 
 /** Fetcher çıktısını düz maç listesine çevirir. */
@@ -819,7 +820,7 @@ const collator = new Intl.Collator("tr", {
   sensitivity: "base",
   numeric: true,
 });
-const SPORT_ORDER = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
+const SPORT_ORDER = CATALOG_SPORT_ORDER;
 const sportRank = (s) => {
   const i = SPORT_ORDER.indexOf(s);
   return i === -1 ? SPORT_ORDER.length : i;
@@ -972,18 +973,36 @@ export async function compareFiles(filePaths, options = {}) {
     throw new Error("En az iki dosya gerekli.");
   }
 
-  const siteNames = uniqueSiteNames(filePaths);
+  const allSiteNames = uniqueSiteNames(filePaths);
 
   const bySite = {};
   const kaynaklar = {};
+  const okunamayan = [];
 
+  // Bir fetcher calismadiysa dosyasi eksik/bozuk olabilir. Eskiden bu durum
+  // tum karsilastirmayi patlatiyor, elde olan iki saglam dosya da
+  // degerlendirilemiyordu. Artik bozuk dosya atlanip sebebi raporlaniyor.
   for (let i = 0; i < filePaths.length; i++) {
-    const raw = JSON.parse(await readFile(filePaths[i], "utf8"));
-    const parsed = normalizeInput(raw, filePaths[i], opt);
+    const site = allSiteNames[i];
 
-    const site = siteNames[i];
-    bySite[site] = parsed.matches.map((m) => ({ ...m, site }));
-    kaynaklar[site] = { dosya: filePaths[i], macSayisi: bySite[site].length };
+    try {
+      const raw = JSON.parse(await readFile(filePaths[i], "utf8"));
+      const parsed = normalizeInput(raw, filePaths[i], opt);
+
+      bySite[site] = parsed.matches.map((m) => ({ ...m, site }));
+      kaynaklar[site] = { dosya: filePaths[i], macSayisi: bySite[site].length };
+    } catch (error) {
+      okunamayan.push({ site, dosya: filePaths[i], hata: error.message });
+      console.warn(`[COMPARE] ${filePaths[i]} okunamadi: ${error.message}`);
+    }
+  }
+
+  const siteNames = allSiteNames.filter((site) => bySite[site]);
+
+  if (siteNames.length < 2) {
+    throw new Error(
+      `Karsilastirma icin en az iki okunabilir dosya gerekli (okunan: ${siteNames.length}).`
+    );
   }
 
   const { clusters, pairStats } = clusterMatches(bySite, opt);
@@ -1025,6 +1044,7 @@ export async function compareFiles(filePaths, options = {}) {
     olusturulma: new Date().toISOString(),
     siteler: siteNames,
     kaynaklar,
+    okunamayan,
     ayarlar: {
       toleransDakika: opt.toleranceMinutes,
       takimEsigi: opt.teamThreshold,

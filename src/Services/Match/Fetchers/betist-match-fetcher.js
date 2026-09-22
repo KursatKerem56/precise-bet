@@ -1,239 +1,82 @@
-import fs from "node:fs/promises";
-import https from "node:https";
+/**
+ * BETIST MAC CEKICI
+ *
+ * Cikti:  betist-matches.json
+ *   { "FUTBOL": { "Ulke - Lig": { "2026-09-18": [
+ *       { eventId, leagueId, home, away, time } ] } }, ... }
+ *
+ * ---------------------------------------------------------------------------
+ * PROTOKOL
+ *
+ * Duz HTTPS. Iki tur istek var:
+ *   1. GET /home.php   -> spor + lig menusu (HTML)
+ *   2. GET /getdata.php?sec=ASIAN_LAYOUT&subsec=REQUEST_GET_SCHEME_EVENTS
+ *      &league_id[]=...  -> o liglerin maclari (HTML icinde rev="{json}")
+ *
+ * ---------------------------------------------------------------------------
+ * ESKI SURUME GORE NE DEGISTI
+ *
+ *   - Spor listesi ARTIK SABIT DEGIL. home.php menusu zaten tum sporlari
+ *     iceriyordu; eskiden dordu haric hepsi atiliyordu. Artik menudeki her
+ *     spor katalogla eslestiriliyor -> EK ISTEK OLMADAN 26 spor.
+ *   - Lig gruplari sirayla degil, SINIRLI es zamanlilikla cekiliyor.
+ *   - Ham `https.get` yerine keep-alive havuzlu HttpClient (TLS el sikismasi
+ *     istek basina degil, baglanti basina).
+ *   - 429/5xx icin exponential backoff'lu retry.
+ */
 
-let SITE_URL = process.env.BETIST_SITE_URL || "https://betist2105.com";
+import { HttpClient } from "./Core/http.js";
+import { createLogger } from "./Core/logger.js";
+import { createRateLimiter, chunkArray, mapWithConcurrency } from "./Core/async.js";
+import { decodeHtmlEntities, stripTags, parseAttributes } from "./Core/text.js";
+import { parseLocalDateTime } from "./Core/time.js";
+import { runFetcher } from "./Core/runner.js";
+import { resolveSport, resolveEnabledSportKeys } from "./Sports/catalog.js";
 
-let BASE_URL = process.env.BETIST_BASE_URL || "https://bet.betist2105.com";
-
-const HOME_URL = `${BASE_URL}/home.php?domain=&options=`;
+const SITE = "BETIST";
 
 const OUTPUT_FILE = process.env.BETIST_OUTPUT || "betist-matches.json";
 
 const CHUNK_SIZE = Number(process.env.BETIST_CHUNK_SIZE || 10);
 
-const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 1);
+/**
+ * Es zamanli istek sayisi. 3 bilincli bir secim: seri calismaya gore
+ * belirgin hizlanma sagliyor ama siteyi dovmuyor.
+ */
+const CONCURRENCY = Number(process.env.BETIST_CONCURRENCY || 3);
 
-const TARGET_ORDER = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
+/** Istekler arasi asgari aralik (rate limit dostu olmak icin). */
+const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 150);
 
-const COMMON_HEADERS = {
-  "User-Agent":
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+const REQUEST_TIMEOUT_MS = Number(process.env.BETIST_TIMEOUT_MS || 25000);
 
-  Accept: "*/*",
+const RETRY_ATTEMPTS = Number(process.env.BETIST_RETRY_ATTEMPTS || 3);
 
-  "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
+/* =========================================================================
+ * PARSING
+ * ====================================================================== */
 
-  Connection: "keep-alive",
-};
+/**
+ * home.php menusunden sporlari ve her sporun lig id'lerini cikarir.
+ *
+ * Menu duz bir <i> listesi: spor isaretcileri (class="b-check sport") ve lig
+ * isaretcileri (class="b-check stage") ic ice DEGIL, arka arkaya geliyor.
+ * Bu yuzden once spor isaretcilerinin konumlari bulunuyor, sonra iki spor
+ * arasinda kalan blok o sporun ligleri sayiliyor.
+ */
+function parseSportMenu(html) {
+  const markers = [];
 
-const cookieJar = new Map();
-
-function updateCookies(setCookieHeaders = []) {
-  const list = Array.isArray(setCookieHeaders)
-    ? setCookieHeaders
-    : [setCookieHeaders].filter(Boolean);
-
-  for (const line of list) {
-    const firstPart = String(line).split(";", 1)[0];
-
-    const eq = firstPart.indexOf("=");
-
-    if (eq <= 0) {
-      continue;
-    }
-
-    cookieJar.set(
-      firstPart.slice(0, eq).trim(),
-
-      firstPart.slice(eq + 1).trim()
-    );
-  }
-}
-
-function cookieHeader() {
-  return [...cookieJar.entries()]
-    .map(([name, value]) => `${name}=${value}`)
-    .join("; ");
-}
-
-function get(url, extraHeaders = {}, redirectCount = 0) {
-  return new Promise((resolve, reject) => {
-    const cookies = cookieHeader();
-
-    const headers = {
-      ...COMMON_HEADERS,
-      ...extraHeaders,
-
-      ...(cookies
-        ? {
-            Cookie: cookies,
-          }
-        : {}),
-    };
-
-    const req = https.get(
-      url,
-      {
-        headers,
-      },
-      (res) => {
-        updateCookies(res.headers["set-cookie"] || []);
-
-        if (
-          res.statusCode >= 300 &&
-          res.statusCode < 400 &&
-          res.headers.location
-        ) {
-          if (redirectCount >= 5) {
-            res.resume();
-
-            reject(new Error("Çok fazla redirect."));
-
-            return;
-          }
-
-          const nextUrl = new URL(res.headers.location, url).toString();
-
-          res.resume();
-
-          get(nextUrl, extraHeaders, redirectCount + 1)
-            .then(resolve)
-            .catch(reject);
-
-          return;
-        }
-
-        const chunks = [];
-
-        res.on("data", (chunk) => {
-          chunks.push(chunk);
-        });
-
-        res.on("end", () => {
-          const body = Buffer.concat(chunks).toString("utf8");
-
-          if (res.statusCode < 200 || res.statusCode >= 300) {
-            reject(
-              new Error(
-                `HTTP ${res.statusCode} ${res.statusMessage || ""}\n${body.slice(
-                  0,
-                  500
-                )}`
-              )
-            );
-
-            return;
-          }
-
-          resolve({
-            statusCode: res.statusCode,
-
-            headers: res.headers,
-
-            body,
-          });
-        });
-      }
-    );
-
-    req.on("error", reject);
-
-    req.setTimeout(25000, () => {
-      req.destroy(new Error("Request timeout."));
-    });
-  });
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function decodeHtmlEntities(value) {
-  return String(value)
-    .replace(/&quot;/g, '"')
-    .replace(/&#34;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&apos;/g, "'")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#x([0-9a-f]+);/gi, (_, hex) =>
-      String.fromCodePoint(parseInt(hex, 16))
-    )
-    .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number(num)));
-}
-
-function stripTags(value) {
-  return decodeHtmlEntities(
-    String(value)
-      .replace(/<[^>]*>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-  );
-}
-
-function parseAttributes(tag) {
-  const attrs = {};
-
-  const regex = /([:\w-]+)\s*=\s*(["'])(.*?)\2/g;
+  const tagRegex = /<i\b[^>]*>/gi;
 
   let match;
 
-  while ((match = regex.exec(tag)) !== null) {
-    attrs[match[1].toLowerCase()] = decodeHtmlEntities(match[3]);
-  }
-
-  return attrs;
-}
-
-function normalizeText(value) {
-  return String(value || "")
-    .toLocaleLowerCase("tr-TR")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function canonicalSportName(menuName) {
-  const n = normalizeText(menuName);
-
-  if (n === "futbol" || n === "soccer") {
-    return "FUTBOL";
-  }
-
-  if (n === "basketbol" || n === "basketball") {
-    return "BASKETBOL";
-  }
-
-  if (n === "voleybol" || n === "volleyball") {
-    return "VOLEYBOL";
-  }
-
-  if (n === "tenis" || n === "tennis") {
-    return "TENIS";
-  }
-
-  return null;
-}
-
-function parseSportMenu(html) {
-  const sportMarkers = [];
-
-  const iTagRegex = /<i\b[^>]*>/gi;
-
-  let tagMatch;
-
-  while ((tagMatch = iTagRegex.exec(html)) !== null) {
-    const attrs = parseAttributes(tagMatch[0]);
+  while ((match = tagRegex.exec(html)) !== null) {
+    const attrs = parseAttributes(match[0]);
 
     const idMatch = String(attrs.id || "").match(/^check__(\d+)$/);
 
-    if (!idMatch) {
-      continue;
-    }
+    if (!idMatch) continue;
 
     const classes = new Set(
       String(attrs.class || "")
@@ -241,32 +84,24 @@ function parseSportMenu(html) {
         .filter(Boolean)
     );
 
-    if (!classes.has("b-check") || !classes.has("sport")) {
-      continue;
-    }
+    if (!classes.has("b-check") || !classes.has("sport")) continue;
 
-    const after = html.slice(iTagRegex.lastIndex, iTagRegex.lastIndex + 2000);
+    const after = html.slice(tagRegex.lastIndex, tagRegex.lastIndex + 2000);
 
     const nameMatch = after.match(
       /<span\b[^>]*class=["'][^"']*\bsport-name\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i
     );
 
-    sportMarkers.push({
+    markers.push({
       sportId: idMatch[1],
-
       name: nameMatch ? stripTags(nameMatch[1]) : `SPORT_${idMatch[1]}`,
-
       layoutSchemaCode: attrs.layout || "",
-
-      start: tagMatch.index,
+      start: match.index,
     });
   }
 
-  return sportMarkers.map((sport, index) => {
-    const end =
-      index + 1 < sportMarkers.length
-        ? sportMarkers[index + 1].start
-        : html.length;
+  return markers.map((sport, index) => {
+    const end = index + 1 < markers.length ? markers[index + 1].start : html.length;
 
     const block = html.slice(sport.start, end);
 
@@ -274,18 +109,16 @@ function parseSportMenu(html) {
 
     const seen = new Set();
 
-    const tagRegex = /<i\b[^>]*>/gi;
+    const leagueRegex = /<i\b[^>]*>/gi;
 
-    let match;
+    let leagueMatch;
 
-    while ((match = tagRegex.exec(block)) !== null) {
-      const attrs = parseAttributes(match[0]);
+    while ((leagueMatch = leagueRegex.exec(block)) !== null) {
+      const attrs = parseAttributes(leagueMatch[0]);
 
       const idMatch = String(attrs.id || "").match(/^check__(\d+)$/);
 
-      if (!idMatch) {
-        continue;
-      }
+      if (!idMatch) continue;
 
       const classes = new Set(
         String(attrs.class || "")
@@ -293,48 +126,22 @@ function parseSportMenu(html) {
           .filter(Boolean)
       );
 
-      if (!classes.has("b-check") || !classes.has("stage")) {
-        continue;
-      }
+      if (!classes.has("b-check") || !classes.has("stage")) continue;
 
-      const id = idMatch[1];
+      if (seen.has(idMatch[1])) continue;
 
-      if (!seen.has(id)) {
-        seen.add(id);
-
-        leagueIds.push(id);
-      }
+      seen.add(idMatch[1]);
+      leagueIds.push(idMatch[1]);
     }
 
-    return {
-      ...sport,
-      leagueIds,
-    };
+    return { ...sport, leagueIds };
   });
 }
 
-function buildEventsUrl(leagueIds, layoutSchemaCode) {
-  const url = new URL(`${BASE_URL}/getdata.php`);
-
-  url.searchParams.set("sec", "ASIAN_LAYOUT");
-
-  url.searchParams.set("subsec", "REQUEST_GET_SCHEME_EVENTS");
-
-  for (const leagueId of leagueIds) {
-    url.searchParams.append("league_id[]", leagueId);
-  }
-
-  url.searchParams.set("layout_schema_code", layoutSchemaCode);
-
-  url.searchParams.set("start", "");
-
-  url.searchParams.set("end", "");
-
-  url.searchParams.set("selected_date_period", "null");
-
-  return url.toString();
-}
-
+/**
+ * Yanit HTML'indeki rev="{...}" niteliklerinden mac kayitlarini cikarir.
+ * rev her zaman mac JSON'u degildir; parse edilemeyen sessizce atlanir.
+ */
 function parseEventRecords(html) {
   const events = new Map();
 
@@ -345,25 +152,18 @@ function parseEventRecords(html) {
   while ((match = revRegex.exec(html)) !== null) {
     const decoded = decodeHtmlEntities(match[1]);
 
-    if (!decoded.startsWith("{") || !decoded.endsWith("}")) {
-      continue;
-    }
+    if (!decoded.startsWith("{") || !decoded.endsWith("}")) continue;
 
     try {
       const obj = JSON.parse(decoded);
 
-      if (!obj?.mid || !obj?.event_start_time || !obj?.lid) {
-        continue;
-      }
+      if (!obj?.mid || !obj?.event_start_time || !obj?.lid) continue;
 
       const key = String(obj.mid);
 
-      if (!events.has(key)) {
-        events.set(key, obj);
-      }
+      if (!events.has(key)) events.set(key, obj);
     } catch {
-      // rev attribute her zaman
-      // event JSON'u olmayabilir.
+      // rev niteligi her zaman event JSON'u tasimiyor.
     }
   }
 
@@ -373,260 +173,223 @@ function parseEventRecords(html) {
 function splitParticipants(eventName) {
   const value = String(eventName || "").trim();
 
-  const separator = " - ";
+  const index = value.indexOf(" - ");
 
-  const index = value.indexOf(separator);
-
-  if (index === -1) {
-    return {
-      home: value,
-      away: "",
-    };
-  }
+  if (index === -1) return { home: value, away: "" };
 
   return {
     home: value.slice(0, index).trim(),
-
-    away: value.slice(index + separator.length).trim(),
+    away: value.slice(index + 3).trim(),
   };
 }
 
-function parseStartTime(value) {
-  const match = String(value || "").match(
-    /^(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})(?::\d{2})?$/
-  );
+function buildEventsUrl(baseUrl, leagueIds, layoutSchemaCode) {
+  const url = new URL(`${baseUrl}/getdata.php`);
 
-  if (!match) {
-    return {
-      date: "UNKNOWN_DATE",
+  url.searchParams.set("sec", "ASIAN_LAYOUT");
+  url.searchParams.set("subsec", "REQUEST_GET_SCHEME_EVENTS");
 
-      time: "",
-    };
+  for (const leagueId of leagueIds) {
+    url.searchParams.append("league_id[]", leagueId);
   }
 
-  return {
-    date: match[1],
+  url.searchParams.set("layout_schema_code", layoutSchemaCode);
+  url.searchParams.set("start", "");
+  url.searchParams.set("end", "");
+  url.searchParams.set("selected_date_period", "null");
 
-    time: match[2],
-  };
+  return url.toString();
 }
 
-function chunkArray(items, size) {
-  const chunks = [];
+/* =========================================================================
+ * KESIF
+ * ====================================================================== */
 
-  for (let i = 0; i < items.length; i += size) {
-    chunks.push(items.slice(i, i + size));
-  }
+/**
+ * Menudeki sporlari katalogla eslestirir.
+ *
+ * Tanimadigimiz sporlar (e-spor, politika vb.) ATLANIR ve tek bir satirda
+ * raporlanir. Uydurma bir anahtarla ciktiya sizmalari, siteler arasi
+ * karsilastirmayi bozardi.
+ */
+function selectSports(menu, enabledKeys, logger) {
+  const targets = new Map();
 
-  return chunks;
-}
-
-async function fetchAllEventsForSport(menuInfo, canonicalName) {
-  const groups = chunkArray(menuInfo.leagueIds, CHUNK_SIZE);
-
-  const events = new Map();
-
-  console.log(
-    "[BETIST]" +
-      `${canonicalName}: sportId=${menuInfo.sportId}, lig=${menuInfo.leagueIds.length}, layout=${menuInfo.layoutSchemaCode}`
-  );
-
-  for (let i = 0; i < groups.length; i++) {
-    const leagueIds = groups[i];
-
-    const url = buildEventsUrl(leagueIds, menuInfo.layoutSchemaCode);
-
-    console.log(
-      "[BETIST]" + `  grup ${i + 1}/${groups.length} -> ${leagueIds.length} lig`
-    );
-
-    const response = await get(url, {
-      Referer: `${SITE_URL}/betting`,
-
-      "X-Requested-With": "XMLHttpRequest",
-    });
-
-    for (const event of parseEventRecords(response.body)) {
-      if (String(event.sport_id) !== String(menuInfo.sportId)) {
-        continue;
-      }
-
-      events.set(String(event.mid), event);
-    }
-
-    if (REQUEST_DELAY_MS > 0 && i + 1 < groups.length) {
-      await sleep(REQUEST_DELAY_MS);
-    }
-  }
-
-  console.log("[BETIST]" + `  benzersiz maç: ${events.size}`);
-
-  return [...events.values()];
-}
-
-function addEventsToOutput(output, canonicalSport, events) {
-  for (const event of events) {
-    const leagueName = String(event.league_name || `LIG_${event.lid}`).trim();
-
-    const countryName = String(event.country_name || "").trim();
-
-    const leagueKey = countryName
-      ? `${countryName} - ${leagueName}`
-      : leagueName;
-
-    const { date, time } = parseStartTime(event.event_start_time);
-
-    const { home, away } = splitParticipants(event.event);
-
-    output[canonicalSport][leagueKey] ??= {};
-
-    output[canonicalSport][leagueKey][date] ??= [];
-
-    output[canonicalSport][leagueKey][date].push({
-      eventId: String(event.mid),
-
-      leagueId: String(event.lid),
-
-      home,
-      away,
-      time,
-    });
-  }
-}
-
-function sortOutput(output) {
-  const sorted = {};
-
-  for (const sport of TARGET_ORDER) {
-    sorted[sport] = {};
-
-    const leagueEntries = Object.entries(output[sport] || {}).sort(([a], [b]) =>
-      a.localeCompare(b, "tr")
-    );
-
-    for (const [league, dates] of leagueEntries) {
-      sorted[sport][league] = {};
-
-      for (const date of Object.keys(dates).sort()) {
-        sorted[sport][league][date] = dates[date].sort((a, b) => {
-          const byTime = String(a.time).localeCompare(String(b.time));
-
-          if (byTime !== 0) {
-            return byTime;
-          }
-
-          return `${a.home}-${a.away}`.localeCompare(
-            `${b.home}-${b.away}`,
-            "tr"
-          );
-        });
-      }
-    }
-  }
-
-  return sorted;
-}
-
-async function betistMatchFetcherMain(siteUrl) {
-  SITE_URL = siteUrl;
-  BASE_URL = `${new URL(siteUrl).protocol}//bet.${new URL(siteUrl).hostname}`;
-
-  console.log("[BETIST]" + `Betist: ${SITE_URL}`);
-
-  console.log("[BETIST]" + `Data host: ${BASE_URL}`);
-
-  console.log("[BETIST]" + "Spor/lig menüsü çekiliyor...");
-
-  const homeResponse = await get(HOME_URL, {
-    Accept:
-      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-
-    Referer: `${SITE_URL}/betting`,
-  });
-
-  const menu = parseSportMenu(homeResponse.body);
-
-  if (!menu.length) {
-    throw new Error(
-      "Spor menüsü bulunamadı. Site HTML yapısı değişmiş veya farklı bir sayfa dönmüş olabilir."
-    );
-  }
-
-  const targetMenus = new Map();
+  const unmapped = [];
 
   for (const item of menu) {
-    const canonical = canonicalSportName(item.name);
+    const sport = resolveSport(item.name);
 
-    if (canonical && !targetMenus.has(canonical)) {
-      targetMenus.set(canonical, item);
+    if (!sport) {
+      unmapped.push(item.name);
+      continue;
     }
+
+    if (enabledKeys && !enabledKeys.has(sport.key)) continue;
+
+    if (!item.layoutSchemaCode) {
+      logger.warn(`${sport.key}: layout_schema_code yok, atlaniyor.`);
+      continue;
+    }
+
+    if (!item.leagueIds.length) continue;
+
+    // Ayni katalog anahtarina birden fazla menu girdisi dusebilir
+    // (orn. "Rugby" ve "Ragbi" -> RAGBI). Ikisi de cekilir, cikti birlesir.
+    const list = targets.get(sport.key) ?? [];
+
+    list.push({ ...item, sportKey: sport.key });
+
+    targets.set(sport.key, list);
   }
 
-  const output = Object.fromEntries(TARGET_ORDER.map((sport) => [sport, {}]));
-
-  for (const sport of TARGET_ORDER) {
-    const menuInfo = targetMenus.get(sport);
-
-    if (!menuInfo) {
-      console.warn(
-        "[BETIST]" + `${sport}: menüde bulunamadı; boş bırakılıyor.`
-      );
-
-      continue;
-    }
-
-    if (!menuInfo.layoutSchemaCode) {
-      console.warn(
-        "[BETIST]" + `${sport}: layout_schema_code bulunamadı; boş bırakılıyor.`
-      );
-
-      continue;
-    }
-
-    if (!menuInfo.leagueIds.length) {
-      console.warn("[BETIST]" + `${sport}: lig bulunamadı; boş bırakılıyor.`);
-
-      continue;
-    }
-
-    try {
-      const events = await fetchAllEventsForSport(menuInfo, sport);
-
-      addEventsToOutput(output, sport, events);
-    } catch (error) {
-      console.error("[BETIST]" + `${sport} çekilirken hata: ${error.message}`);
-    }
+  if (unmapped.length) {
+    logger.debug(`katalogda olmayan spor atlandi: ${unmapped.join(", ")}`);
   }
 
-  const finalOutput = sortOutput(output);
+  return targets;
+}
 
-  await fs.writeFile(
-    OUTPUT_FILE,
-    `${JSON.stringify(finalOutput, null, 2)}\n`,
-    "utf8"
-  );
+/* =========================================================================
+ * ANA AKIS
+ * ====================================================================== */
 
-  console.log("[BETIST]" + "");
+/**
+ * @param {string} siteUrl
+ * @param {{ dateFilter?: object, write?: boolean, sports?: string }} [options]
+ */
+async function betistMatchFetcherMain(siteUrl, options = {}) {
+  const logger = createLogger(SITE);
 
-  console.log("[BETIST]" + `JSON yazıldı: ${OUTPUT_FILE}`);
+  const site = new URL(siteUrl);
 
-  for (const sport of TARGET_ORDER) {
-    const leagues = Object.keys(finalOutput[sport]);
+  // Veri, ana alan adinda degil "bet." alt alan adinda duruyor.
+  const baseUrl = `${site.protocol}//bet.${site.hostname}`;
 
-    const matchCount = leagues.reduce(
-      (sum, league) =>
-        sum +
-        Object.values(finalOutput[sport][league]).reduce(
-          (dateSum, matches) => dateSum + matches.length,
-          0
-        ),
-      0
-    );
+  const enabledKeys = resolveEnabledSportKeys(options.sports);
 
-    console.log(
-      "[BETIST]" + `${sport}: ${leagues.length} lig / ${matchCount} maç`
-    );
+  const http = new HttpClient({
+    timeoutMs: REQUEST_TIMEOUT_MS,
+    maxSockets: CONCURRENCY + 1,
+    retry: { attempts: RETRY_ATTEMPTS },
+    rateLimiter: createRateLimiter(REQUEST_DELAY_MS),
+    logger,
+  });
+
+  try {
+    return await runFetcher({
+      site: SITE,
+      logger,
+      outputFile: options.outputFile ?? OUTPUT_FILE,
+      dateFilter: options.dateFilter,
+      write: options.write,
+
+      collect: async ({ output }) => {
+        logger.info(`site=${siteUrl} data=${baseUrl}`);
+
+        const home = await http.get(`${baseUrl}/home.php?domain=&options=`, {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+          Referer: `${siteUrl}/betting`,
+        });
+
+        const menu = parseSportMenu(home.body);
+
+        if (!menu.length) {
+          throw new Error(
+            "Spor menusu bulunamadi. Site HTML yapisi degismis olabilir."
+          );
+        }
+
+        const targets = selectSports(menu, enabledKeys, logger);
+
+        logger.info(
+          `menude ${menu.length} spor, ${targets.size} tanesi hedefleniyor`
+        );
+
+        // Tum sporlarin lig gruplari TEK bir is kuyruguna aliniyor.
+        // Spor spor ilerlemek yerine boyle yapmanin sebebi: kucuk sporlarda
+        // (1-2 grup) es zamanlilik bos kalirdi; tek kuyrukta worker'lar
+        // bastan sona dolu calisiyor.
+        const tasks = [];
+
+        for (const [sportKey, entries] of targets) {
+          for (const entry of entries) {
+            for (const leagueIds of chunkArray(entry.leagueIds, CHUNK_SIZE)) {
+              tasks.push({ sportKey, entry, leagueIds });
+            }
+          }
+        }
+
+        logger.info(`${tasks.length} lig grubu cekilecek (es zamanli: ${CONCURRENCY})`);
+
+        const results = await mapWithConcurrency(
+          tasks,
+          CONCURRENCY,
+          async (task) => {
+            const url = buildEventsUrl(
+              baseUrl,
+              task.leagueIds,
+              task.entry.layoutSchemaCode
+            );
+
+            const response = await http.get(url, {
+              Referer: `${siteUrl}/betting`,
+              "X-Requested-With": "XMLHttpRequest",
+            });
+
+            return { task, events: parseEventRecords(response.body) };
+          }
+        );
+
+        let failed = 0;
+
+        for (const result of results) {
+          if (result.status === "rejected") {
+            // Tek bir grubun patlamasi digerlerini durdurmaz.
+            failed++;
+
+            logger.warn(`lig grubu alinamadi: ${result.reason.message.split("\n")[0]}`);
+
+            continue;
+          }
+
+          const { task, events } = result.value;
+
+          for (const event of events) {
+            // Yanit bazen istenmeyen sporun maclarini da tasiyor.
+            if (String(event.sport_id) !== String(task.entry.sportId)) continue;
+
+            const { date, time } = parseLocalDateTime(event.event_start_time);
+
+            const { home: homeTeam, away } = splitParticipants(event.event);
+
+            output.add(task.sportKey, {
+              eventId: event.mid,
+              leagueId: event.lid,
+              leagueName: event.league_name,
+              countryName: event.country_name,
+              home: homeTeam,
+              away,
+              date,
+              time,
+            });
+          }
+        }
+
+        if (failed) {
+          logger.warn(`${tasks.length} gruptan ${failed} tanesi alinamadi.`);
+        }
+
+        logger.info(
+          `${http.stats.requests} istek, ${http.stats.retries} tekrar, ` +
+            `${(http.stats.bytes / 1024 / 1024).toFixed(1)} MB`
+        );
+      },
+    });
+  } finally {
+    http.close();
   }
 }
 
-export { betistMatchFetcherMain };
+export { betistMatchFetcherMain, parseSportMenu, parseEventRecords, splitParticipants };

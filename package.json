@@ -8,8 +8,7 @@
     "start:dev": "nodemon",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "build": "tsc",
-    "test": "node --test \"src/Services/Match/Fetchers/__tests__/*.test.js\""
+    "build": "tsc"
   },
   "author": "Kürşat Kerem ÇEVLİK",
   "type": "module",

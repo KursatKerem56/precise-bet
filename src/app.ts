@@ -63,8 +63,8 @@ app.use(
   cors({
     origin: config.frontend.url,
     credentials: true,
-    methods: ["GET", "POST"],
-    allowedHeaders: ["authorization", "cookie"],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Authorization", "Content-Type", "Cookie"],
   })
 );
 app.use(requestIp.mw());

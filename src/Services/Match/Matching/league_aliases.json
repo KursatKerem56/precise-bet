@@ -1,0 +1,237 @@
+{
+  "_comment": "Lig adi alias veritabani. 'countries' bolumu uc sitenin ULKE/BOLGE adlandirmasini tekillestirir (Holland/Netherlands, Turkey/Turkiye, Czech Republic/Czechia ...). 'regions' ulke DEGIL bolge kovasi olan anahtarlari isaretler: betist 'International Clubs' derken mavibet/virusbet 'Europe' diyor, bu yuzden bolgeler ulke gibi KATI kisit olarak kullanilamaz.",
+  "version": 1,
+
+  "countries": {
+    "Netherlands": ["Netherlands", "Holland", "Hollanda"],
+    "Turkiye": ["Turkiye", "Türkiye", "Turkey"],
+    "Czech Republic": ["Czech Republic", "Czechia", "Cek Cumhuriyeti"],
+    "South Korea": ["South Korea", "Republic of Korea", "Korea (South)", "Korea Republic", "Guney Kore"],
+    "North Korea": ["North Korea", "Korea (North)", "Korea DPR"],
+    "Ireland": ["Ireland", "Republic of Ireland", "Eire", "Irlanda"],
+    "United States": ["United States", "USA", "US", "United States of America", "Amerika"],
+    "Bosnia & Herzegovina": ["Bosnia & Herzegovina", "Bosnia and Herzegovina", "Bosnia-Herzegovina", "Bosna Hersek"],
+    "North Macedonia": ["North Macedonia", "Macedonia", "Makedonya"],
+    "Nigeria": ["Nigeria", "NIGERIA", "Nijerya"],
+    "China": ["China", "China PR", "Cin"],
+    "Russia": ["Russia", "Rusya"],
+    "Germany": ["Germany", "Almanya"],
+    "Spain": ["Spain", "Ispanya"],
+    "Italy": ["Italy", "Italya"],
+    "France": ["France", "Fransa"],
+    "England": ["England", "Ingiltere"],
+    "Greece": ["Greece", "Yunanistan"],
+    "Denmark": ["Denmark", "Danimarka"],
+    "Sweden": ["Sweden", "Isvec"],
+    "Norway": ["Norway", "Norvec"],
+    "Switzerland": ["Switzerland", "Isvicre"],
+    "Austria": ["Austria", "Avusturya"],
+    "Belgium": ["Belgium", "Belcika"],
+    "Poland": ["Poland", "Polonya"],
+    "Ukraine": ["Ukraine", "Ukrayna"],
+    "Croatia": ["Croatia", "Hirvatistan"],
+    "Serbia": ["Serbia", "Sirbistan"],
+    "Romania": ["Romania", "Romanya"],
+    "Bulgaria": ["Bulgaria", "Bulgaristan"],
+    "Hungary": ["Hungary", "Macaristan"],
+    "Portugal": ["Portugal", "Portekiz"],
+    "Scotland": ["Scotland", "Iskocya"],
+    "Japan": ["Japan", "Japonya"],
+    "Brazil": ["Brazil", "Brezilya"],
+    "Argentina": ["Argentina", "Arjantin"],
+    "Mexico": ["Mexico", "Meksika"],
+    "Australia": ["Australia", "Avustralya"],
+    "Egypt": ["Egypt", "Misir"],
+    "Morocco": ["Morocco", "Fas"],
+    "Israel": ["Israel", "Israil"],
+    "Kazakhstan": ["Kazakhstan", "Kazakistan"],
+    "Azerbaijan": ["Azerbaijan", "Azerbaycan"]
+  },
+
+  "_regions_comment": "Bunlar ULKE DEGIL. Bir kismi cografi kova (Europe, World), bir kismi ise betist'in ulke yerine koydugu baska bir sey: tenis turnuvalari icin 'ATP'/'WTA', ragbi icin 'Rugby Union'. 'United Kingdom' da burada, cunku mavibet 'United Kingdom - Elite League' derken betist ayni ligi 'England - Elite League' diyor. Bolgeler KATI ulke kisiti olarak kullanilmaz.",
+  "regions": [
+    "International", "International Clubs", "International Youth",
+    "Europe", "Africa", "Asia", "Americas", "North America",
+    "North and Central America", "South America", "World",
+    "Oceania", "Middle East", "ATP", "WTA", "SRL Matches",
+    "United Kingdom", "Great Britain", "UK",
+    "Rugby Union", "Rugby League", "Euroleague", "Eurocup"
+  ],
+
+  "leagues": {
+    "england_premier_league": {
+      "canonical": "Premier League",
+      "sport": "football",
+      "country": "England",
+      "aliases": ["Premier League", "English Premier League", "England Premier League", "ENG Premier League", "EPL"]
+    },
+    "england_championship": {
+      "canonical": "Championship",
+      "sport": "football",
+      "country": "England",
+      "aliases": ["Championship", "EFL Championship", "English Championship"]
+    },
+    "spain_laliga": {
+      "canonical": "LaLiga",
+      "sport": "football",
+      "country": "Spain",
+      "aliases": ["LaLiga", "La Liga", "Primera Division", "LaLiga Santander", "Spanish La Liga"]
+    },
+    "spain_laliga2": {
+      "canonical": "LaLiga 2",
+      "sport": "football",
+      "country": "Spain",
+      "aliases": ["LaLiga 2", "LaLiga2", "La Liga 2", "Segunda Division", "LaLiga SmartBank"]
+    },
+    "italy_serie_a": {
+      "canonical": "Serie A",
+      "sport": "football",
+      "country": "Italy",
+      "aliases": ["Serie A", "Italian Serie A"]
+    },
+    "germany_bundesliga": {
+      "canonical": "Bundesliga",
+      "sport": "football",
+      "country": "Germany",
+      "aliases": ["Bundesliga", "1. Bundesliga", "German Bundesliga"]
+    },
+    "germany_bundesliga_2": {
+      "canonical": "2. Bundesliga",
+      "sport": "football",
+      "country": "Germany",
+      "aliases": ["2. Bundesliga", "2 Bundesliga", "Bundesliga 2"]
+    },
+    "france_ligue_1": {
+      "canonical": "Ligue 1",
+      "sport": "football",
+      "country": "France",
+      "aliases": ["Ligue 1", "French Ligue 1", "Ligue 1 Uber Eats"]
+    },
+    "netherlands_eredivisie": {
+      "canonical": "Eredivisie",
+      "sport": "football",
+      "country": "Netherlands",
+      "aliases": ["Eredivisie", "Dutch Eredivisie"]
+    },
+    "turkiye_super_lig": {
+      "canonical": "Super Lig",
+      "sport": "football",
+      "country": "Turkiye",
+      "aliases": ["Super Lig", "Süper Lig", "Turkish Super Lig", "Trendyol Super Lig"]
+    },
+    "portugal_primeira_liga": {
+      "canonical": "Primeira Liga",
+      "sport": "football",
+      "country": "Portugal",
+      "aliases": ["Primeira Liga", "Liga Portugal", "Portuguese Primeira Liga"]
+    },
+    "scotland_premiership": {
+      "canonical": "Premiership",
+      "sport": "football",
+      "country": "Scotland",
+      "aliases": ["Premiership", "Scottish Premiership", "Scottish Premier League"]
+    },
+    "uefa_champions_league": {
+      "canonical": "UEFA Champions League",
+      "sport": "football",
+      "region": "Europe",
+      "aliases": ["UEFA Champions League", "Champions League", "UCL", "UEFA CL", "UEFA Champions League - League Stage", "UEFA Champions League. Matchday Statistics"]
+    },
+    "uefa_europa_league": {
+      "canonical": "UEFA Europa League",
+      "sport": "football",
+      "region": "Europe",
+      "aliases": ["UEFA Europa League", "Europa League", "UEL", "UEFA Europa League - League Stage"]
+    },
+    "uefa_conference_league": {
+      "canonical": "UEFA Conference League",
+      "sport": "football",
+      "region": "Europe",
+      "aliases": ["UEFA Conference League", "Conference League", "UECL", "UEFA Europa Conference League"]
+    },
+    "uefa_nations_league": {
+      "canonical": "UEFA Nations League",
+      "sport": "football",
+      "region": "Europe",
+      "aliases": ["UEFA Nations League", "Nations League", "UNL", "UEFA Nations League. Matchday Statistics"]
+    },
+    "concacaf_nations_league": {
+      "canonical": "CONCACAF Nations League",
+      "sport": "football",
+      "region": "Americas",
+      "aliases": ["CONCACAF Nations League", "Concacaf Nations League"]
+    },
+    "copa_libertadores": {
+      "canonical": "Copa Libertadores",
+      "sport": "football",
+      "region": "South America",
+      "aliases": ["Copa Libertadores", "CONMEBOL Libertadores", "Libertadores"]
+    },
+    "copa_sudamericana": {
+      "canonical": "Copa Sudamericana",
+      "sport": "football",
+      "region": "South America",
+      "aliases": ["Copa Sudamericana", "CONMEBOL Sudamericana", "Sudamericana"]
+    },
+    "africa_cup_of_nations_qualification": {
+      "canonical": "Africa Cup of Nations Qualification",
+      "sport": "football",
+      "region": "Africa",
+      "aliases": ["Africa Cup of Nations Qualification", "AFCON Qualification", "Africa Cup of Nations Qualifiers"]
+    },
+    "usa_mls": {
+      "canonical": "Major League Soccer",
+      "sport": "football",
+      "country": "United States",
+      "aliases": ["Major League Soccer", "MLS", "USA MLS"]
+    },
+    "usa_usl_championship": {
+      "canonical": "USL Championship",
+      "sport": "football",
+      "country": "United States",
+      "aliases": ["USL Championship", "USL"]
+    },
+    "brazil_serie_a": {
+      "canonical": "Serie A",
+      "sport": "football",
+      "country": "Brazil",
+      "aliases": ["Serie A", "Brasileirao", "Brasileirao Serie A", "Campeonato Brasileiro Serie A"]
+    },
+    "brazil_serie_b": {
+      "canonical": "Serie B",
+      "sport": "football",
+      "country": "Brazil",
+      "aliases": ["Serie B", "Brasileirao Serie B", "Campeonato Brasileiro Serie B"]
+    },
+    "nba": {
+      "canonical": "NBA",
+      "sport": "basketball",
+      "country": "United States",
+      "aliases": ["NBA", "National Basketball Association"]
+    },
+    "euroleague": {
+      "canonical": "EuroLeague",
+      "sport": "basketball",
+      "region": "Europe",
+      "aliases": ["EuroLeague", "Euroleague", "Turkish Airlines EuroLeague"]
+    },
+    "nfl": {
+      "canonical": "NFL",
+      "sport": "american football",
+      "country": "United States",
+      "aliases": ["NFL", "National Football League"]
+    },
+    "mlb": {
+      "canonical": "MLB",
+      "sport": "baseball",
+      "country": "United States",
+      "aliases": ["MLB", "Major League Baseball"]
+    },
+    "nhl": {
+      "canonical": "NHL",
+      "sport": "ice hockey",
+      "country": "United States",
+      "aliases": ["NHL", "National Hockey League"]
+    }
+  }
+}

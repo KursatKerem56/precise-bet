@@ -1,0 +1,141 @@
+{
+  "_comment": "Takim adi alias veritabani. Buradaki kayitlarin BUYUK KISMI uc sitenin gercek ciktisindan cikarildi (betist Turkce exonim kullaniyor, digerleri Ingilizce). Alias eslesmesi bulanik eslesmeden DAHA GUVENILIR kabul edilir; bu yuzden buraya yalnizca ELLE DOGRULANMIS kayit girin. Bulanik eslestiricinin onerileri otomatik olarak buraya YAZILMAZ - team_alias_suggestions.json dosyasina dusurulur.",
+  "version": 1,
+  "teams": {
+    "manchester_united": {
+      "canonical": "Manchester United",
+      "aliases": ["Manchester United", "Manchester Utd", "Man United", "Man Utd", "M. United"]
+    },
+    "manchester_city": {
+      "canonical": "Manchester City",
+      "aliases": ["Manchester City", "Man City", "M. City"]
+    },
+    "paris_saint_germain": {
+      "canonical": "Paris Saint-Germain",
+      "aliases": ["Paris Saint-Germain", "Paris Saint Germain", "PSG", "Paris SG"]
+    },
+    "borussia_dortmund": {
+      "canonical": "Borussia Dortmund",
+      "aliases": ["Borussia Dortmund", "BVB", "B. Dortmund", "Dortmund"]
+    },
+    "borussia_monchengladbach": {
+      "canonical": "Borussia Monchengladbach",
+      "aliases": ["Borussia Monchengladbach", "Borussia Mönchengladbach", "Gladbach", "B. Monchengladbach"]
+    },
+    "bayern_munich": {
+      "canonical": "Bayern Munich",
+      "aliases": ["Bayern Munich", "Bayern München", "Bayern Münih", "FC Bayern", "Bayern"]
+    },
+    "atletico_madrid": {
+      "canonical": "Atletico Madrid",
+      "aliases": ["Atletico Madrid", "Atlético Madrid", "Atl. Madrid", "ATM"]
+    },
+    "internazionale": {
+      "canonical": "Internazionale",
+      "aliases": ["Internazionale", "Inter", "Inter Milan", "Inter Milano"]
+    },
+    "tottenham_hotspur": {
+      "canonical": "Tottenham Hotspur",
+      "aliases": ["Tottenham Hotspur", "Tottenham", "Spurs"]
+    },
+    "wolverhampton_wanderers": {
+      "canonical": "Wolverhampton Wanderers",
+      "aliases": ["Wolverhampton Wanderers", "Wolves", "Wolverhampton"]
+    },
+    "queens_park_rangers": {
+      "canonical": "Queens Park Rangers",
+      "aliases": ["Queens Park Rangers", "QPR", "Queens Park Rangers FC"]
+    },
+    "fenerbahce": {
+      "canonical": "Fenerbahce",
+      "aliases": ["Fenerbahce", "Fenerbahçe", "Fener"]
+    },
+    "galatasaray": {
+      "canonical": "Galatasaray",
+      "aliases": ["Galatasaray", "Cimbom", "Cim Bom"]
+    },
+    "besiktas": {
+      "canonical": "Besiktas",
+      "aliases": ["Besiktas", "Beşiktaş", "Kara Kartal"]
+    },
+    "deportivo_la_guaira": {
+      "canonical": "Deportivo La Guaira",
+      "aliases": ["Deportivo La Guaira", "Deportivo La Guaira FC", "Dep. La Guaira", "Dep La Guaira", "La Guaira"]
+    },
+
+    "_us_clubs_comment": "ABD kuluplerinin sehir kisaltmalari. Bunlar ALIAS olarak tutuluyor cunku token seviyesinde otomatik acilim ('LA' -> 'Los Angeles') gercek veride 49 takim adini bozuyordu ('Deportivo La Coruna' -> 'deportivo los angeles coruna'). Deterministik alias hem dogru hem guvenli.",
+    "la_galaxy": {
+      "canonical": "LA Galaxy",
+      "aliases": ["LA Galaxy", "L. A. Galaxy", "Los Angeles Galaxy", "L.A. Galaxy"]
+    },
+    "new_england_revolution": {
+      "canonical": "New England Revolution",
+      "aliases": ["New England Revolution", "N. E. Revolution", "NE Revolution"]
+    },
+    "san_jose_earthquakes": {
+      "canonical": "San Jose Earthquakes",
+      "aliases": ["San Jose Earthquakes", "S. J. Earthquakes", "SJ Earthquakes"]
+    },
+    "new_york_red_bulls": {
+      "canonical": "New York Red Bulls",
+      "aliases": ["New York Red Bulls", "NY Red Bulls", "N. Y. Red Bulls", "New York RB"]
+    },
+    "new_york_city_fc": {
+      "canonical": "New York City FC",
+      "aliases": ["New York City FC", "NYCFC", "NY City FC"]
+    },
+
+    "adt_tarma": {
+      "canonical": "ADT Tarma",
+      "aliases": ["ADT Tarma", "Asociacion Deportiva Tarma", "Asociación Deportiva Tarma"]
+    },
+    "cienciano": {
+      "canonical": "Cienciano",
+      "aliases": ["Cienciano", "Cienciano del Cusco", "Cienciano Cusco"]
+    },
+
+    "_countries_comment": "Milli takimlar: betist Turkce, mavibet/virusbet Ingilizce yaziyor. Gercek veride bulanik eslesmeye kalan ve bazilari esigin altinda kalan adlar.",
+    "nation_finland":       { "canonical": "Finland",       "aliases": ["Finland", "Finlandiya"] },
+    "nation_italy":         { "canonical": "Italy",         "aliases": ["Italy", "İtalya", "Italya"] },
+    "nation_slovakia":      { "canonical": "Slovakia",      "aliases": ["Slovakia", "Slovakya"] },
+    "nation_zimbabwe":      { "canonical": "Zimbabwe",      "aliases": ["Zimbabwe", "Zimbabve"] },
+    "nation_gambia":        { "canonical": "Gambia",        "aliases": ["Gambia", "Gambiya"] },
+    "nation_somalia":       { "canonical": "Somalia",       "aliases": ["Somalia", "Somali"] },
+    "nation_niger":         { "canonical": "Niger",         "aliases": ["Niger", "Nijer"] },
+    "nation_nigeria":       { "canonical": "Nigeria",       "aliases": ["Nigeria", "Nijerya"] },
+    "nation_tanzania":      { "canonical": "Tanzania",      "aliases": ["Tanzania", "Tanzanya"] },
+    "nation_guinea_bissau": { "canonical": "Guinea-Bissau", "aliases": ["Guinea-Bissau", "Gine Bissau", "Guinea Bissau"] },
+    "nation_guinea":        { "canonical": "Guinea",        "aliases": ["Guinea", "Gine"] },
+    "nation_azerbaijan":    { "canonical": "Azerbaijan",    "aliases": ["Azerbaijan", "Azerbaycan"] },
+    "nation_tajikistan":    { "canonical": "Tajikistan",    "aliases": ["Tajikistan", "Tacikistan"] },
+    "nation_namibia":       { "canonical": "Namibia",       "aliases": ["Namibia", "Namibya"] },
+    "nation_congo":         { "canonical": "Congo",         "aliases": ["Congo", "Kongo"] },
+    "nation_cape_verde":    { "canonical": "Cape Verde",    "aliases": ["Cape Verde", "Kape Verde", "Cabo Verde"] },
+    "nation_rwanda":        { "canonical": "Rwanda",        "aliases": ["Rwanda", "Ruanda"] },
+    "nation_liberia":       { "canonical": "Liberia",       "aliases": ["Liberia", "Liberya"] },
+    "nation_kazakhstan":    { "canonical": "Kazakhstan",    "aliases": ["Kazakhstan", "Kazakistan"] },
+    "nation_croatia":       { "canonical": "Croatia",       "aliases": ["Croatia", "Hirvatistan", "Hırvatistan"] },
+    "nation_bahamas":       { "canonical": "Bahamas",       "aliases": ["Bahamas", "Bahama"] },
+    "nation_antigua":       { "canonical": "Antigua and Barbuda", "aliases": ["Antigua and Barbuda", "Antigua & Barbuda", "Antigua Barbuda"] },
+    "nation_greece":        { "canonical": "Greece",        "aliases": ["Greece", "Yunanistan"] },
+    "nation_netherlands":   { "canonical": "Netherlands",   "aliases": ["Netherlands", "Hollanda", "Holland"] },
+    "nation_germany":       { "canonical": "Germany",       "aliases": ["Germany", "Almanya"] },
+    "nation_spain":         { "canonical": "Spain",         "aliases": ["Spain", "Ispanya", "İspanya"] },
+    "nation_france":        { "canonical": "France",        "aliases": ["France", "Fransa"] },
+    "nation_england":       { "canonical": "England",       "aliases": ["England", "Ingiltere", "İngiltere"] },
+    "nation_turkey":        { "canonical": "Turkiye",       "aliases": ["Turkiye", "Türkiye", "Turkey"] },
+    "nation_russia":        { "canonical": "Russia",        "aliases": ["Russia", "Rusya"] },
+    "nation_ukraine":       { "canonical": "Ukraine",       "aliases": ["Ukraine", "Ukrayna"] },
+    "nation_poland":        { "canonical": "Poland",        "aliases": ["Poland", "Polonya"] },
+    "nation_sweden":        { "canonical": "Sweden",        "aliases": ["Sweden", "Isvec", "İsveç"] },
+    "nation_switzerland":   { "canonical": "Switzerland",   "aliases": ["Switzerland", "Isvicre", "İsviçre"] },
+    "nation_denmark":       { "canonical": "Denmark",       "aliases": ["Denmark", "Danimarka"] },
+    "nation_norway":        { "canonical": "Norway",        "aliases": ["Norway", "Norvec", "Norveç"] },
+    "nation_austria":       { "canonical": "Austria",       "aliases": ["Austria", "Avusturya"] },
+    "nation_belgium":       { "canonical": "Belgium",       "aliases": ["Belgium", "Belcika", "Belçika"] },
+    "nation_morocco":       { "canonical": "Morocco",       "aliases": ["Morocco", "Fas"] },
+    "nation_egypt":         { "canonical": "Egypt",         "aliases": ["Egypt", "Misir", "Mısır"] },
+    "nation_algeria":       { "canonical": "Algeria",       "aliases": ["Algeria", "Cezayir"] },
+    "nation_south_africa":  { "canonical": "South Africa",  "aliases": ["South Africa", "Guney Afrika", "Güney Afrika"] }
+  }
+}

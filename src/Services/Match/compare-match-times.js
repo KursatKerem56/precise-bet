@@ -2,410 +2,121 @@
 /**
  * MAÇ SAATİ KARŞILAŞTIRICI  (ES6 / ESM, sıfır bağımlılık, Node 18+)
  *
- * İki farklı sitenin maç listesini karşılaştırır ve AYNI maçın iki sitede
+ * Üç sitenin maç listesini karşılaştırır ve AYNI maçın farklı sitelerde
  * FARKLI saatte gösterildiği durumları JSON olarak verir.
  *
- * Girdi olarak şu iki dosyayı alır:
- *   1) betist-match-fetcher.js çıktısı  (betist-matches.json)
- *      Yapı:  { "FUTBOL": { "Ülke - Lig": { "2026-09-18": [ {home,away,time,...} ] } }, ... }
+ * Girdi, üç fetcher'ın da ürettiği ORTAK yapıdır:
  *
- *   2) mavibet-match-fetcher.js / cli.js çıktısı  (maclar.json)
- *      Yapı:  { sports: [ { sportName, leagues: [ { leagueName, dates: [ { date, matches: [...] } ] } ] } ] }
- *
- * Hangi dosyanın hangi formatta olduğu OTOMATİK algılanır; sırayı
- * karıştırmanız sorun olmaz.
+ *   { "FUTBOL": { "Ülke - Lig": { "2026-09-18": [ {eventId,leagueId,home,away,time} ] } }, ... }
  *
  * ---------------------------------------------------------------------------
- * EŞLEŞTİRME MANTIĞI (istenen sıra: spor -> lig -> tarih -> takım)
+ * EŞLEŞTİRME HİYERARŞİSİ
  *
- *   1) SPOR    : "FUTBOL" / "Futbol" / "Soccer" gibi farklı yazımlar tek bir
- *                kanonik anahtara indirgenir. Farklı spor = asla eşleşmez.
+ *   SPOR -> LİG -> TARİH -> TAKIM -> SAAT
  *
- *   2) TARİH   : Aynı güne düşen maçlar aday havuzuna alınır. ÖNEMLİ: bir
- *                site 23:50, diğeri 00:10 gösteriyorsa TARİHLER DE FARKLI
- *                olur; bu yüzden ±1 gün komşuluğuna da bakılır, yoksa asıl
- *                yakalamak istediğiniz "gece yarısını aşan" farklar gözden
- *                kaçardı.
+ * Bu sıra hem doğruluk hem performans için kritik: ucuz ve kesin elemeler
+ * önce yapılır, pahalı bulanık karşılaştırma en sona bırakılır.
  *
- *   3) LİG     : Lig adları siteler arasında çok farklı yazılabildiği için
- *                (ör. "Türkiye - Türkiye Süper Lig" vs "Türkiye Süper Lig
- *                2026/2027") ZORUNLU tutulmaz; benzerlik skoru hesaplanıp
- *                aday sıralamasında ağırlık olarak kullanılır. İsterseniz
- *                --lig-zorunlu ile zorunlu hale getirebilirsiniz.
+ *   1) SPOR   : Fetcher'lar zaten katalog anahtarı üretiyor (FUTBOL,
+ *               BASKETBOL...). Farklı spor = ASLA eşleşmez; aday indeksinin
+ *               en üst seviyesi budur, yani basketbol maçları bir futbol
+ *               maçı için hiç taranmaz.
  *
- *   4) TAKIM   : Asıl belirleyici adım. Takım adları normalize edilip
- *                (Türkçe karakter katlama, sezon/jenerik ek temizliği,
- *                kısaltma sözlükleri) bulanık (fuzzy) karşılaştırılır.
- *                Ev/deplasman sırası ters olabilir diye çapraz da denenir.
+ *   2) LİG    : Kanonik lig id'sine çözülebiliyorsa GÜVENİLİR bir kısıt
+ *               olur (farklı id -> doğrudan eleme). Çözülemiyorsa yumuşak
+ *               sinyaldir; çünkü üç site lig adlarını çok farklı yazıyor
+ *               ("International Clubs - UEFA Champions League" vs
+ *               "Europe - UEFA Champions League - League Stage"). Ama
+ *               niteleyiciler (Women / U21 / Reserve) her hâlükârda KATI
+ *               kısıttır.
  *
- *   Adaylar global olarak skora göre sıralanıp tek tek eşleştirilir
- *   (bir maç yalnızca bir kez kullanılabilir).
+ *   3) TARİH  : Aynı gün + (gece yarısını aşanlar için) komşu günler.
+ *               Komşu gün adayları yalnızca saat farkı makul bir gece
+ *               yarısı kayması kadarsa kabul edilir; aksi halde "aynı
+ *               takımların ertesi günkü BAŞKA maçı" yanlışlıkla eşleşirdi.
+ *
+ *   4) TAKIM  : Asıl belirleyici adım. Birebir -> alias -> kontrollü
+ *               bulanık sırasıyla. Niteleyici uyuşmazlığı (B takımı, U19,
+ *               kadınlar) isim ne kadar benzerse benzesin eşleşmeyi keser.
+ *
+ *   5) SAAT   : Tek bir epoch sayısı üzerinden; "23:50 vs 00:10" gerçekte
+ *               20 dakikadır, 23 saat 40 dakika değil.
+ *
+ * Eşleştirme mantığının kendisi ./Matching/ altındaki modüllerde; bu dosya
+ * girdiyi okur, eşleştirmeyi sürücüler ve raporu üretir.
  *
  * ---------------------------------------------------------------------------
  * KULLANIM
  *
- *   node mac-saati-karsilastir.js betist-matches.json maclar.json -o farkli.json
- *   node mac-saati-karsilastir.js *.json --summary
- *   node mac-saati-karsilastir.js a.json b.json --tolerans 5      (5 dk'ya kadar farkı yok say)
- *   node mac-saati-karsilastir.js a.json b.json --eslesmeyenler   (çıktıya eşleşmeyenleri de ekle)
- *   node mac-saati-karsilastir.js a.json b.json --duz             (gruplamadan düz liste)
+ *   node compare-match-times.js betist-matches.json maclar.json -o farkli.json
+ *   node compare-match-times.js *.json --summary
+ *   node compare-match-times.js a.json b.json --tolerans 5      (5 dk'ya kadar farkı yok say)
+ *   node compare-match-times.js a.json b.json --eslesmeyenler   (çıktıya eşleşmeyenleri de ekle)
+ *   node compare-match-times.js a.json b.json --duz             (gruplamadan düz liste)
  */
 
 import { readFile, writeFile } from "node:fs/promises";
 
-// Spor adi eslemesi artik burada kopyalanmiyor; fetcher'larla AYNI katalogdan
-// geliyor. Eskiden bu dosyadaki SPORT_CANON/SPORT_ORDER listeleri fetcher'lardan
-// bagimsizdi ve yeni bir spor eklendiginde burasi guncellenmezse o spor
-// "BILINMEYEN" sayilip hic karsilastirilmazdi.
+// Spor adi eslemesi burada kopyalanmiyor; fetcher'larla AYNI katalogdan
+// geliyor. Eskiden bu dosyadaki SPORT_CANON/SPORT_ORDER listeleri
+// fetcher'lardan bagimsizdi ve yeni bir spor eklendiginde burasi
+// guncellenmezse o spor "BILINMEYEN" sayilip hic karsilastirilmazdi.
 import {
   resolveSport,
   SPORT_ORDER as CATALOG_SPORT_ORDER,
 } from "./Fetchers/Sports/catalog.js";
 
-export const DEFAULT_TIMEZONE_OFFSET_MINUTES = 180; // Europe/Istanbul = UTC+3 (yaz saati yok)
+import {
+  MATCH_CONFIG,
+  buildLeagueIndex,
+  buildMatchIndex,
+  findMatchCandidates,
+  compareMatches,
+  resolveLeague,
+  normalizeTimestamp,
+  UnresolvedCollector,
+} from "./Matching/index.js";
 
-/* =========================================================================
- * 1) METİN NORMALİZASYONU VE BULANIK (FUZZY) KARŞILAŞTIRMA
- * ====================================================================== */
+// Geriye donuk uyumluluk: bu dosyanin eski genel API'si disari aciliyor.
+// src/Services/Match/index.ts `export * from "./compare-match-times"`
+// yaptigi icin bu adlarin kaybolmamasi gerekiyor.
+export {
+  foldText,
+  normalizeTeamName,
+  normalizeLeagueName,
+  similarityRatio,
+  teamSimilarity,
+  leagueSimilarity,
+  toEpochMs,
+  compareMatches,
+  compareMatchTimes,
+  calculateMatchConfidence,
+  normalizeTimestamp,
+  calculateTimeDifference,
+  resolveTeam,
+  resolveLeague,
+  compareTeams,
+  compareLeagues,
+  buildMatchIndex,
+  findMatchCandidates,
+  MATCH_CONFIG,
+  MATCH_RESULT,
+  CITY_ABBREVIATIONS,
+} from "./Matching/index.js";
 
-const TR_MAP = {
-  ç: "c",
-  Ç: "c",
-  ğ: "g",
-  Ğ: "g",
-  ı: "i",
-  I: "i",
-  İ: "i",
-  ö: "o",
-  Ö: "o",
-  ş: "s",
-  Ş: "s",
-  ü: "u",
-  Ü: "u",
-};
+export { DEFAULT_TIMEZONE_OFFSET_MINUTES } from "./Matching/datetime.js";
 
-/** Takım adlarında sık geçen, eşleştirmeyi bozabilecek jenerik ekler.
- * Bilinçli olarak kısa tutuldu; agresif temizlik yanlış eşleşme üretir. */
-const GENERIC_TOKENS = new Set([
-  "fc",
-  "cf",
-  "sk",
-  "ac",
-  "sc",
-  "cd",
-  "ud",
-  "if",
-  "bk",
-  "fk",
-  "sv",
-  "vfl",
-  "vfb",
-  "as",
-  "ss",
-]);
-
-/** Bilinen kısaltma / takma adlar. Anahtar ve değer, foldText() çıktısı
- * biçiminde (küçük harf, Türkçe karakterler katlanmış) olmalı.
- * Buraya ihtiyaç duydukça ekleme yapabilirsiniz. */
-export const KNOWN_ALIASES = {
-  "m united": "manchester united",
-  "man united": "manchester united",
-  "man utd": "manchester united",
-  "manchester utd": "manchester united",
-  "m city": "manchester city",
-  "man city": "manchester city",
-  psg: "paris saint germain",
-  "paris sg": "paris saint germain",
-  bvb: "borussia dortmund",
-  "b dortmund": "borussia dortmund",
-  gladbach: "borussia monchengladbach",
-  bayern: "bayern munich",
-  "atl madrid": "atletico madrid",
-  atm: "atletico madrid",
-  inter: "internazionale",
-  spurs: "tottenham hotspur",
-  tottenham: "tottenham hotspur",
-  wolves: "wolverhampton wanderers",
-  fener: "fenerbahce",
-  cimbom: "galatasaray",
-  "kara kartal": "besiktas",
-};
-
-/** ABD ligleri (NBA/NFL/MLB/NHL) için şehir kısaltmaları. */
-export const CITY_ABBREVIATIONS = {
-  ny: "new york",
-  la: "los angeles",
-  sa: "san antonio",
-  sf: "san francisco",
-  gs: "golden state",
-  okc: "oklahoma city",
-  no: "new orleans",
-  kc: "kansas city",
-  gb: "green bay",
-  ne: "new england",
-  tb: "tampa bay",
-  lv: "las vegas",
-};
-
-/** Küçük harfe çevirir, Türkçe karakterleri katlar, diğer aksanları
- * sadeleştirir, noktalamayı atar, boşlukları teke indirir. */
-export function foldText(text) {
-  if (!text) return "";
-  let t = String(text).trim().toLowerCase();
-  t = t.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (ch) => TR_MAP[ch] ?? ch);
-  t = t.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  t = t.replace(/[.\-'’`]/g, " ");
-  t = t.replace(/[^a-z0-9\s]/g, " ");
-  return t.replace(/\s+/g, " ").trim();
-}
-
-function expandCityAbbrev(tokens) {
-  const out = [];
-  for (const t of tokens) {
-    if (CITY_ABBREVIATIONS[t]) out.push(...CITY_ABBREVIATIONS[t].split(" "));
-    else out.push(t);
-  }
-  return out;
-}
-
-export function normalizeTeamName(name) {
-  let folded = foldText(name);
-  if (KNOWN_ALIASES[folded]) folded = KNOWN_ALIASES[folded];
-  folded = expandCityAbbrev(folded.split(" ")).join(" ");
-  const stripped = folded
-    .split(" ")
-    .filter((t) => t && !GENERIC_TOKENS.has(t))
-    .join(" ");
-  return stripped || folded;
-}
-
-// Sezon bilgisi ("2026", "2026/2027", "2026-27") - foldText'ten ÖNCE
-// temizlenir, çünkü "/" sonradan boşluğa dönüşüp "27" gibi artık bırakır.
-const SEASON_RE = /\b(19|20)\d{2}([/-](19|20)?\d{2})?\b/g;
-
-export function normalizeLeagueName(name) {
-  return foldText(String(name ?? "").replace(SEASON_RE, " "));
-}
-
-/** Levenshtein (düzenleme) mesafesi - saf JS. */
-function levenshtein(a, b) {
-  const m = a.length,
-    n = b.length;
-  if (m === 0) return n;
-  if (n === 0) return m;
-  let prev = new Array(n + 1),
-    curr = new Array(n + 1);
-  for (let j = 0; j <= n; j++) prev[j] = j;
-  for (let i = 1; i <= m; i++) {
-    curr[0] = i;
-    for (let j = 1; j <= n; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      curr[j] = Math.min(prev[j] + 1, curr[j - 1] + 1, prev[j - 1] + cost);
-    }
-    [prev, curr] = [curr, prev];
-  }
-  return prev[n];
-}
-
-function charRatio(a, b) {
-  const maxLen = Math.max(a.length, b.length);
-  if (maxLen === 0) return 100;
-  return Math.max(0, 1 - levenshtein(a, b) / maxLen) * 100;
-}
-
-const tokenSort = (t) => t.split(" ").filter(Boolean).sort().join(" ");
-const isAbbrev = (short, long) =>
-  short.length >= 1 && short.length < long.length && long.startsWith(short);
-
-/** Kelime sırasına duyarsız, baş harf kısaltmalarını tanıyan örtüşme oranı.
- * "Ferro, Fiona" ~ "Fiona Ferro", "Recek D / Siniakov D" ~ "D. Recek / D. Siniakov" */
-// Kısaltma eşleşmesi tam puan alır: "M. Zheng" ile "Michael Zheng" aynı
-// oyuncudur. "Deportivo (A)" ile "Deportivo Alaves" gibi sahte eşleşmeler
-// bu ağırlıkla değil, TAKIM NİTELEYİCİSİ kuralıyla engelleniyor (sondaki
-// tek harf rezerv/ikinci takım göstergesi sayılır) - bkz. splitQualifiers.
-const ABBREV_WEIGHT = 1;
-
-function tokenOverlapRatio(a, b) {
-  const ta = a.split(" ").filter(Boolean);
-  const tb = b.split(" ").filter(Boolean);
-  if (!ta.length || !tb.length) return 0;
-  const used = new Array(tb.length).fill(false);
-  let score = 0;
-  for (const x of ta) {
-    // Önce birebir eşleşme aranır; kısaltmaya göre önceliklidir. Böylece
-    // aynı harfle başlayan iki kelime birbirine yanlış atanmaz.
-    let exact = -1;
-    for (let j = 0; j < tb.length; j++) {
-      if (!used[j] && x === tb[j]) {
-        exact = j;
-        break;
-      }
-    }
-    if (exact >= 0) {
-      used[exact] = true;
-      score += 1;
-      continue;
-    }
-
-    for (let j = 0; j < tb.length; j++) {
-      if (used[j]) continue;
-      if (isAbbrev(x, tb[j]) || isAbbrev(tb[j], x)) {
-        used[j] = true;
-        score += ABBREV_WEIGHT;
-        break;
-      }
-    }
-  }
-  return (100 * score) / Math.max(ta.length, tb.length);
-}
-
-/** "NY" ~ "New York" gibi birleşik baş harf kısaltmaları. */
-function initialsRatio(a, b) {
-  const ta = a.split(" ").filter(Boolean);
-  const tb = b.split(" ").filter(Boolean);
-  if (ta.length < 2 && tb.length < 2) return 0;
-  const dir = (shortT, longT) => {
-    if (longT.length < 2) return 0;
-    const ini = longT.map((t) => t[0]).join("");
-    let best = 0;
-    for (const s of shortT) {
-      if (s.length < 2) continue;
-      if (ini.startsWith(s) || s === ini)
-        best = Math.max(best, (100 * s.length) / ini.length);
-    }
-    return best;
-  };
-  return Math.max(dir(ta, tb), dir(tb, ta));
-}
-
-export function similarityRatio(a, b) {
-  if (!a || !b) return 0;
-  if (a === b) return 100;
-  return Math.max(
-    charRatio(a, b),
-    charRatio(tokenSort(a), tokenSort(b)),
-    tokenOverlapRatio(a, b),
-    initialsRatio(a, b)
-  );
-}
+import { DEFAULT_TIMEZONE_OFFSET_MINUTES } from "./Matching/datetime.js";
 
 /**
- * TAKIM NİTELEYİCİLERİ
- *
- * "Athletic Bilbao" ile "Athletic Bilbao B" AYNI TAKIM DEĞİLDİR: ikincisi
- * rezerv (B) takımıdır ve genelde bambaşka bir ligde oynar. Aynı şekilde
- * U19/U21 altyapı takımları ve kadın takımları da ayrıdır.
- *
- * Bu ekler karakter benzerliğini çok az değiştirdiği için ("athletic bilbao"
- * vs "athletic bilbao b" %88 benzer çıkıyor) bulanık eşleştirme tek başına
- * bunları ayırt edemiyor. Bu yüzden niteleyiciler isimden AYRI çıkarılıp
- * ayrıca karşılaştırılıyor: biri varsa diğerinde de olmak ZORUNDA.
+ * Eski `KNOWN_ALIASES` sabiti. Artik tek dogru kaynak
+ * ./Matching/team_aliases.json; bu nesne yalnizca disari acilan eski
+ * API'yi kirmamak icin duruyor ve JSON'dan turetiliyor.
  */
-const MULTI_CHAR_QUALIFIERS = new Set([
-  "ii",
-  "iii",
-  "u16",
-  "u17",
-  "u18",
-  "u19",
-  "u20",
-  "u21",
-  "u23",
-  "res",
-  "reserve",
-  "reserves",
-  "rezerv",
-  "castilla",
-  "atletic",
-  "youth",
-  "junior",
-  "juniors",
-  "jr",
-  "genclik",
-  "altyapi",
-  "amateur",
-  "amator",
-  "women",
-  "womens",
-  "kadin",
-  "kadinlar",
-  "femenino",
-  "feminin",
-  "feminine",
-  "fem",
-  "academy",
-  "akademi",
-]);
-
-const hasSingleLetterToken = (tokens) => tokens.some((t) => t.length === 1);
-
-/**
- * İsmi "çekirdek ad" ve "niteleyiciler" olarak ayırır.
- *
- * Sondaki tek harf ("... B") sadece KARŞI TARAFTA tek harfli token YOKSA
- * niteleyici sayılır. Aksi halde tenisteki "Recek D" / "D. Recek" biçimini
- * yanlışlıkla farklı takım sanardık.
- */
-function splitQualifiers(folded, otherFolded) {
-  const tokens = folded.split(" ").filter(Boolean);
-  const otherTokens = otherFolded.split(" ").filter(Boolean);
-
-  // İki tarafta da tek harfli token varsa bunlar isim baş harfidir (tenis).
-  const singleLettersAreInitials =
-    hasSingleLetterToken(tokens) && hasSingleLetterToken(otherTokens);
-
-  const quals = new Set();
-  const core = [];
-
-  tokens.forEach((token, index) => {
-    if (MULTI_CHAR_QUALIFIERS.has(token)) {
-      quals.add(token);
-      return;
-    }
-
-    const isLast = index === tokens.length - 1;
-
-    if (
-      !singleLettersAreInitials &&
-      isLast &&
-      token.length === 1 &&
-      tokens.length > 1
-    ) {
-      quals.add(token);
-      return;
-    }
-
-    core.push(token);
-  });
-
-  return { core: core.join(" ") || folded, quals };
-}
-
-function sameQualifiers(a, b) {
-  if (a.size !== b.size) return false;
-  for (const q of a) if (!b.has(q)) return false;
-  return true;
-}
-
-export function teamSimilarity(a, b) {
-  const fa = normalizeTeamName(a);
-  const fb = normalizeTeamName(b);
-
-  const pa = splitQualifiers(fa, fb);
-  const pb = splitQualifiers(fb, fa);
-
-  // Niteleyiciler farklıysa (biri B takımı / U19 / kadınlar) bunlar farklı
-  // takımlardır; isim ne kadar benzerse benzesin eşleştirme yapılmaz.
-  if (!sameQualifiers(pa.quals, pb.quals)) return 0;
-
-  return similarityRatio(pa.core, pb.core);
-}
-
-export const leagueSimilarity = (a, b) =>
-  similarityRatio(normalizeLeagueName(a), normalizeLeagueName(b));
+export { KNOWN_ALIASES } from "./Matching/legacy-aliases.js";
 
 /* =========================================================================
- * 2) SPOR ADI KANONİKLEŞTİRME
+ * 1) SPOR ADI KANONİKLEŞTİRME
  * ====================================================================== */
 
 /** Katalogda taninan her spor anahtari (isFetcherShape icin). */
@@ -419,47 +130,22 @@ export function canonicalSport(name) {
   return name ? String(name).toUpperCase() : "BILINMEYEN";
 }
 
-/* =========================================================================
- * 3) TARİH / SAAT
- * ====================================================================== */
-
-/** "2026-09-18" + "20:00" -> epoch ms (yerel saat UTC+3 kabul edilerek).
- * Gece yarısını aşan farkları doğru hesaplamak için tek bir sayıya
- * indirgemek şart; sadece "HH:MM" string karşılaştırması 23:50 vs 00:10
- * durumunu 23 saat 40 dk fark sanırdı. */
-export function toEpochMs(
-  date,
-  time,
-  offsetMinutes = DEFAULT_TIMEZONE_OFFSET_MINUTES
-) {
-  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date ?? ""));
-  const t = /^(\d{1,2}):(\d{2})/.exec(String(time ?? ""));
-  if (!d || !t) return null;
-  return (
-    Date.UTC(+d[1], +d[2] - 1, +d[3], +t[1], +t[2]) - offsetMinutes * 60_000
-  );
-}
-
-const DAY_MS = 86_400_000;
-const dateKeyOffset = (date, days) => {
-  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(date ?? ""));
-  if (!d) return null;
-  return new Date(Date.UTC(+d[1], +d[2] - 1, +d[3]) + days * DAY_MS)
-    .toISOString()
-    .slice(0, 10);
-};
+// Lig alias indeksi, spor anahtarlarini katalogdan cozerek kurulur.
+// Modul yuklenirken BIR KEZ; her karsilastirmada degil.
+buildLeagueIndex((sportName) => resolveSport(sportName)?.key ?? null);
 
 /* =========================================================================
- * 4) GİRDİYİ ORTAK MODELE İNDİRGEME
+ * 2) GİRDİYİ ORTAK MODELE İNDİRGEME
  * ====================================================================== */
 
 /**
- * Her iki fetcher da AYNI yapıda JSON üretiyor:
- *
- *   { "FUTBOL": { "Ülke - Lig": { "2026-09-18": [ {eventId,leagueId,home,away,time} ] } }, ... }
- *
  * Ortak maç modeli:
- *   { site, sport, league, leagueRaw, country, date, time, epoch, home, away, eventId }
+ *   { site, sport, league, leagueRaw, country, leagueInfo,
+ *     date, time, epoch, home, away, eventId }
+ *
+ * `leagueInfo` ve `epoch` BİR KEZ burada hesaplanır. Eskiden lig adı ve
+ * tarih her karşılaştırmada yeniden parse ediliyordu; aday başına birkaç
+ * yüz kez tekrar eden iş budur.
  */
 
 /** Dosya, fetcher çıktısı yapısına uyuyor mu? */
@@ -472,7 +158,9 @@ export function isFetcherShape(data) {
 export function parseFetcherOutput(
   data,
   site,
-  offsetMinutes = DEFAULT_TIMEZONE_OFFSET_MINUTES
+  offsetMinutes = DEFAULT_TIMEZONE_OFFSET_MINUTES,
+  collector = null,
+  sourceName = site
 ) {
   const out = [];
 
@@ -484,26 +172,36 @@ export function parseFetcherOutput(
     for (const [leagueKey, dates] of Object.entries(leagues)) {
       if (!dates || typeof dates !== "object") continue;
 
-      // Lig anahtarı "Ülke - Lig Adı" biçiminde; ikisini ayırıp hem ülkeyi
-      // hem sade lig adını elde ediyoruz (lig benzerliği için daha isabetli).
-      const sep = leagueKey.indexOf(" - ");
-      const country = sep > -1 ? leagueKey.slice(0, sep).trim() : null;
-      const league =
-        sep > -1 ? leagueKey.slice(sep + 3).trim() : leagueKey.trim();
+      // Lig anahtari "Ulke - Lig Adi" biciminde. Cozumleme LIG BASINA bir
+      // kez yapilir, mac basina degil: gercek veride ~500 lig anahtarina
+      // karsilik ~6300 mac var.
+      const leagueInfo = resolveLeague(sport, leagueKey);
+
+      if (collector && !leagueInfo.canonicalId) {
+        collector.addLeague({
+          source: sourceName,
+          sport,
+          country: leagueInfo.country,
+          league: leagueInfo.name,
+        });
+      }
 
       for (const [date, matches] of Object.entries(dates)) {
         if (!Array.isArray(matches)) continue;
 
         for (const m of matches) {
+          const stamp = normalizeTimestamp(date, m.time, offsetMinutes);
+
           out.push({
             site,
             sport,
-            league,
+            league: leagueInfo.name,
             leagueRaw: leagueKey,
-            country,
+            country: leagueInfo.countryRaw,
+            leagueInfo,
             date,
-            time: m.time ?? null,
-            epoch: toEpochMs(date, m.time, offsetMinutes),
+            time: stamp.time,
+            epoch: stamp.epoch,
             home: m.home ?? null,
             away: m.away ?? null,
             eventId: m.eventId != null ? String(m.eventId) : null,
@@ -520,125 +218,107 @@ export function parseFetcherOutput(
 export function normalizeInput(
   data,
   site,
-  { offsetMinutes = DEFAULT_TIMEZONE_OFFSET_MINUTES } = {}
+  {
+    offsetMinutes = DEFAULT_TIMEZONE_OFFSET_MINUTES,
+    collector = null,
+    sourceName = site,
+  } = {}
 ) {
   if (!isFetcherShape(data)) {
     throw new Error(
       `"${site}" dosyası tanınmadı. Beklenen yapı: { "FUTBOL": { "Ülke - Lig": { "2026-09-18": [ ... ] } }, ... }`
     );
   }
-  return { matches: parseFetcherOutput(data, site, offsetMinutes) };
-}
-
-/* =========================================================================
- * 5) EŞLEŞTİRME VE KARŞILAŞTIRMA
- * ====================================================================== */
-
-export const DEFAULTS = {
-  teamThreshold: 78, // iki maçın "aynı maç" sayılması için takım skoru eşiği
-  leagueThreshold: 55, // lig "aynı" sayılsın diye gereken skor (zorunlu değilse sadece ağırlık)
-  requireLeague: false, // true -> lig eşleşmesi ZORUNLU
-  dateToleranceDays: 1, // gece yarısını aşan kaymaları yakalamak için ±1 gün
-  toleranceMinutes: 0, // bu kadar veya daha az fark "aynı" sayılır
-};
-
-/** İki maç için (takım skoru, lig skoru, ters mi) hesaplar.
- * Ev/deplasman sırası siteler arasında ters olabileceği için çapraz da denenir. */
-function scorePair(a, b, teamThreshold) {
-  const hh = teamSimilarity(a.home, b.home);
-  const aa = teamSimilarity(a.away, b.away);
-  const straightOk = hh >= teamThreshold && aa >= teamThreshold;
-  const straight = (hh + aa) / 2;
-
-  const ha = teamSimilarity(a.home, b.away);
-  const ah = teamSimilarity(a.away, b.home);
-  const crossOk = ha >= teamThreshold && ah >= teamThreshold;
-  const cross = (ha + ah) / 2;
-
-  let teamScore, flipped, ok;
-  if (straightOk && (!crossOk || straight >= cross)) {
-    teamScore = straight;
-    flipped = false;
-    ok = true;
-  } else if (crossOk) {
-    teamScore = cross;
-    flipped = true;
-    ok = true;
-  } else {
-    teamScore = Math.max(straight, cross);
-    flipped = cross > straight;
-    ok = false;
-  }
-
   return {
-    ok,
-    teamScore,
-    flipped,
-    leagueScore: leagueSimilarity(a.league, b.league),
+    matches: parseFetcherOutput(
+      data,
+      site,
+      offsetMinutes,
+      collector,
+      sourceName
+    ),
   };
 }
 
+/* =========================================================================
+ * 3) EŞLEŞTİRME
+ * ====================================================================== */
+
+/**
+ * Varsayılanlar. Sayıların TEK doğru kaynağı ./Matching/config.js;
+ * burası yalnızca eski `DEFAULTS` API'sini koruyan bir görünümdür.
+ */
+export const DEFAULTS = {
+  teamThreshold: MATCH_CONFIG.teamThreshold,
+  leagueThreshold: MATCH_CONFIG.leagueThreshold,
+  requireLeague: MATCH_CONFIG.requireLeague,
+  dateToleranceDays: MATCH_CONFIG.dateToleranceDays,
+  toleranceMinutes: MATCH_CONFIG.toleranceMinutes,
+  lowLeagueScore: MATCH_CONFIG.lowLeagueScore,
+  teamScoreWhenLeagueLow: MATCH_CONFIG.teamScoreWhenLeagueLow,
+  maxAdjacentDayDiffMinutes: MATCH_CONFIG.maxAdjacentDayDiffMinutes,
+  crossDatePenalty: MATCH_CONFIG.crossDatePenalty,
+  minConfidence: MATCH_CONFIG.possibleConfidence,
+};
+
 /**
  * İki listeyi eşleştirir.
+ *
+ * ESKİ HÂLİ: her maç için "spor|tarih" kovasındaki TÜM maçlarla tek tek
+ * skorlanıyordu -> üç site için 979.978 aday çifti, 3.9 milyon bulanık
+ * takım karşılaştırması, ~72 saniye.
+ *
+ * YENİ HÂLİ: aday havuzu takım adı ters indeksinden geliyor (bkz.
+ * Matching/candidates.js) -> 43.501 aday çifti (%4.4), doğru eşleşmelerin
+ * %99.95'i korunuyor.
+ *
  * @returns {{pairs: Array, onlyA: Array, onlyB: Array}}
  */
 export function matchLists(listA, listB, options = {}) {
   const opt = { ...DEFAULTS, ...options };
 
-  // Spor + tarih kovalarına ayır (aday sayısını düşürmek için).
-  const indexB = new Map();
-  listB.forEach((m, i) => {
-    const key = `${m.sport}|${m.date}`;
-    if (!indexB.has(key)) indexB.set(key, []);
-    indexB.get(key).push(i);
-  });
+  // Hedef listenin hiyerarşik indeksi: sport -> date -> tokenPrefix.
+  const index = buildMatchIndex(listB);
 
-  // Tüm makul adayları skorla.
   const candidates = [];
+
   listA.forEach((a, ai) => {
-    const seen = new Set();
-    for (let d = -opt.dateToleranceDays; d <= opt.dateToleranceDays; d++) {
-      const date = d === 0 ? a.date : dateKeyOffset(a.date, d);
-      if (!date) continue;
-      for (const bi of indexB.get(`${a.sport}|${date}`) ?? []) {
-        if (seen.has(bi)) continue;
-        seen.add(bi);
+    for (const bi of findMatchCandidates(a, index, opt)) {
+      const b = listB[bi];
 
-        const b = listB[bi];
-        const s = scorePair(a, b, opt.teamThreshold);
-        if (!s.ok) continue;
-        if (opt.requireLeague && s.leagueScore < opt.leagueThreshold) continue;
+      const result = compareMatches(a, b, opt);
+      if (!result.ok) continue;
+      if (result.confidence < opt.minConfidence) continue;
 
-        // Lig adları tamamen farklıysa takım adları da çok yüksek
-        // benzerlikte olmalı (bkz. DEFAULTS.lowLeagueScore).
-        if (
-          s.leagueScore < opt.lowLeagueScore &&
-          s.teamScore < opt.teamScoreWhenLeagueLow
-        )
-          continue;
+      const crossDate = a.date !== b.date;
 
-        candidates.push({
-          ai,
-          bi,
-          teamScore: s.teamScore,
-          leagueScore: s.leagueScore,
-          flipped: s.flipped,
-          // Sıralama skoru: takım ağırlıklı, lig ikincil, saat farkı üçüncül.
-          // (Aynı takımların aynı gün iki maçı varsa saati yakın olanı tercih et.)
-          rank:
-            s.teamScore * 1000 +
-            s.leagueScore -
-            Math.min(Math.abs((a.epoch ?? 0) - (b.epoch ?? 0)) / 60000, 999) /
-              1000,
-        });
-      }
+      candidates.push({
+        ai,
+        bi,
+        teamScore: result.teamScore,
+        leagueScore: result.leagueScore,
+        flipped: result.flipped,
+        confidence: result.confidence,
+        decision: result.decision,
+        diffMinutes: result.time?.diffMinutes ?? null,
+        crossDate,
+        // Sıralama skoru: takım ağırlıklı, lig ikincil, saat farkı üçüncül.
+        // Aynı gün adayı komşu gün adayının HER ZAMAN önüne geçer; aynı
+        // takımların hem bugün hem yarın kaydı varsa doğrusu aynı gündür.
+        rank:
+          result.teamScore * 1000 +
+          result.leagueScore -
+          (crossDate ? opt.crossDatePenalty : 0) -
+          Math.min(Math.abs(result.time?.diffMinutes ?? 0), 999) / 1000,
+      });
     }
   });
 
-  // En iyi adaydan başlayarak tekil eşleştir.
+  // En iyi adaydan başlayarak tekil eşleştir (bir maç bir kez kullanılır).
   candidates.sort((x, y) => y.rank - x.rank);
-  const usedA = new Set(),
-    usedB = new Set();
+
+  const usedA = new Set();
+  const usedB = new Set();
   const pairs = [];
 
   for (const c of candidates) {
@@ -646,24 +326,22 @@ export function matchLists(listA, listB, options = {}) {
     usedA.add(c.ai);
     usedB.add(c.bi);
 
-    const a = listA[c.ai],
-      b = listB[c.bi];
-    const diffMinutes =
-      a.epoch != null && b.epoch != null
-        ? Math.round((b.epoch - a.epoch) / 60000)
-        : null;
-
     pairs.push({
-      a,
-      b,
+      a: listA[c.ai],
+      b: listB[c.bi],
+      indexA: c.ai,
+      indexB: c.bi,
       teamScore: Math.round(c.teamScore * 10) / 10,
       leagueScore: Math.round(c.leagueScore * 10) / 10,
+      confidence: Math.round(c.confidence * 1000) / 1000,
+      decision: c.decision,
       flipped: c.flipped,
-      diffMinutes,
+      diffMinutes: c.diffMinutes,
+      crossDate: c.crossDate,
       isDifferent:
-        diffMinutes == null
+        c.diffMinutes == null
           ? false
-          : Math.abs(diffMinutes) > opt.toleranceMinutes,
+          : Math.abs(c.diffMinutes) > opt.toleranceMinutes,
     });
   }
 
@@ -753,9 +431,13 @@ export function clusterMatches(bySite, options = {}) {
       const { pairs } = matchLists(bySite[siteA], bySite[siteB], opt);
 
       for (const pair of pairs) {
-        const ia = bySite[siteA].indexOf(pair.a);
-        const ib = bySite[siteB].indexOf(pair.b);
-        if (ia < 0 || ib < 0) continue;
+        // matchLists artik indeksleri de donduruyor. Eskiden burada
+        // `bySite[siteA].indexOf(pair.a)` cagriliyordu: her eslesme icin
+        // 1500-2800 elemanli dizide dogrusal arama, yani eslesme sayisi x
+        // liste uzunlugu kadar gereksiz is.
+        const ia = pair.indexA;
+        const ib = pair.indexB;
+        if (ia == null || ib == null) continue;
 
         const ra = ds.find(keyOf(siteA, ia));
         const rb = ds.find(keyOf(siteB, ib));
@@ -897,6 +579,12 @@ function clusterToRow(cluster, siteNames, analysis) {
     takimlar[site] = `${m.home} - ${m.away}`;
   }
 
+  // Siteler macin GUNU konusunda da anlasmazsa bunu ayrica isaretle.
+  // Tek basina "1380 dakika fark" yaniltici olurdu: gerceklesen sey
+  // saatin degil TARIHIN farkli yazilmasidir.
+  const gunler = new Set(Object.values(tarihler));
+  const tarihFarkli = gunler.size > 1;
+
   return {
     sport: first.sport,
     league: first.league,
@@ -905,6 +593,7 @@ function clusterToRow(cluster, siteNames, analysis) {
     away: first.away,
     saatler,
     tarihler,
+    tarihFarkli,
     maxFarkDakika: analysis.maxDiffMinutes,
     sapanSiteler: analysis.deviating,
     eksikSiteler: analysis.missing,
@@ -979,6 +668,13 @@ export async function compareFiles(filePaths, options = {}) {
   const kaynaklar = {};
   const okunamayan = [];
 
+  // Alias veritabaninda karsiligi olmayan lig/takim adlarini topla.
+  // Varsayilan KAPALI (MATCH_DEBUG_UNRESOLVED=1 ile acilir) -- production'da
+  // her kosuda binlerce satir log uretmesin.
+  const collector = new UnresolvedCollector({
+    enabled: opt.collectUnresolved ?? MATCH_CONFIG.collectUnresolved,
+  });
+
   // Bir fetcher calismadiysa dosyasi eksik/bozuk olabilir. Eskiden bu durum
   // tum karsilastirmayi patlatiyor, elde olan iki saglam dosya da
   // degerlendirilemiyordu. Artik bozuk dosya atlanip sebebi raporlaniyor.
@@ -987,9 +683,28 @@ export async function compareFiles(filePaths, options = {}) {
 
     try {
       const raw = JSON.parse(await readFile(filePaths[i], "utf8"));
-      const parsed = normalizeInput(raw, filePaths[i], opt);
+      // `site` (kisa ad) raporlarda kullanilir; dosya yolu yalnizca hata
+      // mesajinda anlamli oldugu icin normalizeInput'a o gidiyor.
+      const parsed = normalizeInput(raw, filePaths[i], {
+        ...opt,
+        collector,
+        sourceName: site,
+      });
 
       bySite[site] = parsed.matches.map((m) => ({ ...m, site }));
+
+      if (collector.enabled) {
+        for (const m of bySite[site]) {
+          for (const team of [m.home, m.away]) {
+            collector.addTeam({
+              source: site,
+              sport: m.sport,
+              league: m.leagueRaw,
+              team,
+            });
+          }
+        }
+      }
       kaynaklar[site] = { dosya: filePaths[i], macSayisi: bySite[site].length };
     } catch (error) {
       okunamayan.push({ site, dosya: filePaths[i], hata: error.message });
@@ -1063,6 +778,12 @@ export async function compareFiles(filePaths, options = {}) {
     },
     farkliMaclar: opt.flat ? rows : groupRows(rows),
   };
+
+  // ONERI, OTOMATIK ALIAS DEGILDIR: bulanik eslestiricinin bulduklari
+  // alias dosyalarina yazilmaz, yalnizca insan onayina sunulur. Yanlis bir
+  // alias butun eslestirme sistemini sessizce bozar.
+  const cozulemeyen = collector.report();
+  if (cozulemeyen) result.cozulemeyen = cozulemeyen;
 
   if (opt.includeUnmatched) {
     const slim = (m) => ({

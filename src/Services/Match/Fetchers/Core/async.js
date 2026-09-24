@@ -1,15 +1,15 @@
 /**
- * Ortak asenkron yardimcilari: kontrollu concurrency, retry/backoff ve
- * rate limiting.
+ * Shared async helpers: bounded concurrency, retry/backoff and rate
+ * limiting.
  *
- * Uc fetcher da ayni sequential kaliba sahipti:
+ * All three fetchers had the same sequential pattern:
  *
- *     for (const grup of gruplar) { await istek(grup); await sleep(gecikme); }
+ *     for (const group of groups) { await request(group); await sleep(delay); }
  *
- * Bu kalip gecikmeye karsi tamamen savunmasiz: 20 grup x 1 sn RTT = 20 sn,
- * ve bunun tamami beklemeyle geciyor. Burasi ayni isi SINIRLI sayida es
- * zamanli istekle yapmayi sagliyor. "Sinirli" onemli: `Promise.all(hepsi)`
- * demek siteyi dovmek demek, ki bu anti-bot tetikler.
+ * That pattern is completely defenceless against latency: 20 groups x 1 s
+ * RTT = 20 s, all of it spent waiting. This lets the same work run over a
+ * BOUNDED number of concurrent requests. "Bounded" matters: `Promise.all(all)`
+ * means hammering the site, which trips anti-bot measures.
  */
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,16 +27,16 @@ function chunkArray(items, size) {
 }
 
 /**
- * Sabit sayida worker ile listeyi isler.
+ * Processes a list with a fixed number of workers.
  *
- * `Promise.all(items.map(...))` YERINE bu kullaniliyor cunku o, liste ne
- * kadar uzunsa o kadar es zamanli istek acar. Burada ayni anda en fazla
- * `limit` adet is yurur.
+ * This is used INSTEAD OF `Promise.all(items.map(...))`, which opens as many
+ * concurrent requests as the list is long. Here at most `limit` jobs run at
+ * the same time.
  *
- * Bir is patlarsa digerleri DEVAM EDER; sonuc dizisi girdi sirasini korur ve
- * her eleman `{ status, value }` veya `{ status, reason }` doner
- * (Promise.allSettled ile ayni sekil). Boylece kismi basarisizlik cagiran
- * tarafta acikca gorunur, sessizce yutulmaz.
+ * If one job blows up the others CONTINUE; the result array preserves input
+ * order and each element is `{ status, value }` or `{ status, reason }` (the
+ * same shape as Promise.allSettled). That way partial failure is plainly
+ * visible to the caller instead of being swallowed.
  *
  * @template T, R
  * @param {T[]} items
@@ -75,11 +75,12 @@ async function mapWithConcurrency(items, limit, worker) {
 }
 
 /**
- * Ardisik istekler arasinda en az `minIntervalMs` birakan basit bir kapi.
+ * A simple gate that leaves at least `minIntervalMs` between consecutive
+ * requests.
  *
- * Concurrency ile BIRLIKTE kullaniliyor: concurrency "ayni anda kac istek",
- * bu ise "saniyede kac istek" tarafini tutuyor. Ikisi olmadan es zamanlilik
- * dogrudan rate limit yemeye donusurdu.
+ * Used TOGETHER WITH concurrency: concurrency covers "how many requests at
+ * once", this covers "how many requests per second". Without both,
+ * concurrency would turn straight into getting rate limited.
  */
 function createRateLimiter(minIntervalMs) {
   const interval = Math.max(0, Number(minIntervalMs) || 0);
@@ -99,11 +100,11 @@ function createRateLimiter(minIntervalMs) {
   };
 }
 
-/** Yeniden denemeye deger mi? Varsayilan siniflandirma. */
+/** Is it worth retrying? The default classification. */
 function isTransientError(error) {
   if (!error) return false;
 
-  // HttpClient/WS katmanlari bunu acikca isaretliyor.
+  // The HttpClient/WS layers mark this explicitly.
   if (typeof error.retryable === "boolean") return error.retryable;
 
   const code = error.code;
@@ -126,23 +127,24 @@ function isTransientError(error) {
     return status === 408 || status === 429 || status >= 500;
   }
 
-  // WebSocket protokolleri HTTP durum kodu tasimadigi icin geriye metin
-  // kaliyor. "backend_timeout" ve "system is busy" mavibet'in acikca
-  // "biraz sonra tekrar dene" dedigi durumlar -- bunlari kalici sayip
-  // pahali yedek yola dusmek gereksiz.
-  return /timeout|zaman asimi|socket hang up|baglanti kapandi|backend_timeout|system is busy|try again/i.test(
+  // WebSocket protocols carry no HTTP status code, so only the text is
+  // left. "backend_timeout" and "system is busy" are mavibet explicitly
+  // saying "try again shortly" -- treating those as permanent and falling
+  // back to the expensive path would be pointless.
+  return /timeout|timed out|socket hang up|connection closed|backend_timeout|system is busy|try again/i.test(
     String(error.message || "")
   );
 }
 
 /**
- * Exponential backoff + full jitter ile yeniden deneme.
+ * Retry with exponential backoff + full jitter.
  *
- * Jitter kasitli: sabit backoff'ta ayni anda patlayan N istek ayni anda
- * yeniden denenir ve ayni duvara tekrar carpar ("thundering herd").
+ * The jitter is deliberate: with a fixed backoff, N requests that fail at
+ * the same moment retry at the same moment and hit the same wall again (a
+ * "thundering herd").
  *
- * Sunucu `Retry-After` verdiyse ona saygi gosteriliyor; rate limit'e karsi
- * dogru davranis tahmin yurutmek degil, sunucunun dedigini beklemektir.
+ * If the server sent `Retry-After` it is respected; the right response to a
+ * rate limit is to wait as long as the server says, not to guess.
  */
 async function withRetry(fn, options = {}) {
   const {
@@ -151,7 +153,7 @@ async function withRetry(fn, options = {}) {
     maxDelayMs = 8000,
     isRetryable = isTransientError,
     onRetry,
-    label = "istek",
+    label = "request",
   } = options;
 
   let lastError;

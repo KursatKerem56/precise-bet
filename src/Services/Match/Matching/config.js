@@ -1,115 +1,116 @@
 /**
- * MERKEZI ESLESTIRME AYARLARI
+ * CENTRAL MATCHING SETTINGS
  *
- * Esik degerleri eskiden compare-match-times.js icine dagilmisti ve bir
- * kismi (lowLeagueScore, teamScoreWhenLeagueLow) DEFAULTS'ta hic tanimli
- * degildi -- yani o guvenlik kontrolu sessizce hic calismiyordu. Artik
- * butun sayilar tek yerde.
+ * The thresholds used to be scattered through compare-match-times.js, and
+ * some of them (lowLeagueScore, teamScoreWhenLeagueLow) were never defined
+ * in DEFAULTS at all -- meaning that safety check silently never ran. All
+ * the numbers now live in one place.
  *
- * Degerler gercek veriye bakilarak secildi; secim gerekcesi her birinin
- * yaninda yazili.
+ * The values were chosen by looking at real data; the rationale for each is
+ * written next to it.
  */
 
 export const MATCH_CONFIG = {
-  /* --- Takim --------------------------------------------------------- */
+  /* --- Team ---------------------------------------------------------- */
 
-  /** Iki adin "ayni takim" sayilmasi icin gereken bulanik skor (0-100).
-   * 78: uc sitenin gercek verisinde dogru eslesmelerin en dusugu ~82
-   * (Namibya/Namibia), yanlis eslesmelerin en yuksegi ~73 (Manchester City/
-   * Leicester City). 78 iki kumenin tam ortasinda duruyor. */
+  /** The fuzzy score (0-100) two names need to count as "the same team".
+   * 78: in the real data of the three sites the lowest correct match is ~82
+   * (Namibya/Namibia) and the highest wrong match is ~73 (Manchester City/
+   * Leicester City). 78 sits right between the two clusters. */
   teamThreshold: 78,
 
-  /** Alias uzerinden ayni kanonik takima cozulen adlarin skoru. Bulanik
-   * eslesmeden HER ZAMAN daha guvenilir kabul edilir. */
+  /** The score for names that resolve to the same canonical team through an
+   * alias. It is ALWAYS treated as more reliable than a fuzzy match. */
   teamAliasScore: 100,
 
-  /** "Sadece zayif kelime ortak" korumasinin esigi.
+  /** The threshold of the "only a weak word in common" guard.
    *
-   * Bu bir ESLESTIRME esigi degil, TESADUF korumasidir; bu yuzden ana
-   * esikten daha dusuk. Zayif kelime disindaki cekirdek adlar bu kadar
-   * bile benzemiyorsa ortaklik tesadufidir:
-   *   "Manchester" / "Leicester" -> 50  (reddedilir, dogru)
-   *   "Salfrod"    / "Salford"   -> 71  (kabul edilir: yazim hatasi) */
+   * This is not a MATCHING threshold but a COINCIDENCE guard, which is why
+   * it is lower than the main one. If the core names outside the weak word
+   * are not even this similar, the overlap is a coincidence:
+   *   "Manchester" / "Leicester" -> 50  (rejected, correctly)
+   *   "Salfrod"    / "Salford"   -> 71  (accepted: a typo) */
   weakOverlapCoreThreshold: 65,
 
-  /* --- Lig ----------------------------------------------------------- */
+  /* --- League -------------------------------------------------------- */
 
-  /** Lig adi "ayni" sayilsin diye gereken bulanik skor. */
+  /** The fuzzy score a league name needs to count as "the same". */
   leagueThreshold: 55,
 
-  /** Lig eslesmesi zorunlu mu? Varsayilan hayir: uc site lig adlarini cok
-   * farkli yaziyor ("International Clubs - UEFA Champions League" vs
-   * "Europe - UEFA Champions League - League Stage"), zorunlu tutmak
-   * gercek eslesmelerin buyuk kismini kaybettirir. */
+  /** Is a league match mandatory? By default no: the three sites write
+   * league names very differently ("International Clubs - UEFA Champions
+   * League" vs "Europe - UEFA Champions League - League Stage"), and
+   * requiring it would lose most of the genuine matches. */
   requireLeague: false,
 
-  /** Lig adlari birbirinden tamamen farkliysa takim skorunun bu esigi
-   * asmasi beklenir. (Eskiden tanimsizdi -> kontrol hic calismiyordu.) */
+  /** When the league names are completely different, the team score is
+   * expected to clear this bar. (It used to be undefined -> the check never
+   * ran.) */
   lowLeagueScore: 35,
   teamScoreWhenLeagueLow: 88,
 
-  /* --- Tarih / saat --------------------------------------------------- */
+  /* --- Date / time ---------------------------------------------------- */
 
-  /** Gece yarisini asan kaymalari yakalamak icin +-1 gun komsuluguna bakilir. */
+  /** A +-1 day neighbourhood is searched to catch shifts across midnight. */
   dateToleranceDays: 1,
 
-  /** Bu kadar veya daha az fark "ayni saat" sayilir. */
+  /** A difference of at most this many minutes counts as "the same time". */
   toleranceMinutes: 0,
 
-  /** KOMSU GUNDEKI adaylar icin ust sinir (dakika).
+  /** The upper bound (in minutes) for candidates on a NEIGHBOURING DAY.
    *
-   * 2160 dk = 36 saat. Bu bir AKIL SAGLIGI siniridir, gece yarisi
-   * toleransi degil: ayni iki takim komsu gunlerde tekrar karsilasmadigi
-   * icin (futbol/boks/MMA/tenis) komsu gunde eslesen kayitlar gercekte
-   * AYNI macin TARIHI FARKLI yazilmis halidir ve bu bilgi kullanici icin
-   * en az saat farki kadar degerlidir.
+   * 2160 min = 36 hours. This is a SANITY bound, not a midnight tolerance:
+   * since the same two teams do not meet again on consecutive days
+   * (football/boxing/MMA/tennis), records that match on a neighbouring day
+   * are really the SAME match with a DIFFERENT DATE written down, and that
+   * is at least as valuable to the user as a time difference.
    *
-   * Bu yuzden komsu gun adaylari ELENMEZ; bunun yerine:
-   *   - siralamada ayni gun adaylari her zaman one gecer (crossDatePenalty)
-   *   - cikti bunlari `tarihFarkli` olarak AYRICA isaretler
-   * boylece 1380 dk gibi yaniltici bir "saat farki" tek basina
-   * raporlanmaz. */
+   * So neighbouring-day candidates are NOT dropped; instead:
+   *   - same-day candidates always rank ahead of them (crossDatePenalty)
+   *   - the output flags them SEPARATELY as `tarihFarkli`
+   * which keeps a misleading "time difference" such as 1380 min from being
+   * reported on its own. */
   maxAdjacentDayDiffMinutes: 2160,
 
-  /** Ayni gun adayini komsu gun adayinin ONUNE gecirmek icin siralama
-   * cezasi. Ayni takimlarin hem bugun hem yarin kaydi varsa dogru olan
-   * ayni gun eslesmesidir. */
+  /** The ranking penalty that puts a same-day candidate AHEAD of a
+   * neighbouring-day one. When the same teams have a record both today and
+   * tomorrow, the same-day match is the correct one. */
   crossDatePenalty: 500,
 
-  /* --- Aday daraltma (blocking) --------------------------------------- */
+  /* --- Candidate narrowing (blocking) --------------------------------- */
 
-  /** Takim adi token'larindan uretilen blocking anahtarinin uzunlugu.
-   * 3 harf: gercek veride 2068 dogru eslesmenin 2067'sini koruyor
-   * (%99.95) ve aday sayisini %4.4'e dusuruyor. */
+  /** The length of the blocking key built from team name tokens.
+   * 3 letters: on real data it keeps 2067 of 2068 correct matches (99.95%)
+   * while cutting the candidate count to 4.4%. */
   blockingPrefixLength: 3,
 
-  /* --- Guven seviyeleri ----------------------------------------------- */
+  /* --- Confidence levels ---------------------------------------------- */
 
-  /** Bunun ustu "match", altindaki bant "possible_match". */
+  /** Above this is "match", the band below it is "possible_match". */
   highConfidence: 0.92,
   possibleConfidence: 0.75,
 
-  /* --- Teshis --------------------------------------------------------- */
+  /* --- Diagnostics ---------------------------------------------------- */
 
-  /** Alias veritabaninda bulunamayan lig/takim adlarini topla.
-   * Production'da log kalabaligi yapmamasi icin varsayilan kapali;
-   * MATCH_DEBUG_UNRESOLVED=1 ile acilir. */
+  /** Collect the league/team names missing from the alias database.
+   * Off by default so it does not clutter production logs; enabled with
+   * MATCH_DEBUG_UNRESOLVED=1. */
   collectUnresolved: process.env.MATCH_DEBUG_UNRESOLVED === "1",
 
-  /** Oneri ciktisina bir ad icin en fazla kac aday yazilsin. */
+  /** How many candidates at most to list per name in the suggestion output. */
   maxSuggestionsPerName: 3,
 
-  /** Oneri sayilmak icin gereken en dusuk bulanik skor. */
+  /** The lowest fuzzy score required to count as a suggestion. */
   suggestionThreshold: 80,
 };
 
 /**
- * TAKIM NITELEYICILERI
+ * TEAM QUALIFIERS
  *
- * "Athletic Bilbao" ile "Athletic Bilbao B" AYNI TAKIM DEGILDIR. Bu ekler
- * karakter benzerligini cok az degistirdigi icin bulanik eslestirme tek
- * basina ayirt edemiyor; bu yuzden isimden AYRI cikarilip ayrica
- * karsilastiriliyor: biri varsa digerinde de olmak ZORUNDA.
+ * "Athletic Bilbao" and "Athletic Bilbao B" are NOT THE SAME TEAM. These
+ * affixes barely move the character similarity, so fuzzy matching cannot
+ * tell them apart on its own; they are therefore extracted from the name
+ * and compared SEPARATELY: if one side has it, the other MUST have it too.
  */
 export const TEAM_QUALIFIERS = new Set([
   "ii",
@@ -150,11 +151,12 @@ export const TEAM_QUALIFIERS = new Set([
 ]);
 
 /**
- * LIG NITELEYICILERI
+ * LEAGUE QUALIFIERS
  *
- * Ayni ulkenin erkek/kadin/genclik ligleri ayri yarismalardir:
- * "Argentina - Primera Division" ile "Argentina - Primera Division, Women"
- * ayni lig degildir. Bu niteleyiciler iki tarafta da ayni olmali.
+ * The men's, women's and youth leagues of the same country are separate
+ * competitions: "Argentina - Primera Division" is not the same league as
+ * "Argentina - Primera Division, Women". These qualifiers have to be the
+ * same on both sides.
  */
 export const LEAGUE_QUALIFIERS = new Set([
   "u16",
@@ -187,12 +189,13 @@ export const LEAGUE_QUALIFIERS = new Set([
 ]);
 
 /**
- * Lig duzeyinde niteleyiciler KABA SINIFA indirgenir.
+ * At the league level, qualifiers are reduced to a COARSE CLASS.
  *
- * Bir site "U19, Youth League" derken digeri "Division de Honor Juvenil"
- * diyor: ikisi de genclik ligi, ama biri yas grubunu, digeri sadece
- * "juvenil" diyor. Lig duzeyinde onemli olan KATEGORI (genclik / kadinlar
- * / rezerv); kesin yas grubu zaten TAKIM adinda ayrica kontrol ediliyor.
+ * One site says "U19, Youth League" while another says "Division de Honor
+ * Juvenil": both are youth leagues, but one names the age group and the
+ * other only says "juvenil". What matters at the league level is the
+ * CATEGORY (youth / women / reserve); the exact age group is already
+ * checked separately in the TEAM name.
  */
 export const LEAGUE_QUALIFIER_CLASS = new Map(
   Object.entries({
@@ -227,11 +230,11 @@ export const LEAGUE_QUALIFIER_CLASS = new Map(
 );
 
 /**
- * Tek baslarina GUCLU KIMLIK TASIMAYAN kelimeler.
+ * Words that carry NO STRONG IDENTITY on their own.
  *
- * "Manchester City" ile "Leicester City" sadece "City" ortak diye
- * eslesmemeli. Bu kelimeler blocking anahtari uretmez ve token ortusmesinde
- * dusuk agirlikla sayilir.
+ * "Manchester City" and "Leicester City" must not match just because they
+ * share "City". These words produce no blocking key and count with a low
+ * weight in token overlap.
  */
 export const WEAK_TOKENS = new Set([
   "united",
@@ -271,8 +274,8 @@ export const WEAK_TOKENS = new Set([
 ]);
 
 /**
- * Kulup turu belirten jenerik ekler. Ad karsilastirmasinda atilir.
- * Bilincli olarak kisa tutuldu; agresif temizlik yanlis eslesme uretir.
+ * Generic affixes denoting the club type. Dropped during name comparison.
+ * Deliberately kept short; aggressive stripping produces wrong matches.
  */
 export const GENERIC_TOKENS = new Set([
   "fc",
@@ -307,8 +310,8 @@ export const GENERIC_TOKENS = new Set([
   "asd",
   "nk",
   "rk",
-  // "as": AS Monaco / Monaco, AS Cannes / Cannes -- gercek veride uc
-  // sitenin de bir kismi bu oneki yaziyor, bir kismi yazmiyor.
+  // "as": AS Monaco / Monaco, AS Cannes / Cannes -- in the real data some
+  // of the three sites write this prefix and some do not.
   "as",
   "cs",
   "cp",
@@ -316,7 +319,7 @@ export const GENERIC_TOKENS = new Set([
   "rc",
   "cda",
   "club",
-  // Slav hokey/futbol kulup onekleri: HC/HK/KH/MHK ailesinin devami.
+  // Slavic hockey/football club prefixes: the rest of the HC/HK/KH/MHK family.
   "skp",
   "ohk",
   "mhc",
@@ -328,10 +331,10 @@ export const GENERIC_TOKENS = new Set([
 ]);
 
 /**
- * Yalnizca BELLI SPORLARDA jenerik sayilan ekler.
+ * Affixes that count as generic ONLY IN CERTAIN SPORTS.
  *
- * "Rugby" ragbi kulubu adinda tur belirtir ("Montpellier Herault Rugby" /
- * "Montpellier Herault RC") ama futbolda ayirt edici olabilir.
+ * "Rugby" denotes the type in a rugby club's name ("Montpellier Herault
+ * Rugby" / "Montpellier Herault RC") but can be distinctive in football.
  */
 export const SPORT_GENERIC_TOKENS = new Map([
   ["RAGBI", new Set(["rugby", "rc"])],
@@ -339,20 +342,20 @@ export const SPORT_GENERIC_TOKENS = new Map([
   ["BASKETBOL", new Set(["basket", "basketball", "bc"])],
 ]);
 
-/** ABD liglerinde sehir kisaltmasi acilabilecek sporlar.
- * "La Plata" -> "Los Angeles Plata" felaketini onlemek icin sehir
- * kisaltmalari YALNIZCA bu sporlarda uygulanir. */
+/** The sports where a US city abbreviation may be expanded.
+ * To avoid the "La Plata" -> "Los Angeles Plata" disaster, city
+ * abbreviations are expanded ONLY in these sports. */
 /**
- * BIREYSEL sporlar.
+ * INDIVIDUAL sports.
  *
- * Lig niteleyicisi kontrolu (Women / U21 / Reserve) KULUP sporlari icin
- * var: ayni kulubun erkek, kadin ve U19 takimi AYNI ADI tasir, ayirt
- * edici tek sey ligin niteleyicisidir.
+ * The league qualifier check (Women / U21 / Reserve) exists for CLUB
+ * sports: a club's men's, women's and U19 sides carry THE SAME NAME, and
+ * the only thing telling them apart is the league's qualifier.
  *
- * Bireysel sporlarda boyle bir risk yok -- sporcu adi zaten tekil. Buna
- * karsilik turnuva adlandirmasi cok tutarsiz ("ITF W15 Constanta" vs
- * "WTT Women - Constanta - Clay"), bu yuzden kontrolu bu sporlarda
- * uygulamak yalnizca dogru eslesmeleri eliyordu.
+ * Individual sports carry no such risk -- the athlete's name is already
+ * unique. Tournament naming, on the other hand, is wildly inconsistent
+ * ("ITF W15 Constanta" vs "WTT Women - Constanta - Clay"), so applying the
+ * check here only threw away correct matches.
  */
 export const INDIVIDUAL_SPORTS = new Set([
   "TENIS",

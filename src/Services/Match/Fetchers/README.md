@@ -1,6 +1,7 @@
-# Maç Fetcher'ları
+# Match Fetchers
 
-Üç bahis sitesinden maç listesi çeker ve hepsini **aynı** JSON şekline indirger:
+Fetches the match list from three betting sites and reduces all of them to the
+**same** JSON shape:
 
 ```json
 {
@@ -15,107 +16,111 @@
 }
 ```
 
-`FUTBOL`, `BASKETBOL`, `VOLEYBOL`, `TENIS` anahtarları **boş olsalar bile her zaman
-bulunur** — mevcut tüketiciler (`compare-match-times.js`, `Match.service.ts`, panel
-arayüzü) bunların varlığına güveniyor. Yeni sporlar bunların *ardına* eklenir.
+The `FUTBOL`, `BASKETBOL`, `VOLEYBOL` and `TENIS` keys are **always present, even
+when empty** — existing consumers (`compare-match-times.js`, `Match.service.ts`,
+the panel UI) rely on them. New sports are appended *after* them.
 
-## Dizin yapısı
+## Directory layout
 
 ```
-Core/        siteden bağımsız altyapı
-  http.js      keep-alive havuzlu HTTPS + cookie jar + retry + boyut sınırı
-  ws.js        RFC 6455 WebSocket (+ opsiyonel permessage-deflate)
-  async.js     kontrollü concurrency, exponential backoff, rate limiter
-  output.js    ortak çıktı modeli (tekilleştirme + sıralama)
-  runner.js    fetcher kabuğu (dosyaya yazma, özet, boş sonuç koruması)
-  time.js      üç farklı zaman biriminden Türkiye saatine
-  text.js      HTML entity / etiket / nitelik ayrıştırma, ad normalizasyonu
+Core/        site independent infrastructure
+  http.js      HTTPS with a keep-alive pool + cookie jar + retry + size limit
+  ws.js        RFC 6455 WebSocket (+ optional permessage-deflate)
+  async.js     bounded concurrency, exponential backoff, rate limiter
+  output.js    the shared output model (dedup + sorting)
+  runner.js    the fetcher shell (file writing, summary, empty-result guard)
+  time.js      from three different time units to Turkish time
+  text.js      HTML entity / tag / attribute parsing, name normalisation
 Sports/
-  catalog.js   TEK spor mapping kaynağı
-*-match-fetcher.js   siteye özgü protokol ve ayrıştırma
-__tests__/           fixture tabanlı testler (ağ erişimi yok)
+  catalog.js   THE single source of sport mapping
+*-match-fetcher.js   site specific protocol and parsing
+__tests__/           fixture based tests (no network access)
 ```
 
-Siteye özgü davranış bilerek fetcher dosyalarında bırakıldı; `Core/` yalnızca
-gerçekten üçünde de aynı olan işi barındırıyor.
+Site specific behaviour is deliberately left in the fetcher files; `Core/` only
+holds work that is genuinely identical across all three.
 
-## Protokoller
+## Protocols
 
-| Site | Taşıma | Spor keşfi |
+| Site | Transport | Sport discovery |
 |---|---|---|
-| **BETIST** | HTTPS + HTML kazıma | `home.php` menüsü (zaten çekilen istek) |
-| **VIRUS_BET** | WebSocket, BetConstruct "swarm" JSON | tek spor/lig ağacı sorgusu |
-| **MAVI_BET** | WebSocket, WAMP v2 + deflate | `disciplinesV2` dökümü (oturum hazırlığında zaten çekiliyor) |
+| **BETIST** | HTTPS + HTML scraping | the `home.php` menu (a request we already make) |
+| **VIRUS_BET** | WebSocket, BetConstruct "swarm" JSON | a single sport/league tree query |
+| **MAVI_BET** | WebSocket, WAMP v2 + deflate | the `disciplinesV2` dump (already fetched during session priming) |
 
-Üçünde de spor id'leri **koda gömülü değil**; site ne bildiriyorsa o kullanılıyor.
+In all three the sport ids are **not hardcoded**; whatever the site reports is
+what gets used.
 
-## Yeni bir spor eklemek
+## Adding a new sport
 
-Tek adım: [`Sports/catalog.js`](./Sports/catalog.js) içindeki `SPORTS` dizisine bir
-satır ekleyin.
+One step: add a line to the `SPORTS` array in
+[`Sports/catalog.js`](./Sports/catalog.js).
 
 ```js
 {
-  key: "SNOOKER",        // çıktı JSON'undaki anahtar
-  id: "SNOOKER",         // uygulama içi normalized değer
-  aliases: ["snooker", "bilardo"],   // sitelerin kullandığı adlar
+  key: "SNOOKER",        // the key in the output JSON
+  id: "SNOOKER",         // the normalised in-app value
+  aliases: ["snooker", "bilardo"],   // the names the sites use
 },
 ```
 
-Sonra `Constants/Match.ts` içindeki `EMatchSport` enum'una **aynı** `id` değerini
-ekleyin. (İkisinin sapmasını `catalog.test.js` yakalar, unutursanız test kırılır.)
+Then add the **same** `id` value to the `EMatchSport` enum in
+`Constants/Match.ts`. (`catalog.test.js` catches any divergence between the two,
+so the test breaks if you forget.)
 
-Fetcher dosyalarına **dokunmanız gerekmez** — üçü de spor listesini siteden
-okuyup katalogla eşleştiriyor.
+You **do not need to touch** the fetcher files — all three read the sport list
+from the site and match it against the catalog.
 
-### Alias yazarken
+### Writing aliases
 
-Adlar `foldName()` ile normalize edilip karşılaştırılıyor: camelCase ayrılır,
-harf/rakam sınırı ayrılır, Türkçe karakterler katlanır, noktalama boşluğa
-dönüşür. Yani tek bir alias birden çok yazımı karşılar:
+Names are normalised with `foldName()` before comparison: camelCase is split,
+the letter/digit boundary is split, Turkish characters are folded and
+punctuation becomes whitespace. So a single alias covers several spellings:
 
-| Sitenin yazdığı | foldName sonucu |
+| What the site writes | foldName result |
 |---|---|
 | `AmericanFootball` | `american football` |
 | `Am. Football` | `am football` |
 | `Formula1` | `formula 1` |
 | `Santranç` | `santranc` |
 
-`key` ve `id` de otomatik olarak alias sayılır.
+`key` and `id` automatically count as aliases too.
 
-### Eklemeden önce
+### Before you add one
 
-Sporun sitede **gerçekten** olduğunu doğrulayın. Katalogda karşılığı olmayan bir
-spor sessizce atlanır ve `MATCH_FETCHER_LOG_LEVEL=debug` ile tek satırda listelenir:
+Verify the sport **really** exists on the site. A sport with no catalog entry is
+skipped silently and listed in a single line under
+`MATCH_FETCHER_LOG_LEVEL=debug`:
 
 ```
-[VIRUS_BET] katalogda olmayan spor atlandi: Counter-Strike 2, Politics, …
+[VIRUS_BET] skipped sports missing from the catalog: Counter-Strike 2, Politics, …
 ```
 
-Bu listede görmediğiniz bir sporu eklemeyin — o site onu sunmuyordur.
+Do not add a sport you do not see in that list — that site does not offer it.
 
-## Ortam değişkenleri
+## Environment variables
 
-Hepsi isteğe bağlı.
+All of them are optional.
 
-| Değişken | Varsayılan | Açıklama |
+| Variable | Default | Description |
 |---|---|---|
-| `MATCH_SPORTS` | *(hepsi)* | Virgüllü liste; key veya id kabul eder. Eski davranış: `FUTBOL,BASKETBOL,VOLEYBOL,TENIS` |
+| `MATCH_SPORTS` | *(all)* | Comma separated list; accepts a key or an id. Old behaviour: `FUTBOL,BASKETBOL,VOLEYBOL,TENIS` |
 | `MATCH_FETCHER_LOG_LEVEL` | `info` | `silent` / `error` / `warn` / `info` / `debug` |
-| `BETIST_LOG_LEVEL` vb. | — | Tek site için seviye ezme |
-| `MATCH_FETCH_INTERVAL_MS` | `120000` | Turlar arası bekleme |
-| `{SITE}_CONCURRENCY` | 3 / 3 / 2 | Eş zamanlı istek sınırı |
-| `{SITE}_REQUEST_DELAY_MS` | 150 / 120 / 80 | İstekler arası asgari aralık |
-| `{SITE}_RETRY_ATTEMPTS` | 3 | Deneme sayısı |
-| `MAVIBET_BULK_TIMEOUT_MS` | `120000` | Toplu spor dökümü zaman aşımı |
+| `BETIST_LOG_LEVEL` etc. | — | Override the level for one site |
+| `MATCH_FETCH_INTERVAL_MS` | `120000` | Wait between rounds |
+| `{SITE}_CONCURRENCY` | 3 / 3 / 2 | Concurrent request limit |
+| `{SITE}_REQUEST_DELAY_MS` | 150 / 120 / 80 | Minimum gap between requests |
+| `{SITE}_RETRY_ATTEMPTS` | 3 | Number of attempts |
+| `MAVIBET_BULK_TIMEOUT_MS` | `120000` | Timeout for the bulk sport dump |
 
-Concurrency ve delay birlikte çalışır: ilki "aynı anda kaç istek", ikincisi
-"saniyede kaç istek". İkisini de yükseltmek anti-bot tetikleyebilir.
+Concurrency and delay work together: the first is "how many requests at once",
+the second is "how many requests per second". Raising both can trip anti-bot
+measures.
 
-## Test
+## Tests
 
 ```bash
 npm test
 ```
 
-Testler ağa çıkmaz; fixture'lar gerçek yanıtlardan kısaltılmıştır.
+The tests do not reach the network; the fixtures are trimmed real responses.

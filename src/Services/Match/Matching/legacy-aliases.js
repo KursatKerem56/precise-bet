@@ -1,9 +1,10 @@
 /**
- * GERIYE DONUK UYUMLULUK: eski `KNOWN_ALIASES` sabiti.
+ * BACKWARDS COMPATIBILITY: the old `KNOWN_ALIASES` constant.
  *
- * Tek dogru kaynak artik team_aliases.json. Bu modul o JSON'dan eski
- * bicimi (foldText(alias) -> foldText(kanonik ad)) turetiyor; boylece
- * disari acilan eski API kirilmiyor ama alias'lar TEK yerde duruyor.
+ * The single source of truth is now team_aliases.json. This module derives
+ * the old format from that JSON (foldText(alias) -> foldText(canonical
+ * name)), so the old public API keeps working while the aliases live in ONE
+ * place.
  */
 
 import { foldText } from "./text.js";

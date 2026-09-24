@@ -1,14 +1,14 @@
 /**
- * TARIH / SAAT NORMALIZASYONU VE KARSILASTIRMASI
+ * DATE / TIME NORMALISATION AND COMPARISON
  *
- * Saat karsilastirmasi HER ZAMAN tek bir epoch sayisi uzerinden yapilir.
- * Sadece "HH:MM" string'i karsilastirmak 23:50 ile 00:10 arasini 23 saat
- * 40 dk fark sanardi; oysa gercek fark 20 dakikadir.
+ * Time comparison ALWAYS goes through a single epoch number. Comparing the
+ * "HH:MM" string alone would read 23:50 versus 00:10 as a 23 hour 40 minute
+ * difference, when the real difference is 20 minutes.
  */
 
 import { MATCH_CONFIG } from "./config.js";
 
-/** Europe/Istanbul = UTC+3 (yaz saati uygulanmiyor). */
+/** Europe/Istanbul = UTC+3 (no daylight saving). */
 export const DEFAULT_TIMEZONE_OFFSET_MINUTES = 180;
 
 export const DAY_MS = 86_400_000;
@@ -18,10 +18,10 @@ const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const TIME_RE = /^(\d{1,2}):(\d{2})/;
 
 /**
- * "2026-09-18" + "20:00" -> epoch ms (yerel saat UTC+offset kabul edilerek).
+ * "2026-09-18" + "20:00" -> epoch ms (treating local time as UTC+offset).
  *
- * Saat yoksa null doner -- UYDURMAZ. Cagiran taraf saatsiz kaydi
- * "karsilastirilamaz" olarak isler.
+ * Returns null when there is no time -- it never GUESSES. The caller treats
+ * a record without a time as "not comparable".
  */
 export function toEpochMs(
   date,
@@ -41,13 +41,13 @@ export function toEpochMs(
   );
 }
 
-/** Sadece tarihin (saatsiz) epoch karsiligi; tarih kovalari icin. */
+/** The epoch value of the date alone (no time); used for date buckets. */
 export function dateToEpochMs(date) {
   const d = DATE_RE.exec(String(date ?? ""));
   return d ? Date.UTC(+d[1], +d[2] - 1, +d[3]) : null;
 }
 
-/** "2026-09-18" + 1 gun -> "2026-09-19". Gecersiz tarihte null. */
+/** "2026-09-18" + 1 day -> "2026-09-19". null on an invalid date. */
 export function dateKeyOffset(date, days) {
   const base = dateToEpochMs(date);
   if (base == null) return null;
@@ -55,8 +55,8 @@ export function dateKeyOffset(date, days) {
 }
 
 /**
- * Bir mac icin normalize edilmis zaman bilgisi uretir.
- * Bu deger mac nesnesinde SAKLANIR; tekrar tekrar parse edilmez.
+ * Produces the normalised time information for a match.
+ * The value is STORED on the match object; it is not parsed over and over.
  */
 export function normalizeTimestamp(date, time, offsetMinutes) {
   return {
@@ -67,14 +67,14 @@ export function normalizeTimestamp(date, time, offsetMinutes) {
   };
 }
 
-/** Iki epoch arasindaki farki DAKIKA olarak verir (b - a). */
+/** The difference between two epochs in MINUTES (b - a). */
 export function calculateTimeDifference(epochA, epochB) {
   if (epochA == null || epochB == null) return null;
   return Math.round((epochB - epochA) / MINUTE_MS);
 }
 
 /**
- * Iki macin saatlerini karsilastirir.
+ * Compares the times of two matches.
  *
  * @returns {{
  *   diffMinutes: number|null,
@@ -83,11 +83,11 @@ export function calculateTimeDifference(epochA, epochB) {
  *   plausible: boolean
  * }}
  *
- * `plausible` = bu iki kayit AYNI macin iki farkli gosterimi OLABILIR mi?
- * Farkli gunlerdeki kayitlar icin saat farki makul bir gece yarisi
- * kaymasini asiyorsa (varsayilan 12 saat) bu iki kayit ayni mac DEGILDIR.
- * Gercek veride bu kontrol olmadan "ayni takimlarin ertesi gunku baska
- * maci" 1380 dakikalik "saat farki" olarak raporlaniyordu.
+ * `plausible` = COULD these two records be two representations of the SAME
+ * match? For records on different days, if the time difference exceeds a
+ * reasonable midnight shift (12 hours by default) the two records are NOT
+ * the same match. Without this check, real data reported "the same teams'
+ * other match the next day" as a 1380 minute "time difference".
  */
 export function compareMatchTimes(a, b, options = {}) {
   const toleranceMinutes =
@@ -98,7 +98,8 @@ export function compareMatchTimes(a, b, options = {}) {
   const diffMinutes = calculateTimeDifference(a.epoch, b.epoch);
 
   if (diffMinutes == null) {
-    // Saat bilgisi eksik: eleme yapma, ama "farkli" de deme.
+    // The time is missing: do not eliminate, but do not call it "different"
+    // either.
     return {
       diffMinutes: null,
       comparable: false,

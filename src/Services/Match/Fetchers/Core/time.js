@@ -1,17 +1,17 @@
 /**
- * Tarih/saat donusumleri.
+ * Date/time conversions.
  *
- * Uc site zamani UC FARKLI birimde veriyor:
- *   betist   : "2026-09-18 20:00:00" (site yerel saati, Europe/Istanbul)
- *   virusbet : unix SANIYE
- *   mavibet  : unix MILISANIYE
+ * The three sites report time in THREE DIFFERENT units:
+ *   betist   : "2026-09-18 20:00:00" (site local time, Europe/Istanbul)
+ *   virusbet : unix SECONDS
+ *   mavibet  : unix MILLISECONDS
  *
- * Ciktida hepsi Turkiye saatine gore "YYYY-MM-DD" + "HH:MM" olmali; aksi
- * halde saat karsilastirici (compare-match-times) ayni maci farkli saatte
- * gorur ve sahte "fark" uretirdi.
+ * In the output they must all be "YYYY-MM-DD" + "HH:MM" in Turkish time;
+ * otherwise the time comparator (compare-match-times) would see the same
+ * match at two different times and produce phantom "differences".
  *
- * Intl.DateTimeFormat kurulumu pahalidir (maç basina yeniden kurmak binlerce
- * kez tekrarlanan bir maliyet); bu yuzden zaman dilimi basina onbellekleniyor.
+ * Building an Intl.DateTimeFormat is expensive (rebuilding it per match is a
+ * cost repeated thousands of times), so it is cached per time zone.
  */
 
 const DEFAULT_TIMEZONE = "Europe/Istanbul";
@@ -41,11 +41,11 @@ function getFormatter(timeZone) {
 }
 
 /**
- * epoch ms -> { date, time } (verilen zaman diliminde).
+ * epoch ms -> { date, time } (in the given time zone).
  *
- * DIKKAT: `Number(null)` ve `Number("")` sifir dondurur. Bunlari elemezsek
- * startTime alani eksik olan bir kayit sessizce "1970-01-01" tarihine
- * duserdi -- yani bozuk veri, gecerli veri gibi gorunurdu.
+ * CAREFUL: `Number(null)` and `Number("")` both return zero. Without
+ * filtering those out, a record with a missing startTime would silently land
+ * on "1970-01-01" -- broken data would look like valid data.
  */
 function formatEpochMs(epochMs, timeZone = DEFAULT_TIMEZONE) {
   if (epochMs === null || epochMs === undefined || epochMs === "") {
@@ -74,7 +74,7 @@ function formatEpochMs(epochMs, timeZone = DEFAULT_TIMEZONE) {
   };
 }
 
-/** epoch saniye -> { date, time }. */
+/** epoch seconds -> { date, time }. */
 function formatEpochSeconds(epochSeconds, timeZone = DEFAULT_TIMEZONE) {
   if (epochSeconds === null || epochSeconds === undefined || epochSeconds === "") {
     return UNKNOWN;
@@ -90,8 +90,9 @@ function formatEpochSeconds(epochSeconds, timeZone = DEFAULT_TIMEZONE) {
 /**
  * "YYYY-MM-DD HH:MM[:SS]" -> { date, time }.
  *
- * Deger zaten site yerel saatinde geldigi icin zaman dilimi donusumu
- * YAPILMIYOR; Date'e cevirmek sunucunun TZ'sine gore kaydirirdi.
+ * The value already arrives in the site's local time, so NO time zone
+ * conversion is applied; converting to a Date would shift it by the server's
+ * own TZ.
  */
 function parseLocalDateTime(value) {
   const match = String(value ?? "").match(

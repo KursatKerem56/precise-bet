@@ -1,16 +1,16 @@
 /**
- * COZULEMEYEN LIG / TAKIM ADLARININ TOPLANMASI
+ * COLLECTING UNRESOLVED LEAGUE / TEAM NAMES
  *
- * Alias veritabaninda karsiligi olmayan adlari toplar ve en yakin
- * adaylariyla birlikte raporlar.
+ * Gathers the names that have no entry in the alias database and reports
+ * them together with their closest candidates.
  *
- * ONEMLI: bulanik eslestiricinin bulduklari alias dosyalarina OTOMATIK
- * YAZILMAZ. Yanlis bir alias butun eslestirme sistemini bozar ve hatayi
- * geriye donuk izlemek cok zorlasir. Bunun yerine ayri bir "oneri" ciktisi
- * uretilir; kalici alias'i insan onaylar.
+ * IMPORTANT: what the fuzzy matcher finds is NEVER WRITTEN to the alias
+ * files AUTOMATICALLY. A wrong alias breaks the entire matching system and
+ * makes the mistake very hard to trace back. Instead a separate
+ * "suggestion" output is produced; a human approves the permanent alias.
  *
- * Production'da log kalabaligi yapmamasi icin varsayilan KAPALI
- * (MATCH_DEBUG_UNRESOLVED=1 ile acilir).
+ * OFF by default so it does not clutter production logs (enabled with
+ * MATCH_DEBUG_UNRESOLVED=1).
  */
 
 import { similarityRatio } from "./similarity.js";
@@ -26,11 +26,11 @@ export class UnresolvedCollector {
       options.maxSuggestions ?? MATCH_CONFIG.maxSuggestionsPerName;
     this.threshold = options.threshold ?? MATCH_CONFIG.suggestionThreshold;
 
-    /** anahtar -> kayit (ayni ad bir kez raporlanir) */
+    /** key -> record (the same name is reported once) */
     this.teams = new Map();
     this.leagues = new Map();
 
-    // Aday listeleri bir kez hazirlanir; her ad icin yeniden kurulmaz.
+    // The candidate lists are built once, not rebuilt for every name.
     this._teamPool = null;
     this._leaguePool = null;
   }
@@ -67,7 +67,7 @@ export class UnresolvedCollector {
     return out.sort((a, b) => b.score - a.score).slice(0, this.maxSuggestions);
   }
 
-  /** Alias tablosunda karsiligi olmayan bir takim adini kaydeder. */
+  /** Records a team name that has no entry in the alias table. */
   addTeam({ source, sport, league, team }) {
     if (!this.enabled || !team) return;
 
@@ -86,7 +86,7 @@ export class UnresolvedCollector {
     });
   }
 
-  /** Alias tablosunda karsiligi olmayan bir lig adini kaydeder. */
+  /** Records a league name that has no entry in the alias table. */
   addLeague({ source, sport, country, league }) {
     if (!this.enabled || !league) return;
 
@@ -105,7 +105,7 @@ export class UnresolvedCollector {
     });
   }
 
-  /** Yalnizca ONERISI OLAN kayitlar raporlanir; geri kalani gurultudur. */
+  /** Only records WITH A SUGGESTION are reported; the rest is noise. */
   report() {
     if (!this.enabled) return null;
 

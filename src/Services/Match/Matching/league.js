@@ -1,29 +1,29 @@
 /**
- * LIG ESLESTIRME PIPELINE'I
+ * THE LEAGUE MATCHING PIPELINE
  *
- *   Asama 1 : Normalize edilmis lig adlari birebir ayni
- *   Asama 2 : Ikisi de AYNI kanonik lig id'sine cozuluyor (alias)
- *   Asama 3 : Ulke + normalize ad eslesmesi
- *   Asama 4 : Kontrollu bulanik eslesme (sport context ZORUNLU)
+ *   Stage 1 : The normalised league names are identical
+ *   Stage 2 : Both resolve to the SAME canonical league id (alias)
+ *   Stage 3 : Country + normalised name match
+ *   Stage 4 : Guarded fuzzy match (the sport context is MANDATORY)
  *
  * ---------------------------------------------------------------------------
- * LIG NEDEN KATI (HARD) BIR KOVA ANAHTARI DEGIL
+ * WHY THE LEAGUE IS NOT A HARD BUCKET KEY
  *
- * Uc site ayni ligi cok farkli yaziyor:
+ * The three sites write the same league very differently:
  *
  *   betist : "International Clubs - UEFA Champions League"
  *   mavibet: "Europe - UEFA Champions League - League Stage"
  *   virusbet: "Europe - UEFA Champions League"
  *
- * Gercek veride betist'in 150 futbol liginin neredeyse hicbiri mavibet'te
- * BIREBIR ayni yazilmiyor. Ligi zorunlu kova anahtari yapmak eslesmelerin
- * buyuk kismini kaybettirirdi. Bu yuzden lig:
+ * In real data almost none of betist's 150 football leagues is spelled
+ * EXACTLY the same way on mavibet. Making the league a mandatory bucket key
+ * would lose most of the matches. So the league is:
  *
- *   - GUVENILIR sekilde farkli oldugunda (iki taraf da kanonik lig'e
- *     cozuluyor ve id'ler farkli)            -> HARD REJECT
- *   - Niteleyicileri farkli oldugunda
- *     (Women / U21 / Reserve)                -> HARD REJECT
- *   - Diger her durumda                      -> SOFT SIGNAL (skor)
+ *   - a HARD REJECT when it is RELIABLY different (both sides resolve to a
+ *     canonical league and the ids differ)
+ *   - a HARD REJECT when the qualifiers differ
+ *     (Women / U21 / Reserve)
+ *   - a SOFT SIGNAL (a score) in every other case
  */
 
 import { foldText, tokenize, stripSeason } from "./text.js";
@@ -36,7 +36,7 @@ import {
   MATCH_CONFIG,
 } from "./config.js";
 
-/** Lig adinda sezon/grup/asama gurultusu. */
+/** Season/group/stage noise in a league name. */
 const STAGE_NOISE = new Set([
   "league",
   "stage",
@@ -53,7 +53,7 @@ const STAGE_NOISE = new Set([
 
 const normalizeCache = new Map();
 
-/** Lig adini normalize eder (sezon bilgisi atilir). */
+/** Normalises a league name (the season information is dropped). */
 export function normalizeLeagueName(name) {
   const key = String(name ?? "");
   const hit = normalizeCache.get(key);
@@ -65,8 +65,9 @@ export function normalizeLeagueName(name) {
 }
 
 /**
- * "Ulke - Lig Adi" anahtarini parcalarina ayirir.
- * Ulke adi alias tablosundan tekillestirilir (Holland -> Netherlands).
+ * Splits a "Country - League Name" key into its parts.
+ * The country name is canonicalised through the alias table (Holland ->
+ * Netherlands).
  */
 export function splitLeagueKey(leagueKey) {
   const raw = String(leagueKey ?? "");
@@ -83,7 +84,7 @@ export function splitLeagueKey(leagueKey) {
 }
 
 /**
- * Lig adindaki niteleyicileri ayirir.
+ * Splits the qualifiers out of a league name.
  * "Primera Division, Women" -> core "primera division", quals {women}
  * "U20, COSAFA Cup"         -> core "cosafa cup",       quals {u20}
  */
@@ -93,7 +94,7 @@ export function splitLeagueQualifiers(foldedName) {
 
   for (const token of tokenize(foldedName)) {
     if (LEAGUE_QUALIFIERS.has(token)) {
-      // "womens" ve "women" ayni seyi soyluyor.
+      // "womens" and "women" say the same thing.
       quals.add(token.replace(/s$/, "").replace(/^kadinlar?$/, "women"));
       continue;
     }
@@ -111,11 +112,11 @@ const sameSet = (a, b) => {
 };
 
 /**
- * Bir lig anahtarini cozumlenmis hale getirir. Sonuc mac nesnesinde
- * SAKLANIR; her karsilastirmada yeniden hesaplanmaz.
+ * Resolves a league key. The result is STORED on the match object; it is
+ * not recomputed on every comparison.
  *
- * @param {string} sportKey  katalog spor anahtari (FUTBOL ...)
- * @param {string} leagueKey "Ulke - Lig Adi"
+ * @param {string} sportKey  the catalog sport key (FUTBOL ...)
+ * @param {string} leagueKey "Country - League Name"
  */
 export function resolveLeague(sportKey, leagueKey) {
   const { countryRaw, country, isRegion, countryKnown, name } =
@@ -143,21 +144,23 @@ export function resolveLeague(sportKey, leagueKey) {
 }
 
 /**
- * Iki cozumlenmis ligi karsilastirir.
+ * Compares two resolved leagues.
  *
  * @returns {{ score: number, stage: string, hardReject: boolean, reason?: string }}
  */
 export function compareLeagues(a, b, context = {}) {
   if (!a || !b) return { score: 0, stage: "unknown", hardReject: false };
 
-  // --- HARD CONSTRAINT: niteleyici ------------------------------------
-  // "Primera Division" ile "Primera Division, Women" ayri yarismalardir.
+  // --- HARD CONSTRAINT: qualifiers ------------------------------------
+  // "Primera Division" and "Primera Division, Women" are separate
+  // competitions.
   //
-  // Kontrol LIG + TAKIM niteleyicilerinin BIRLESIMI uzerinden yapilir.
-  // Bir site niteleyiciyi lig adina, digeri takim adina yazabiliyor:
-  //   betist : "USA - NWSL, Women"        takimlar "... (w)"
-  //   mavibet: "United States - NWSL"     takimlar "... (W)"
-  // Ikisi de ayni yarisma; yalnizca lig adina bakmak bunu ayirirdi.
+  // The check runs on the UNION of the LEAGUE and TEAM qualifiers. One site
+  // can put the qualifier in the league name and another in the team name:
+  //   betist : "USA - NWSL, Women"        teams "... (w)"
+  //   mavibet: "United States - NWSL"     teams "... (W)"
+  // Both are the same competition; looking only at the league name would
+  // split them apart.
   const effective = (league, teamQuals) => {
     const merged = new Set();
     for (const q of league.quals)
@@ -167,8 +170,8 @@ export function compareLeagues(a, b, context = {}) {
     return merged;
   };
 
-  // Bireysel sporlarda bu kontrol uygulanmaz: sporcu adi zaten tekil,
-  // turnuva adlandirmasi ise cok tutarsiz.
+  // The check is not applied in individual sports: the athlete's name is
+  // already unique while tournament naming is wildly inconsistent.
   const skipQualifierCheck = INDIVIDUAL_SPORTS.has(context.sport);
 
   if (
@@ -186,9 +189,9 @@ export function compareLeagues(a, b, context = {}) {
     };
   }
 
-  // --- HARD CONSTRAINT: guvenilir kanonik lig farki --------------------
-  // Yalnizca IKI TARAF da guvenle cozulduyse reddederiz; tek tarafli veya
-  // dusuk guvenli cozumler yanlis eleme yapabilir.
+  // --- HARD CONSTRAINT: a reliable canonical league difference ---------
+  // We only reject when BOTH SIDES resolved confidently; one sided or low
+  // confidence resolutions can eliminate the wrong thing.
   if (
     a.canonicalId &&
     b.canonicalId &&
@@ -204,28 +207,30 @@ export function compareLeagues(a, b, context = {}) {
     };
   }
 
-  // --- Asama 2: ayni kanonik lig ---------------------------------------
+  // --- Stage 2: the same canonical league ------------------------------
   if (a.canonicalId && b.canonicalId && a.canonicalId === b.canonicalId) {
     return { score: 100, stage: "alias", hardReject: false };
   }
 
-  // --- HARD CONSTRAINT: farkli ULKE ------------------------------------
+  // --- HARD CONSTRAINT: a different COUNTRY ----------------------------
   //
-  // "England - Premier League" ile "Belarus - Premier League" AYNI LIG
-  // DEGILDIR; ortak olan tek sey lig adidir. Ulke bu yuzden kati kisittir.
+  // "England - Premier League" and "Belarus - Premier League" are NOT THE
+  // SAME LEAGUE; the only thing they share is the league name. That is why
+  // the country is a hard constraint.
   //
-  // Kisit, alias tablosundaki `regions` listesiyle SINIRLANIR. Ulke
-  // alaninda her zaman ulke olmuyor:
-  //   - cografi kova : "Europe", "World", "International Clubs"
-  //   - spor adi     : "Rugby Union - France Pro D2"   (betist)
-  //   - tur adi      : "ATP - Saint Tropez"            (betist)
-  //   - ust ulke     : "United Kingdom - Elite League" (mavibet)
-  //                    ayni ligi betist "England - Elite League" diyor
+  // The constraint is LIMITED by the `regions` list in the alias table. The
+  // country field does not always hold a country:
+  //   - a geographic bucket : "Europe", "World", "International Clubs"
+  //   - a sport name        : "Rugby Union - France Pro D2"   (betist)
+  //   - a tour name         : "ATP - Saint Tropez"            (betist)
+  //   - a parent country    : "United Kingdom - Elite League" (mavibet)
+  //                           betist calls the same league
+  //                           "England - Elite League"
   //
-  // Bu degerler `regions` olarak isaretli oldugu icin eleme yapmaz.
-  // Taninmayan ama GERCEK bir ulke olan degerler (ornegin "Belarus")
-  // kisiti normal sekilde uygular -- allowlist kullansaydik tam da
-  // korumak istedigimiz durumu kacirirdik.
+  // Those values are flagged as `regions`, so they eliminate nothing.
+  // Values that are unrecognised but are a REAL country ("Belarus", say)
+  // apply the constraint normally -- with an allowlist we would miss
+  // exactly the case we want to guard against.
   if (
     a.country &&
     b.country &&
@@ -241,7 +246,7 @@ export function compareLeagues(a, b, context = {}) {
     };
   }
 
-  // --- Asama 1 / 3: birebir (ulke baglamiyla) --------------------------
+  // --- Stage 1 / 3: exact (with the country context) -------------------
   if (a.core && a.core === b.core) {
     const sameCountry = a.country && b.country && a.country === b.country;
     return {
@@ -251,12 +256,12 @@ export function compareLeagues(a, b, context = {}) {
     };
   }
 
-  // --- Asama 4: kontrollu bulanik --------------------------------------
+  // --- Stage 4: guarded fuzzy ------------------------------------------
   const score = similarityRatio(a.core, b.core);
   return { score, stage: "fuzzy", hardReject: false };
 }
 
-/** Geriye donuk uyumlu sade skor (eski `leagueSimilarity` imzasi). */
+/** The plain backwards compatible score (the old `leagueSimilarity` signature). */
 export const leagueSimilarity = (a, b) =>
   similarityRatio(normalizeLeagueName(a), normalizeLeagueName(b));
 

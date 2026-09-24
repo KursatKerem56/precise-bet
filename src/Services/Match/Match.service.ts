@@ -7,7 +7,7 @@ import { getSites } from "@Panel";
 
 import { fetchSiteMatches, isSupportedSite } from "@Match/Fetchers";
 
-// Spor anahtari -> normalized id cevrimi icin tek kaynak.
+// The single source for the sport key -> normalised id conversion.
 import { getSportByKey } from "@Match/Fetchers/Sports/catalog.js";
 
 import { Match } from "@Match/Models";
@@ -17,7 +17,7 @@ import { EPanelSite } from "@Panel/Constants";
 
 import logger from "@Utils/Logger";
 
-/** Iki calisma arasindaki bekleme. */
+/** The wait between two runs. */
 const FETCH_INTERVAL_MS = Number(
   process.env.MATCH_FETCH_INTERVAL_MS || 1000 * 60 * 2
 );
@@ -36,13 +36,13 @@ const saveMatches = async (site: EPanelSite) => {
   const matchesWillBeSaved = [];
 
   for (const sportKey of Object.keys(matchesRaw)) {
-    // ESKIDEN: ic ice ternary, bilinmeyen HER anahtari sessizce TENNIS'e
-    // yaziyordu. Yeni sporlar eklenince bu, veriyi sessizce bozardi.
-    // Artik katalogdan cozuluyor ve cozulemeyen anahtar ATLANIYOR.
+    // PREVIOUSLY: a nested ternary silently mapped EVERY unknown key to
+    // TENNIS. As new sports were added, that quietly corrupted the data.
+    // It now resolves through the catalog and an unresolved key is SKIPPED.
     const sport = getSportByKey(sportKey);
 
     if (!sport) {
-      logger.warn(`[${site}] katalogda olmayan spor anahtari atlandi: ${sportKey}`);
+      logger.warn(`[${site}] skipped sport key missing from the catalog: ${sportKey}`);
       continue;
     }
 
@@ -68,20 +68,20 @@ const saveMatches = async (site: EPanelSite) => {
   }
 
   if (!matchesWillBeSaved.length) {
-    // Bos sonuc icin mevcut kayitlari SILMIYORUZ; gecici bir cekim
-    // basarisizligi kalici veri kaybina donusmemeli.
-    logger.warn(`[${site}] kaydedilecek mac yok; mevcut kayitlar korunuyor.`);
+    // We do NOT delete the existing records for an empty result; a
+    // temporary fetch failure must not turn into permanent data loss.
+    logger.warn(`[${site}] no matches to save; the existing records are kept.`);
     return;
   }
 
   await Match.deleteMany({ site: foundSite._id.toString() });
 
-  // insertMany tek turda gider; eskiden mac grubu basina ayri create()
-  // cagrisi yapiliyordu.
+  // insertMany goes in a single round trip; there used to be a separate
+  // create() call per match group.
   await Match.insertMany(matchesWillBeSaved);
 };
 
-/** Ayni anda ikinci bir tur baslamasini engeller. */
+/** Prevents a second round from starting at the same time. */
 let fetchInProgress = false;
 
 let fetchTimer: NodeJS.Timeout | null = null;
@@ -89,56 +89,57 @@ let fetchTimer: NodeJS.Timeout | null = null;
 const runMatchFetchers = async () => {
   const sites = await getSites();
 
-  // Siteler birbirinden bagimsiz: biri patlarsa digerleri devam etsin.
+  // The sites are independent of each other: if one blows up the others
+  // carry on.
   const results = await Promise.allSettled(
     sites.map(async (site) => {
       if (!isSupportedSite(site.site)) {
-        logger.warn(`Fetcher tanimli degil: ${site.site}`);
+        logger.warn(`No fetcher defined for: ${site.site}`);
         return;
       }
 
-      logger.info(`Mac cekimi basliyor: ${site.site}`);
+      logger.info(`Match fetch starting: ${site.site}`);
 
       await fetchSiteMatches(site.site, site.link);
 
       await saveMatches(site.site);
 
-      logger.info(`Mac cekimi bitti: ${site.site}`);
+      logger.info(`Match fetch finished: ${site.site}`);
     })
   );
 
   results.forEach((result, index) => {
     if (result.status === "rejected") {
       logger.error(
-        `Mac cekimi basarisiz: ${sites[index]?.site}`,
+        `Match fetch failed: ${sites[index]?.site}`,
         result.reason
       );
     }
   });
 
-  // Karsilastirma, cekimlerin bir kismi basarisiz olsa bile calissin:
-  // elde olan dosyalarla anlamli sonuc ureten bir adim.
+  // The comparison should run even when some of the fetches failed: it is
+  // a step that produces a meaningful result from whatever files exist.
   try {
     await compareMatchTimesMain();
   } catch (error) {
-    logger.error("Mac saati karsilastirmasi basarisiz", error);
+    logger.error("Match time comparison failed", error);
   }
 };
 
 /**
- * Periyodik mac cekimini baslatir.
+ * Starts the periodic match fetch.
  *
- * ESKIDEN: `setTimeout(initMatchFetchers, 2dk)` cekim suresinden BAGIMSIZ
- * kuruluyordu; cekim 2 dakikadan uzun surerse turlar ust uste biniyordu.
- * Ayrica compareMatchTimesMain() hata atarsa yeniden kurma satirina hic
- * ulasilamiyor, dongu sessizce oluyordu.
+ * PREVIOUSLY: `setTimeout(initMatchFetchers, 2 min)` was scheduled
+ * INDEPENDENTLY of how long a fetch took, so rounds overlapped whenever a
+ * fetch ran longer than 2 minutes. On top of that, if compareMatchTimesMain()
+ * threw, the rescheduling line was never reached and the loop died silently.
  *
- * Artik: ayni anda tek tur, ve bir sonraki tur HER DURUMDA (hata dahil)
- * onceki tur BITTIKTEN sonra kuruluyor.
+ * Now: one round at a time, and the next round is scheduled IN EVERY CASE
+ * (errors included) AFTER the previous one has finished.
  */
 const initMatchFetchers = async () => {
   if (fetchInProgress) {
-    logger.warn("Onceki mac cekimi hala suruyor; bu tur atlandi.");
+    logger.warn("The previous match fetch is still running; this round was skipped.");
     return;
   }
 
@@ -147,7 +148,7 @@ const initMatchFetchers = async () => {
   try {
     await runMatchFetchers();
   } catch (error) {
-    logger.error("Mac cekim turu basarisiz", error);
+    logger.error("Match fetch round failed", error);
   } finally {
     fetchInProgress = false;
 
@@ -155,12 +156,12 @@ const initMatchFetchers = async () => {
 
     fetchTimer = setTimeout(initMatchFetchers, FETCH_INTERVAL_MS);
 
-    // Zamanlayici process'in kapanmasini engellemesin.
+    // The timer must not keep the process from exiting.
     fetchTimer.unref?.();
   }
 };
 
-/** Periyodik cekimi durdurur (test ve duzgun kapanma icin). */
+/** Stops the periodic fetch (for tests and a clean shutdown). */
 const stopMatchFetchers = () => {
   if (fetchTimer) clearTimeout(fetchTimer);
 
@@ -172,7 +173,8 @@ const getMatches = async () => {
 
   const matchesBySite: Record<string, any[]> = {};
 
-  // Siteler bagimsiz; sirayla beklemek yerine paralel sorgula.
+  // The sites are independent; query them in parallel instead of waiting
+  // on each in turn.
   const perSite = await Promise.all(
     sites.map(async (site) => ({
       site: site.site,

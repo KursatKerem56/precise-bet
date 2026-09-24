@@ -1,44 +1,48 @@
 /**
- * MAVIBET MAC CEKICI
+ * MAVIBET MATCH FETCHER
  *
- * Cikti:  mavi_bet-matches.json  (betist ile birebir ayni yapi)
- *
- * ---------------------------------------------------------------------------
- * PROTOKOL
- *
- * WebSocket uzerinden WAMP v2 (wamp.2.json alt protokolu), permessage-deflate
- * zorunlu (sunucu buyuk yanitlari yalnizca sikistirilmis gonderiyor).
- *
- *   HELLO -> WELCOME -> (oturum hazirligi) -> REGISTER(topic) + CALL initialDump
- *
- * Sunucu, hazirlik adimlari yapilmadan veri isteklerini "om.rpc.exception"
- * ile reddediyor; primeSession() bu yuzden var, sus degil.
+ * Output:  mavi_bet-matches.json  (the exact same shape as betist)
  *
  * ---------------------------------------------------------------------------
- * ESKI SURUME GORE NE DEGISTI -- BU DOSYADAKI EN BUYUK KAZANC
+ * PROTOCOL
  *
- * Eski akis spor basina soyleydi:
- *     locations/{sportId}                      ->  ~70 ulke
- *       tournaments/{sportId}/{locationId}     ->  ulke basina 1 istek
- *         /sports#tournaments                  ->  LIG BASINA 1 istek
- *         tournament-aggregator-.../{ligId}    ->  LIG BASINA 1-4 istek
- * Futbol icin bu ~560-900 istek ve lig basina 80 ms zorunlu bekleme demekti.
+ * WAMP v2 over WebSocket (the wamp.2.json subprotocol), with
+ * permessage-deflate mandatory (the server only sends large responses
+ * compressed).
  *
- * Oysa sunucu ayni veriyi TEK topic'te veriyor:
+ *   HELLO -> WELCOME -> (session priming) -> REGISTER(topic) + CALL initialDump
+ *
+ * Without the priming steps the server rejects data requests with
+ * "om.rpc.exception"; that is why primeSession() exists, not superstition.
+ *
+ * ---------------------------------------------------------------------------
+ * WHAT CHANGED VERSUS THE OLD VERSION -- THE BIGGEST WIN IN THIS FILE
+ *
+ * The old flow, per sport, was:
+ *     locations/{sportId}                      ->  ~70 countries
+ *       tournaments/{sportId}/{locationId}     ->  1 request per country
+ *         /sports#tournaments                  ->  1 request PER LEAGUE
+ *         tournament-aggregator-.../{leagueId} ->  1-4 requests PER LEAGUE
+ * For football that meant ~560-900 requests and a mandatory 80 ms wait per
+ * league.
+ *
+ * Yet the server serves the same data on a SINGLE topic:
  *     sport-aggregator-main/{sportId}/default-event-info/NOT_LIVE/1
- * -> 1 istek, futbolda 292 lig / 1325 mac (eski yontem 740 mac buluyordu).
+ * -> 1 request, 292 leagues / 1325 matches for football (the old method
+ * found 740 matches).
  *
- * Sondaki "1" mac basina istenen market sayisi; bize oran lazim olmadigi
- * icin en dusuk deger veriliyor (0 = SINIRSIZ demek, futbolda zaman asimina
- * ugruyor -- bu yuzden 0 DEGIL 1).
+ * The trailing "1" is how many markets are requested per match; we do not
+ * need the odds, so the lowest value is used (0 means UNLIMITED and times
+ * out on football -- hence 1, NOT 0).
  *
- * Eski lig-lig gezme yolu SILINMEDI: toplu topic reddedilirse otomatik ona
- * dusuluyor, boylece sunucu bicim degistirse bile veri gelmeye devam eder.
+ * The old league-by-league path was NOT deleted: if the bulk topic is
+ * rejected we fall back to it automatically, so data keeps arriving even if
+ * the server changes format.
  *
- * Ayrica spor listesi artik sabit degil: primeSession zaten cektigi (ve
- * eskiden attigi) "disciplinesV2" dokumunden 50 spor kesfediliyor.
- * Tenis'in farkli lig agaci kullandigi da koda gomulu degil; kaydin
- * `showEventCategory` alanindan okunuyor.
+ * The sport list is no longer hardcoded either: 50 sports are discovered
+ * from the "disciplinesV2" dump that primeSession already fetches (and used
+ * to throw away). That tennis uses a different league tree is not baked into
+ * the code either; it is read from the record's `showEventCategory` field.
  */
 
 import fs from "node:fs/promises";
@@ -67,9 +71,9 @@ const LANG = "en";
 const CALL_TIMEOUT_MS = Number(process.env.MAVIBET_CALL_TIMEOUT_MS || 20000);
 
 /**
- * Toplu spor dokumu icin AYRI ve cok daha uzun zaman asimi.
- * Futbol dokumu olculen surede ~17 sn; 20 sn'lik genel sinir bu istegi
- * neredeyse her seferinde kesiyordu.
+ * A SEPARATE and much longer timeout for the bulk sport dump.
+ * The football dump measured ~17 s; the general 20 s limit was cutting this
+ * request off almost every time.
  */
 const BULK_TIMEOUT_MS = Number(process.env.MAVIBET_BULK_TIMEOUT_MS || 120000);
 
@@ -79,7 +83,7 @@ const REQUEST_DELAY_MS = Number(process.env.MAVIBET_REQUEST_DELAY_MS || 80);
 
 const RETRY_ATTEMPTS = Number(process.env.MAVIBET_RETRY_ATTEMPTS || 3);
 
-/** 0 = sinirsiz. Yalnizca yedek (lig-lig) yolunu sinirlamak icin. */
+/** 0 = unlimited. Only to bound the fallback (league-by-league) path. */
 const MAX_LOCATIONS = Number(process.env.MAVIBET_MAX_LOCATIONS || 0);
 
 const DEBUG_FILE = process.env.MAVIBET_DEBUG_FILE || "mavibet-debug.log";
@@ -103,7 +107,7 @@ const WAMP = {
 };
 
 /* =========================================================================
- * WAMP ISTEMCISI
+ * WAMP CLIENT
  * ====================================================================== */
 
 class MavibetClient {
@@ -121,7 +125,7 @@ class MavibetClient {
     this.closedByUs = false;
     this.reconnecting = null;
 
-    /** Denenen her topic ve sonucu; sorun cikarsa dosyaya yazilir. */
+    /** Every topic tried and its result; written to file when something goes wrong. */
     this.diagnostics = [];
 
     this.stats = { calls: 0, retries: 0, reconnects: 0 };
@@ -142,7 +146,7 @@ class MavibetClient {
       origin: this.origin,
       userAgent: USER_AGENT,
       subprotocol: "wamp.2.json",
-      // Sunucu buyuk yanitlari YALNIZCA sikistirilmis gonderiyor.
+      // The server sends large responses ONLY compressed.
       permessageDeflate: true,
       handshakeTimeoutMs: CALL_TIMEOUT_MS + 10000,
       extraHeaders: ["Cache-Control: no-cache", "Pragma: no-cache"],
@@ -163,19 +167,20 @@ class MavibetClient {
 
     this.ws.onClose(() => {
       for (const [, pending] of this.pending) {
-        const error = new Error("Baglanti kapandi.");
+        const error = new Error("Connection closed.");
         error.retryable = true;
         pending.reject(error);
       }
 
       this.pending.clear();
 
-      this.welcome?.reject(new Error("WELCOME beklenirken baglanti kapandi."));
+      this.welcome?.reject(new Error("Connection closed while waiting for WELCOME."));
       this.welcome = null;
     });
 
-    // WAMP HELLO ucu elemanli olmak ZORUNDA ve "roles" olmadan router
-    // oturum acmaz; eksik gonderirsek sonraki mesajlar sessizce yok sayilir.
+    // A WAMP HELLO MUST have three elements, and the router will not open a
+    // session without "roles"; if we send an incomplete one the following
+    // messages are silently ignored.
     const hello = [
       WAMP.HELLO,
       "http://www.mavibet.com",
@@ -217,13 +222,13 @@ class MavibetClient {
       },
     ];
 
-    // WELCOME gelmeden hicbir sey gonderilmiyor; erken istekler router
-    // tarafindan sessizce atiliyor (bos ciktinin klasik sebebi).
+    // Nothing is sent before WELCOME arrives; early requests are silently
+    // dropped by the router (the classic cause of empty output).
     const welcomePromise = new Promise((resolve, reject) => {
       this.welcome = { resolve, reject };
 
       setTimeout(
-        () => reject(new Error("WELCOME zaman asimi (sunucu oturum acmadi).")),
+        () => reject(new Error("WELCOME timed out (the server did not open a session).")),
         CALL_TIMEOUT_MS
       );
     });
@@ -232,7 +237,7 @@ class MavibetClient {
 
     this.sessionId = await welcomePromise;
 
-    this.logger.info(`WAMP oturumu acildi (session ${this.sessionId}).`);
+    this.logger.info(`WAMP session opened (session ${this.sessionId}).`);
   }
 
   handle(message) {
@@ -247,7 +252,7 @@ class MavibetClient {
     if (type === WAMP.ABORT) {
       this.welcome?.reject(
         new Error(
-          `Sunucu oturumu reddetti (ABORT): ${JSON.stringify(message[2] ?? message[1] ?? "bilinmeyen")}`
+          `The server rejected the session (ABORT): ${JSON.stringify(message[2] ?? message[1] ?? "unknown")}`
         )
       );
       this.welcome = null;
@@ -255,11 +260,12 @@ class MavibetClient {
     }
 
     if (type === WAMP.INVOCATION) {
-      // Sunucu push'u: icerigini kullanmiyoruz ama protokol geregi onayla.
+      // A server push: we do not use its content but the protocol requires
+      // an acknowledgement.
       try {
         this.ws.send(JSON.stringify([WAMP.YIELD, message[1], {}]));
       } catch {
-        /* baglanti kapanmis olabilir */
+        /* the connection may already be closed */
       }
       return;
     }
@@ -287,9 +293,9 @@ class MavibetClient {
 
       this.pending.delete(message[2]);
 
-      // WAMP ERROR: [8, istekTipi, istekId, details, errorUri, args, kwargs]
-      // Sunucunun asil aciklamasi args/kwargs icinde; tek basina errorUri
-      // ("om.rpc.exception") hicbir sey anlatmiyor.
+      // WAMP ERROR: [8, requestType, requestId, details, errorUri, args, kwargs]
+      // The server's real explanation is in args/kwargs; the errorUri on its
+      // own ("om.rpc.exception") says nothing.
       const extras = [];
 
       if (message[3] && Object.keys(message[3]).length) {
@@ -304,7 +310,7 @@ class MavibetClient {
 
       pending.reject(
         new Error(
-          `WAMP ERROR: ${message[4] ?? "bilinmeyen"}` +
+          `WAMP ERROR: ${message[4] ?? "unknown"}` +
             (extras.length ? ` | ${extras.join(" ")}` : "")
         )
       );
@@ -318,7 +324,7 @@ class MavibetClient {
       const timer = setTimeout(() => {
         this.pending.delete(id);
 
-        const error = new Error("Istek zaman asimina ugradi.");
+        const error = new Error("The request timed out.");
         error.retryable = true;
         reject(error);
       }, timeoutMs);
@@ -362,25 +368,25 @@ class MavibetClient {
   }
 
   async reconnect() {
-    if (this.closedByUs) throw new Error("Istemci kapatildi.");
+    if (this.closedByUs) throw new Error("The client was closed.");
 
     if (!this.reconnecting) {
       this.reconnecting = (async () => {
         this.stats.reconnects++;
 
-        this.logger.warn("baglanti koptu, yeniden baglaniliyor...");
+        this.logger.warn("connection dropped, reconnecting...");
 
         try {
           this.ws?.close();
         } catch {
-          /* zaten kapali */
+          /* already closed */
         }
 
-        // Yeni oturum yine hazirlik adimlarini gerektiriyor.
+        // A new session needs the priming steps again.
         await this.connect();
         await this.primeSession();
 
-        this.logger.info("yeniden baglanildi.");
+        this.logger.info("reconnected.");
       })().finally(() => {
         this.reconnecting = null;
       });
@@ -390,14 +396,14 @@ class MavibetClient {
   }
 
   /**
-   * Bir topic'in anlik dokumu: once REGISTER, sonra initialDump.
-   * Hangi adimin koptugu belli olsun diye hatalar etiketleniyor.
+   * A point-in-time dump of one topic: REGISTER first, then initialDump.
+   * Errors are labelled so it is clear which step broke.
    */
   async #dumpOnce(topic, timeoutMs) {
     try {
       await this.register(topic, timeoutMs);
     } catch (error) {
-      error.message = `[REGISTER basarisiz] ${error.message}`;
+      error.message = `[REGISTER failed] ${error.message}`;
       throw error;
     }
 
@@ -406,7 +412,7 @@ class MavibetClient {
     try {
       data = await this.call("/sports#initialDump", { topic }, timeoutMs);
     } catch (error) {
-      error.message = `[initialDump basarisiz] ${error.message}`;
+      error.message = `[initialDump failed] ${error.message}`;
       throw error;
     }
 
@@ -414,10 +420,10 @@ class MavibetClient {
   }
 
   /**
-   * Retry + yeniden baglanma ile dokum alir.
+   * Takes a dump with retry and, if needed, a reconnect.
    *
-   * Eski surumde retry HIC YOKTU; mavibet-debug.log'daki "zaman asimi"
-   * satirlari o liglerin sessizce kaybolmasi demekti.
+   * The old version had NO retry at all; the "timeout" lines in
+   * mavibet-debug.log meant those leagues were silently lost.
    */
   async dump(topic, { label = topic, timeoutMs = CALL_TIMEOUT_MS, attempts = RETRY_ATTEMPTS } = {}) {
     this.stats.calls++;
@@ -438,8 +444,8 @@ class MavibetClient {
           isRetryable: (error) => {
             const message = String(error?.message ?? "");
 
-            // Ayni topic'i ikinci kez REGISTER etmek kalici hata verir;
-            // tekrar denemenin anlami yok.
+            // REGISTERing the same topic twice is a permanent error; there
+            // is no point retrying it.
             if (/already|exists|registered/i.test(message)) return false;
 
             return isTransientError(error);
@@ -448,7 +454,7 @@ class MavibetClient {
             this.stats.retries++;
 
             this.logger.warn(
-              `${label} basarisiz (${attempt}/${total}): ${error.message}`
+              `${label} failed (${attempt}/${total}): ${error.message}`
             );
           },
         }
@@ -460,21 +466,21 @@ class MavibetClient {
     } catch (error) {
       this.diagnostics.push({ label, topic, ok: false, error: error.message });
 
-      this.logger.debug(`${label}: HATA ${error.message}`);
+      this.logger.debug(`${label}: ERROR ${error.message}`);
 
-      // Hata firlatmak yerine null: tek bir topic'in patlamasi tum
-      // fetch'i durdurmamali.
+      // null instead of throwing: one topic blowing up must not stop the
+      // whole fetch.
       return null;
     }
   }
 
   /**
-   * OTURUM HAZIRLAMA -- tarayicinin acilista yaptigi adimlarin aynisi.
-   * Atlanirsa sunucu sonraki veri isteklerini reddediyor.
+   * SESSION PRIMING -- the same steps the browser performs on startup.
+   * Skip them and the server rejects the following data requests.
    *
-   * DONUS: "disciplinesV2" dokumu. Eskiden bu dokum alinip ATILIYORDU;
-   * oysa icinde 50 sporun id'si, adi ve lig agaci tipi var. Spor kesfi
-   * artik BEDAVA -- ek istek yok.
+   * RETURNS: the "disciplinesV2" dump. This dump used to be fetched and
+   * THROWN AWAY, even though it holds the id, name and league tree type of
+   * 50 sports. Sport discovery is now FREE -- no extra request.
    */
   async primeSession() {
     const topics = [
@@ -489,14 +495,14 @@ class MavibetClient {
     try {
       await this.subscribe("/registrationDismissed");
     } catch (error) {
-      this.logger.debug(`[prime] subscribe atlandi: ${error.message}`);
+      this.logger.debug(`[prime] subscribe skipped: ${error.message}`);
     }
 
     for (const topic of topics) {
       try {
         await this.register(topic);
       } catch (error) {
-        this.logger.debug(`[prime] register atlandi (${topic}): ${error.message}`);
+        this.logger.debug(`[prime] register skipped (${topic}): ${error.message}`);
       }
     }
 
@@ -504,12 +510,12 @@ class MavibetClient {
       await this.call("/sports#getSessionInfo", { lang: LANG });
       await this.call("/sports#configureFonts", {});
     } catch (error) {
-      this.logger.debug(`[prime] oturum bilgisi atlandi: ${error.message}`);
+      this.logger.debug(`[prime] session info skipped: ${error.message}`);
     }
 
     let disciplines = [];
 
-    // Tarayicinin sirasi: disciplinesV2 once.
+    // The browser's order: disciplinesV2 first.
     for (const path of [
       "disciplinesV2/BOTH/BOTH",
       "disciplines/BOTH/BOTH",
@@ -527,11 +533,11 @@ class MavibetClient {
 
         if (!disciplines.length && records.length) disciplines = records;
       } catch (error) {
-        this.logger.debug(`[prime] dump atlandi (${path}): ${error.message}`);
+        this.logger.debug(`[prime] dump skipped (${path}): ${error.message}`);
       }
     }
 
-    this.logger.info("oturum hazirlandi.");
+    this.logger.info("session primed.");
 
     return disciplines;
   }
@@ -545,15 +551,15 @@ class MavibetClient {
 const topicFor = (path) => `/sports/${TENANT}/${LANG}/${path}`;
 
 /* =========================================================================
- * SPOR KESFI
+ * SPORT DISCOVERY
  * ====================================================================== */
 
 /**
- * disciplines dokumundeki SPORT kayitlarini katalogla eslestirir.
+ * Matches the SPORT records in the disciplines dump against the catalog.
  *
- * `showEventCategory` sitenin KENDI bildirdigi bayrak: true ise o sporun
- * lig agaci ulke yerine "event category" (WTA, Challenger, ITF...) uzerinden
- * gidiyor. Eskiden bu, tenis icin koda sabit yazilmisti.
+ * `showEventCategory` is a flag the site reports ITSELF: when true, that
+ * sport's league tree goes through "event category" (WTA, Challenger,
+ * ITF...) instead of country. This used to be hardcoded for tennis.
  */
 function discoverSports(records, enabledKeys, logger) {
   const targets = [];
@@ -563,7 +569,7 @@ function discoverSports(records, enabledKeys, logger) {
   for (const record of records) {
     if (!record || record._type !== "SPORT" || record.id == null) continue;
 
-    // Sanal/simule sporlar gercek mac degil.
+    // Virtual/simulated sports are not real matches.
     if (record.isVirtual || record.isSimulated) continue;
 
     if (record.hasMatches === false) continue;
@@ -589,23 +595,24 @@ function discoverSports(records, enabledKeys, logger) {
   }
 
   if (unmapped.length) {
-    logger.debug(`katalogda olmayan spor atlandi: ${unmapped.join(", ")}`);
+    logger.debug(`skipped sports missing from the catalog: ${unmapped.join(", ")}`);
   }
 
-  // Buyuk sporlar once baslasin: es zamanli worker'lar sonda tek bir dev
-  // isi beklemek zorunda kalmasin.
+  // Start with the big sports, so the concurrent workers do not end up
+  // waiting on a single huge job at the end.
   targets.sort((a, b) => b.upcoming - a.upcoming);
 
   return targets;
 }
 
 /* =========================================================================
- * VERI CEKME
+ * DATA FETCHING
  * ====================================================================== */
 
 /**
- * Bir MATCH kaydini ortak cikti modeline cevirir.
- * @returns {boolean} gercekten eklendiyse true (tekrar/eksik kayit false doner)
+ * Converts one MATCH record into the shared output model.
+ * @returns {boolean} true when it was really added (duplicate/incomplete
+ *          records return false)
  */
 function addMatchRecord(output, sportKey, record) {
   const { date, time } = formatEpochMs(record.startTime, DEFAULT_TIMEZONE);
@@ -613,8 +620,8 @@ function addMatchRecord(output, sportKey, record) {
   return output.add(sportKey, {
     eventId: record.id,
     leagueId: record.parentId,
-    // Sezonsuz kisa ad varsa tercih et ("Turkiye Super Lig"),
-    // yoksa tam ad ("Turkiye Super Lig 2026/2027").
+    // Prefer the short name without the season ("Turkiye Super Lig") and
+    // fall back to the full name ("Turkiye Super Lig 2026/2027").
     leagueName: record.shortParentName || record.parentName,
     countryName: record.venueName || record.categoryName,
     home: record.homeParticipantName,
@@ -625,8 +632,8 @@ function addMatchRecord(output, sportKey, record) {
 }
 
 /**
- * TOPLU YOL: bir sporun tum lig ve maclari tek dokumde.
- * @returns {number} eklenen mac sayisi, veya -1 (topic reddedildi)
+ * THE BULK PATH: every league and match of a sport in one dump.
+ * @returns {number} how many matches were added, or -1 (topic rejected)
  */
 async function fetchSportBulk(client, sport, output) {
   const records = await client.dump(
@@ -634,11 +641,11 @@ async function fetchSportBulk(client, sport, output) {
       `sport-aggregator-main/${sport.sportId}/default-event-info/NOT_LIVE/1`
     ),
     {
-      label: `${sport.sportKey} toplu`,
+      label: `${sport.sportKey} bulk`,
       timeoutMs: BULK_TIMEOUT_MS,
-      // Sunucu yogunken "backend_timeout" donuyor. Bir-iki backoff'lu
-      // tekrar, lig lig gezen yedek yola dusmekten cok daha ucuz
-      // (olculen: tekrar ~1 sn, yedek yol ~100 sn).
+      // When the server is busy it returns "backend_timeout". One or two
+      // retries with backoff are far cheaper than dropping to the
+      // league-by-league fallback (measured: retry ~1 s, fallback ~100 s).
       attempts: 3,
     }
   );
@@ -659,13 +666,13 @@ async function fetchSportBulk(client, sport, output) {
 }
 
 /* ---------------------------------------------------------------------------
- * YEDEK YOL (eski davranis)
+ * THE FALLBACK PATH (the old behaviour)
  *
- * Toplu topic reddedilirse lig lig gezilir. Yavas ama calisiyor; sunucu
- * bicim degistirirse tek dayanagimiz bu.
+ * If the bulk topic is rejected we walk league by league. Slow, but it
+ * works; if the server changes format this is all we have.
  * ------------------------------------------------------------------------ */
 
-/** Ayni ligin maclarini veren birden fazla topic bicimi var; en hafiften dene. */
+/** Several topic formats serve the same league's matches; try the lightest first. */
 function tournamentTopicVariants(tournamentId) {
   return [
     {
@@ -684,8 +691,8 @@ function tournamentTopicVariants(tournamentId) {
 }
 
 /**
- * "Yaklasan mac sayisi" alanini guvenli yorumlar.
- * Alan YOKSA 0 saymiyoruz; yalnizca acikca 0 olani atliyoruz.
+ * Interprets the "number of upcoming matches" field safely.
+ * A MISSING field is not treated as 0; only an explicit 0 is skipped.
  */
 function hasUpcoming(record) {
   const value = record?.numberOfUpcomingMatches;
@@ -695,7 +702,7 @@ function hasUpcoming(record) {
   return Number(value) > 0;
 }
 
-/** Hangi lig topic bicimi calisiyor -- ilk basarida hatirlanir. */
+/** Which league topic format works -- remembered on the first success. */
 let workingVariant = null;
 
 async function fetchSportByLeagues(client, sport, output, throttle, logger) {
@@ -704,7 +711,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
     : topicFor(`locations/${sport.sportId}`);
 
   const branchRecords = await client.dump(branchTopic, {
-    label: `${sport.sportKey} dallar`,
+    label: `${sport.sportKey} branches`,
   });
 
   if (!branchRecords) return 0;
@@ -714,7 +721,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
   let branches = branchRecords
     .filter((r) => r?._type === wantedType && r.id != null && hasUpcoming(r))
     .map((r) => ({
-      name: r.name ?? `DAL_${r.id}`,
+      name: r.name ?? `BRANCH_${r.id}`,
       topic: sport.useEventCategory
         ? topicFor(`tournaments-by-event-category/${r.id}`)
         : topicFor(`tournaments/${sport.sportId}/${r.id}`),
@@ -722,7 +729,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
 
   if (MAX_LOCATIONS > 0) branches = branches.slice(0, MAX_LOCATIONS);
 
-  logger.info(`${sport.sportKey}: yedek yol, ${branches.length} dal`);
+  logger.info(`${sport.sportKey}: fallback path, ${branches.length} branches`);
 
   let added = 0;
 
@@ -730,7 +737,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
     await throttle();
 
     const records = await client.dump(branch.topic, {
-      label: `${sport.sportKey} lig listesi ${branch.name}`,
+      label: `${sport.sportKey} league list ${branch.name}`,
     });
 
     if (!records) continue;
@@ -753,7 +760,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
         await throttle();
 
         const matchRecords = await client.dump(variant.topic, {
-          label: `${sport.sportKey} lig ${tournament.name} [${variant.key}]`,
+          label: `${sport.sportKey} league ${tournament.name} [${variant.key}]`,
           attempts: 2,
         });
 
@@ -766,12 +773,13 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
             String(r.sportId) === sport.sportId
         );
 
-        // Hatasiz ama MAC ICERMEYEN yanit "calisiyor" sayilmaz; yoksa bos
-        // donen bir bicimi kalici secip tum ligleri bos toplardik.
+        // A response that succeeds but CONTAINS NO MATCHES does not count as
+        // "working"; otherwise we would lock onto a format that returns
+        // nothing and collect every league empty.
         if (!matches.length) continue;
 
         if (workingVariant !== variant.key) {
-          logger.info(`lig verisi icin "${variant.key}" bicimi kullaniliyor`);
+          logger.info(`using the "${variant.key}" format for league data`);
           workingVariant = variant.key;
         }
 
@@ -788,7 +796,7 @@ async function fetchSportByLeagues(client, sport, output, throttle, logger) {
 }
 
 /* =========================================================================
- * ANA AKIS
+ * MAIN FLOW
  * ====================================================================== */
 
 /**
@@ -802,7 +810,7 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
 
   if (!found) {
     logger.error(
-      `site URL'si taninmadi (mavibet{N}.com bekleniyordu): ${siteUrl}`
+      `site URL not recognised (expected mavibet{N}.com): ${siteUrl}`
     );
 
     return null;
@@ -810,8 +818,8 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
 
   const number = found[1];
 
-  // DIKKAT: WebSocket Origin'i ana site degil SPOR alt alan adidir.
-  // Yanlis Origin sessizce BOS sonuc verir.
+  // CAREFUL: the WebSocket Origin is the SPORTS subdomain, not the main
+  // site. A wrong Origin silently yields an EMPTY result.
   const origin =
     process.env.MAVIBET_WS_ORIGIN || `https://sports2.mavibet${number}.com`;
 
@@ -843,17 +851,17 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
 
         if (!targets.length) {
           throw new Error(
-            "Spor listesi bos dondu; oturum hazirligi basarisiz olmus olabilir."
+            "The sport list came back empty; session priming may have failed."
           );
         }
 
         logger.info(
-          `${disciplines.length} kayittan ${targets.length} spor hedefleniyor ` +
-            `(es zamanli: ${CONCURRENCY})`
+          `targeting ${targets.length} sports out of ${disciplines.length} records ` +
+            `(concurrency: ${CONCURRENCY})`
         );
 
-        // Es zamanlilik burada 2: bu dokumler cok buyuk (futbol ~22k kayit),
-        // daha fazlasi bellek tepe noktasini gereksiz yukseltir.
+        // The concurrency here is 2: these dumps are very large (~22k records
+        // for football) and more would push the memory peak up for nothing.
         const results = await mapWithConcurrency(
           targets,
           CONCURRENCY,
@@ -863,12 +871,12 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
             const bulk = await fetchSportBulk(client, sport, output);
 
             if (bulk >= 0) {
-              logger.info(`${sport.sportKey}: toplu dokum -> ${bulk} mac`);
+              logger.info(`${sport.sportKey}: bulk dump -> ${bulk} matches`);
               return bulk;
             }
 
             logger.warn(
-              `${sport.sportKey}: toplu dokum reddedildi, lig lig geziliyor.`
+              `${sport.sportKey}: bulk dump rejected, walking league by league.`
             );
 
             return fetchSportByLeagues(client, sport, output, throttle, logger);
@@ -878,12 +886,12 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
         const failed = results.filter((r) => r.status === "rejected");
 
         for (const result of failed) {
-          logger.error(`spor cekilemedi: ${result.reason.message}`);
+          logger.error(`could not fetch sport: ${result.reason.message}`);
         }
 
         logger.info(
-          `${client.stats.calls} dokum, ${client.stats.retries} tekrar, ` +
-            `${client.stats.reconnects} yeniden baglanma`
+          `${client.stats.calls} dumps, ${client.stats.retries} retries, ` +
+            `${client.stats.reconnects} reconnects`
         );
 
         await writeDiagnostics(client, output, logger);
@@ -894,28 +902,28 @@ async function mavibetMatchFetcherMain(siteUrl, options = {}) {
   }
 }
 
-/** Basarisiz topic'leri dosyaya birakir; sessiz basarisizlik olmasin. */
+/** Writes the failed topics to a file, so failures are never silent. */
 async function writeDiagnostics(client, output, logger) {
   const failed = client.diagnostics.filter((d) => !d.ok);
 
   if (!failed.length) return;
 
   const report = [
-    `mavibet teshis raporu - ${new Date().toISOString()}`,
+    `mavibet diagnostics report - ${new Date().toISOString()}`,
     `WS: ${client.wsUrl}`,
     `Origin: ${client.origin}`,
-    `denenen: ${client.diagnostics.length}, basarisiz: ${failed.length}, ` +
-      `toplanan mac: ${output.total}`,
+    `tried: ${client.diagnostics.length}, failed: ${failed.length}, ` +
+      `matches collected: ${output.total}`,
     "",
-    ...failed.map((d) => `HATA  ${d.error}\n      ${d.topic}`),
+    ...failed.map((d) => `ERROR ${d.error}\n      ${d.topic}`),
   ].join("\n");
 
   try {
     await fs.writeFile(DEBUG_FILE, `${report}\n`, "utf8");
 
-    logger.warn(`${failed.length} istek basarisiz; ayrinti: ${DEBUG_FILE}`);
+    logger.warn(`${failed.length} requests failed; details: ${DEBUG_FILE}`);
   } catch (error) {
-    logger.warn(`teshis raporu yazilamadi: ${error.message}`);
+    logger.warn(`could not write the diagnostics report: ${error.message}`);
   }
 }
 

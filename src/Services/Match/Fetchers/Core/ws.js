@@ -1,14 +1,14 @@
 /**
- * ORTAK MINIMAL WEBSOCKET ISTEMCISI (RFC 6455)
+ * SHARED MINIMAL WEBSOCKET CLIENT (RFC 6455)
  *
- * mavibet ve virusbet fetcher'lari bu kodun neredeyse birebir ayni iki
- * kopyasini tasiyordu (~250 satir x 2). Tek fark mavibet'in ayrica
- * permessage-deflate (RFC 7692) cozmesiydi.
+ * The mavibet and virusbet fetchers carried two nearly identical copies of
+ * this code (~250 lines x 2). The only difference was that mavibet also
+ * decoded permessage-deflate (RFC 7692).
  *
- * Ikisi burada birlestirildi: deflate destegi opsiyonel bir bayrak.
- * `ws` paketi bilerek kullanilmiyor -- ikisi de zaten node:tls uzerine
- * yazilmisti ve bu dosyalar bagimsiz calisabilsin diye tasarlanmisti;
- * davranisi korumak icin ayni yol surduruluyor.
+ * The two are merged here: deflate support is an optional flag. The `ws`
+ * package is deliberately not used -- both were already written on top of
+ * node:tls and were designed so these files can run standalone; the same
+ * route is kept to preserve that behaviour.
  */
 
 import tls from "node:tls";
@@ -20,12 +20,12 @@ const WS_GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 const DEFLATE_TAIL = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 
 /**
- * permessage-deflate cozucu.
+ * permessage-deflate decoder.
  *
- * Sunucu "server_no_context_takeover" BILDIRMEDIYSE tek bir deflate akisini
- * tum mesajlar boyunca surdurur. O durumda mesajlar ayri ayri acilamaz;
- * kalici bir inflate akisini SIRAYLA beslemek zorunludur. Sira bozulursa
- * tum sonraki mesajlar coder.
+ * Unless the server ANNOUNCES "server_no_context_takeover", it keeps a
+ * single deflate stream across all messages. In that case messages cannot be
+ * decoded independently; a persistent inflate stream must be fed IN ORDER.
+ * If the order breaks, every following message is garbage.
  */
 class PermessageDeflate {
   constructor(noContextTakeover) {
@@ -74,7 +74,7 @@ class PermessageDeflate {
         })
     );
 
-    // Hata olsa bile kuyruk ilerlesin, yoksa baglanti kilitlenir.
+    // The queue must advance even on error, otherwise the connection locks up.
     this.queue = task.then(
       () => undefined,
       () => undefined
@@ -87,7 +87,7 @@ class PermessageDeflate {
     try {
       this.stream?.close();
     } catch {
-      /* zaten kapali olabilir */
+      /* it may already be closed */
     }
 
     this.stream = null;
@@ -114,7 +114,7 @@ function encodeFrame(payload, opcode = 0x1) {
 
   header[0] = 0x80 | opcode; // FIN + opcode
 
-  // Istemciden sunucuya giden cerceveler MASKELI olmak zorunda (RFC 6455).
+  // Client to server frames are required to be MASKED (RFC 6455).
   const mask = crypto.randomBytes(4);
 
   const masked = Buffer.allocUnsafe(len);
@@ -136,7 +136,7 @@ function decodeFrames(buffer) {
     const b1 = buffer[offset + 1];
 
     const fin = (b0 & 0x80) !== 0;
-    // RSV1 = "bu mesaj sikistirildi"; yalnizca ilk cercevede set edilir.
+    // RSV1 = "this message is compressed"; only set on the first frame.
     const rsv1 = (b0 & 0x40) !== 0;
     const opcode = b0 & 0x0f;
     const masked = (b1 & 0x80) !== 0;
@@ -155,7 +155,7 @@ function decodeFrames(buffer) {
       const big = buffer.readBigUInt64BE(cursor);
 
       if (big > BigInt(Number.MAX_SAFE_INTEGER)) {
-        throw new Error("WebSocket cercevesi cok buyuk.");
+        throw new Error("WebSocket frame is too large.");
       }
 
       len = Number(big);
@@ -171,7 +171,7 @@ function decodeFrames(buffer) {
       cursor += 4;
     }
 
-    // Cerceve henuz tam gelmediyse tamponda birak.
+    // If the frame has not fully arrived yet, leave it in the buffer.
     if (cursor + len > buffer.length) break;
 
     let payload = buffer.subarray(cursor, cursor + len);
@@ -195,7 +195,7 @@ function decodeFrames(buffer) {
 }
 
 /**
- * wss:// adresine baglanir.
+ * Connects to a wss:// address.
  *
  * @param {string} url
  * @param {{
@@ -241,8 +241,8 @@ function connectWebSocket(url, options = {}) {
         host: parsed.hostname,
         port,
         servername: parsed.hostname,
-        // EC2'de IPv6 rotasi/DNS tercihi WS baglantisini bozabiliyor;
-        // cagiran taraf IPv4'e sabitleyebilsin diye acik birakildi.
+        // On EC2 the IPv6 route/DNS preference can break the WS
+        // connection; left open so the caller can pin it to IPv4.
         ...(family ? { family } : {}),
       },
       () => {
@@ -260,8 +260,8 @@ function connectWebSocket(url, options = {}) {
             ...(origin ? [`Origin: ${origin}`] : []),
             ...(userAgent ? [`User-Agent: ${userAgent}`] : []),
             "Accept-Language: tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-            // Deflate teklif EDILMEZSE sunucu da kullanmaz; cozucusu
-            // olmayan cagiranlar icin bu en guvenli varsayilan.
+            // If deflate is NOT offered the server will not use it either;
+            // that is the safest default for callers with no decoder.
             ...(permessageDeflate
               ? [
                   "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits",
@@ -282,14 +282,15 @@ function connectWebSocket(url, options = {}) {
     let fragCompressed = false;
     let inflater = null;
 
-    // Sikistirma acma asenkron; mesaj SIRASI korunmak zorunda.
+    // Decompression is async; message ORDER has to be preserved.
     let emitQueue = Promise.resolve();
 
     const textHandlers = [];
     const closeHandlers = [];
 
-    // El sikisma yaniti ile ilk mesajlar AYNI TCP paketinde gelebilir.
-    // Dinleyici baglanana kadar biriktiriyoruz ki mesaj kaybolmasin.
+    // The handshake response and the first messages can arrive in the SAME
+    // TCP packet. They are buffered until a listener attaches so that no
+    // message is lost.
     const pendingTexts = [];
 
     let closed = false;
@@ -315,7 +316,7 @@ function connectWebSocket(url, options = {}) {
 
     const api = {
       send(text) {
-        if (closed) throw new Error("WebSocket kapali.");
+        if (closed) throw new Error("WebSocket is closed.");
 
         logger?.debug(">>", text.slice(0, 200));
 
@@ -326,7 +327,7 @@ function connectWebSocket(url, options = {}) {
         try {
           socket.write(encodeFrame(Buffer.alloc(0), 0x8));
         } catch {
-          // soket zaten kapali olabilir
+          // the socket may already be closed
         }
 
         socket.end();
@@ -360,7 +361,7 @@ function connectWebSocket(url, options = {}) {
     };
 
     socket.setTimeout(handshakeTimeoutMs, () => {
-      fail(new Error("WebSocket baglanti zaman asimi."));
+      fail(new Error("WebSocket connection timed out."));
     });
 
     socket.on("error", (error) => {
@@ -373,7 +374,7 @@ function connectWebSocket(url, options = {}) {
     socket.on("data", (chunk) => {
       buffer = Buffer.concat([buffer, chunk]);
 
-      // --- Once HTTP Upgrade yaniti ---
+      // --- First the HTTP Upgrade response ---
       if (!handshakeDone) {
         const end = buffer.indexOf("\r\n\r\n");
 
@@ -386,7 +387,7 @@ function connectWebSocket(url, options = {}) {
         if (!/^HTTP\/1\.1 101/i.test(head)) {
           return fail(
             new Error(
-              `WebSocket el sikismasi basarisiz: ${head.split("\r\n")[0] || "bilinmeyen yanit"}`
+              `WebSocket handshake failed: ${head.split("\r\n")[0] || "unknown response"}`
             )
           );
         }
@@ -394,18 +395,18 @@ function connectWebSocket(url, options = {}) {
         const accept = /sec-websocket-accept:\s*(\S+)/i.exec(head)?.[1];
 
         if (accept !== expectedAccept) {
-          return fail(new Error("Sec-WebSocket-Accept dogrulamasi basarisiz."));
+          return fail(new Error("Sec-WebSocket-Accept verification failed."));
         }
 
-        // Alt protokol kabul edilmediyse WAMP mesajlari SESSIZCE yok sayilir
-        // ve bos cikti alinir. Erken ve acik hata veriyoruz.
+        // If the subprotocol is not accepted, WAMP messages are SILENTLY
+        // ignored and the output comes back empty. Fail early and loudly.
         if (subprotocol) {
           const negotiated = /sec-websocket-protocol:\s*(\S+)/i.exec(head)?.[1];
 
           if (negotiated !== subprotocol) {
             return fail(
               new Error(
-                `Sunucu "${subprotocol}" alt protokolunu kabul etmedi (donen: ${negotiated ?? "yok"}).`
+                `The server did not accept the "${subprotocol}" subprotocol (returned: ${negotiated ?? "none"}).`
               )
             );
           }
@@ -416,11 +417,11 @@ function connectWebSocket(url, options = {}) {
 
         if (/permessage-deflate/i.test(extLine)) {
           if (!permessageDeflate) {
-            // Teklif etmedigimiz halde dayatildiysa cozemeyiz; sessiz
-            // bozuk veri yerine acik hata.
+            // If it is forced on us without being offered we cannot decode
+            // it; fail loudly instead of producing silently broken data.
             return fail(
               new Error(
-                "Sunucu permessage-deflate dayatti; bu istemci sikistirilmis cerceveleri cozemiyor."
+                "The server forced permessage-deflate; this client cannot decode compressed frames."
               )
             );
           }
@@ -429,7 +430,7 @@ function connectWebSocket(url, options = {}) {
             /server_no_context_takeover/i.test(extLine)
           );
 
-          logger?.debug(`permessage-deflate aktif (${extLine.trim()})`);
+          logger?.debug(`permessage-deflate active (${extLine.trim()})`);
         }
 
         handshakeDone = true;
@@ -439,7 +440,7 @@ function connectWebSocket(url, options = {}) {
         resolve(api);
       }
 
-      // --- Sonra cerceveler ---
+      // --- Then the frames ---
       let decoded;
 
       try {
@@ -463,7 +464,7 @@ function connectWebSocket(url, options = {}) {
           continue;
         }
 
-        // Metin/ikili cerceveler parcali gelebilir.
+        // Text/binary frames can arrive fragmented.
         if (frame.opcode === 0x0) {
           fragParts.push(frame.payload);
         } else {
@@ -490,7 +491,7 @@ function connectWebSocket(url, options = {}) {
           if (compressed) {
             if (!inflater) {
               logger?.error(
-                "sikistirilmis mesaj geldi ama deflate pazarligi yok."
+                "a compressed message arrived but deflate was never negotiated."
               );
               return;
             }
@@ -498,7 +499,7 @@ function connectWebSocket(url, options = {}) {
             try {
               body = await inflater.inflate(full);
             } catch (error) {
-              logger?.error(`mesaj acilamadi: ${error.message}`);
+              logger?.error(`could not decompress message: ${error.message}`);
               return;
             }
           }

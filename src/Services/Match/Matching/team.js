@@ -1,13 +1,13 @@
 /**
- * TAKIM ESLESTIRME PIPELINE'I
+ * THE TEAM MATCHING PIPELINE
  *
- *   Asama 1 : Normalize edilmis adlar birebir ayni      -> 100
- *   Asama 2 : Ikisi de AYNI kanonik takima cozuluyor    -> 100 (alias)
- *   Asama 3 : Kontrollu bulanik karsilastirma           -> 0-100
+ *   Stage 1 : The normalised names are identical        -> 100
+ *   Stage 2 : Both resolve to the SAME canonical team   -> 100 (alias)
+ *   Stage 3 : Guarded fuzzy comparison                  -> 0-100
  *
- * Her asamadan once NITELEYICI kontrolu var: "Barcelona" ile "Barcelona B",
- * "Barcelona Women" veya "Barcelona U19" ayni takim DEGILDIR ve isim ne
- * kadar benzerse benzesin eslestirilmez (hard constraint).
+ * A QUALIFIER check runs before every stage: "Barcelona" is NOT the same
+ * team as "Barcelona B", "Barcelona Women" or "Barcelona U19", and they are
+ * never matched however similar the names look (a hard constraint).
  */
 
 import {
@@ -30,17 +30,18 @@ import {
 } from "./config.js";
 
 /**
- * ABD liglerinde gecen sehir kisaltmalari.
+ * City abbreviations used in US leagues.
  *
- * DIKKAT - bunlar eskiden HER sporda aciliyordu ve gercek veride 49 takim
- * adini bozuyordu:
+ * CAREFUL - these used to be expanded in EVERY sport and corrupted 49 team
+ * names in real data:
  *
  *   "Deportivo La Coruna"     -> "deportivo LOS ANGELES coruna"
  *   "Gimnasia La Plata"       -> "gimnasia LOS ANGELES plata"
  *   "Sepsi Sf. Gheorghe"      -> "sepsi SAN FRANCISCO gheorghe"
  *
- * Artik yalnizca ABD ligi olan sporlarda VE ham metinde token BUYUK HARF
- * yazilmissa aciliyor ("LA Galaxy" evet, "La Plata" hayir).
+ * They are now expanded only in sports that have a US league AND only when
+ * the token is written in UPPERCASE in the raw text ("LA Galaxy" yes, "La
+ * Plata" no).
  */
 const CITY_ABBREVIATIONS = {
   ny: "new york",
@@ -57,7 +58,7 @@ const CITY_ABBREVIATIONS = {
   lv: "las vegas",
 };
 
-/** Ham adda BUYUK HARF yazilmis token'larin kumesi. */
+/** The set of tokens written in UPPERCASE in the raw name. */
 function uppercaseTokens(raw) {
   const set = new Set();
   for (const piece of String(raw ?? "").split(/[\s.,'’`-]+/)) {
@@ -72,19 +73,19 @@ function uppercaseTokens(raw) {
   return set;
 }
 
-/** normalize sonuclari icin cache: "sport\0ad" -> normalize edilmis ad. */
+/** Cache for normalisation results: "sport\0name" -> normalised name. */
 const normalizeCache = new Map();
 
 /**
- * Ardisik tek harfli token'lari tek bir kisaltmaya birlestirir.
+ * Merges consecutive single letter tokens into one abbreviation.
  *
- *   "C A Antoniano"    -> ["ca", "antoniano"]   ("ca" sonra jenerik olarak atilir)
+ *   "C A Antoniano"    -> ["ca", "antoniano"]   ("ca" is later dropped as generic)
  *   "L. A. Galaxy"     -> ["la", "galaxy"]
  *   "N. E. Revolution" -> ["ne", "revolution"]
  *
- * Siteler ayni kisaltmayi bitisik ya da noktali yaziyor; birlestirmeden
- * "c a antoniano" ile "ca antoniano" farkli token sayisina dusuyor ve
- * benzerlik gereksiz yere azaliyordu.
+ * The sites write the same abbreviation either joined or with dots; without
+ * merging, "c a antoniano" and "ca antoniano" end up with different token
+ * counts and the similarity drops for no good reason.
  */
 function mergeInitials(tokens) {
   const out = [];
@@ -110,11 +111,11 @@ function mergeInitials(tokens) {
 }
 
 /**
- * Takim adini karsilastirmaya hazir bicime indirger.
+ * Reduces a team name to a comparison ready form.
  *
  * @param {string} name
- * @param {{ sport?: string }} [options] sport verilirse ABD sehir
- *        kisaltmalari yalnizca ilgili sporlarda acilir.
+ * @param {{ sport?: string }} [options] when sport is given, US city
+ *        abbreviations are only expanded in the relevant sports.
  */
 export function normalizeTeamName(name, options = {}) {
   const sport = options.sport ?? null;
@@ -125,7 +126,7 @@ export function normalizeTeamName(name, options = {}) {
 
   const folded = foldText(name);
 
-  // Asama 2'nin girdisi: alias tablosunda tam ad karsiligi var mi?
+  // The input to stage 2: does the alias table hold this exact name?
   const alias = resolveTeamAlias(folded);
   const base = alias ? foldText(alias.canonical) : folded;
 
@@ -157,18 +158,19 @@ export function normalizeTeamName(name, options = {}) {
 }
 
 /**
- * Bir adin kanonik takim kimligini dondurur (varsa).
- * Niteleyiciler kimligin PARCASIDIR: "Barcelona B" ile "Barcelona" ayni
- * kimlige cozulmemeli.
+ * Returns a name's canonical team identity (if any).
+ * Qualifiers are PART of the identity: "Barcelona B" and "Barcelona" must
+ * not resolve to the same one.
  */
 export function resolveTeam(name, options = {}) {
   const folded = foldText(name);
   const direct = resolveTeamAlias(folded);
   if (direct) return direct;
 
-  // Niteleyicileri ayirip cekirdek adi da dene: "Manchester Utd U21"
-  // cekirdegi "Manchester Utd" -> manchester_united, niteleyici u21 ayri
-  // tasinir ve karsilastirmada zaten ayrica kontrol edilir.
+  // Also try the core name with the qualifiers split off: the core of
+  // "Manchester Utd U21" is "Manchester Utd" -> manchester_united, while the
+  // u21 qualifier travels separately and is checked on its own during
+  // comparison.
   const { core } = splitQualifiers(folded, "");
   if (core !== folded) {
     const viaCore = resolveTeamAlias(core);
@@ -179,15 +181,15 @@ export function resolveTeam(name, options = {}) {
 }
 
 /**
- * Bir adin "guclu" (ayirt edici) token'i var mi?
+ * Does a name have a "strong" (distinctive) token?
  *
- * "City", "United", "Real", "Sporting" tek baslarina kimlik tasimaz.
- * Iki ad SADECE zayif kelimelerde ortusuyorsa eslesme sayilmaz.
+ * "City", "United", "Real" and "Sporting" carry no identity on their own.
+ * If two names overlap ONLY in weak words, it does not count as a match.
  */
 const hasStrongToken = (normalized) =>
   tokenize(normalized).some((t) => !WEAK_TOKENS.has(t));
 
-/** Iki normalize adin paylastigi token sayilari (guclu / zayif ayri). */
+/** How many tokens two normalised names share (strong and weak separately). */
 function sharedTokens(a, b) {
   const setB = new Set(tokenize(b));
   let strong = 0;
@@ -203,7 +205,7 @@ function sharedTokens(a, b) {
 }
 
 /**
- * Iki takim adini karsilastirir.
+ * Compares two team names.
  *
  * @returns {{ score: number, stage: "exact"|"alias"|"fuzzy"|"rejected", reason?: string }}
  */
@@ -213,9 +215,9 @@ export function compareTeams(a, b, options = {}) {
 
   if (!na || !nb) return { score: 0, stage: "rejected", reason: "empty" };
 
-  // --- HARD CONSTRAINT: niteleyiciler ---------------------------------
-  // Karsilastirma ham (fold edilmis) ad uzerinden yapilir; normalize
-  // asamasi jenerik ekleri atarken niteleyiciyi de yiyebilir.
+  // --- HARD CONSTRAINT: qualifiers ------------------------------------
+  // The comparison runs on the raw (folded) name; while stripping generic
+  // affixes, normalisation can eat the qualifier too.
   const fa = foldText(a);
   const fb = foldText(b);
   const ignore = options.ignoreQualifiers ?? null;
@@ -226,34 +228,35 @@ export function compareTeams(a, b, options = {}) {
     return { score: 0, stage: "rejected", reason: "qualifier-mismatch" };
   }
 
-  // --- Asama 1: birebir ------------------------------------------------
+  // --- Stage 1: exact --------------------------------------------------
   if (na === nb) return { score: 100, stage: "exact" };
 
-  // --- Asama 2: alias --------------------------------------------------
+  // --- Stage 2: alias --------------------------------------------------
   const ra = resolveTeam(a, options);
   const rb = resolveTeam(b, options);
   if (ra && rb && ra.id === rb.id) {
     return { score: MATCH_CONFIG.teamAliasScore, stage: "alias" };
   }
 
-  // --- Asama 3: kontrollu bulanik --------------------------------------
+  // --- Stage 3: guarded fuzzy ------------------------------------------
   const score = similarityRatio(
     normalizeTeamName(pa.core, options),
     normalizeTeamName(pb.core, options)
   );
 
-  // Iki ad da zayif kelimelerden ibaretse ("City" vs "City") karar verme.
+  // When both names are nothing but weak words ("City" vs "City"), do not
+  // decide.
   if (!hasStrongToken(na) && !hasStrongToken(nb)) {
     return { score: 0, stage: "rejected", reason: "no-strong-token" };
   }
 
-  // "Manchester City" / "Leicester City" korumasi: ortak olan TEK sey
-  // zayif bir kelimeyse ve guclu token'lar hic ortusmuyorsa eslesme
-  // kabul edilmez.
+  // The "Manchester City" / "Leicester City" guard: when the ONLY thing in
+  // common is a weak word and the strong tokens do not overlap at all, the
+  // match is not accepted.
   //
-  // DIKKAT: kosul "paylasilan zayif token VAR" diye baglanmak ZORUNDA.
-  // Aksi halde hicbir token'i ortak olmayan ama ayni adin farkli
-  // yazimi olan isimler de elenirdi:
+  // CAREFUL: the condition MUST be tied to "a shared weak token EXISTS".
+  // Otherwise names that share no token but are different spellings of the
+  // same name would be eliminated too:
   //   "Baracaldo" / "Barakaldo", "Nordsjalland" / "Nordsjaelland"
   const shared = sharedTokens(na, nb);
 
@@ -262,10 +265,10 @@ export function compareTeams(a, b, options = {}) {
     shared.strong === 0 &&
     shared.weak > 0
   ) {
-    // Zayif kelimeleri atip GERIYE KALANI karsilastir. "Manchester" ile
-    // "Leicester" birbirine benzemez -> gercekten sadece "City" ortak,
-    // eslesme reddedilir. Ama "Salfrod" ile "Salford" benzer -> bu bir
-    // yazim hatasi varyanti, reddedilmemeli.
+    // Drop the weak words and compare WHAT IS LEFT. "Manchester" and
+    // "Leicester" are not alike -> only "City" really is shared and the
+    // match is rejected. But "Salfrod" and "Salford" are alike -> that is a
+    // typo variant and must not be rejected.
     const strongOnly = (n) =>
       tokenize(n)
         .filter((t) => !WEAK_TOKENS.has(t))
@@ -282,16 +285,16 @@ export function compareTeams(a, b, options = {}) {
 }
 
 /**
- * Bir macin takim adlarinda gecen niteleyicilerin birlesimi.
+ * The union of the qualifiers appearing in a match's team names.
  *
- * Lig niteleyicisiyle BIRLIKTE degerlendirilir: bir site ligi
- * "USA - NWSL, Women" diye yazarken digeri "United States - NWSL" diyor
- * ama iki tarafta da takimlar "(W)" tasiyor. Yalnizca lig adina bakan bir
- * kontrol bu 24 dogru eslesmeyi eliyordu.
+ * Evaluated TOGETHER WITH the league qualifier: one site writes the league
+ * as "USA - NWSL, Women" while another says "United States - NWSL", yet on
+ * both sides the teams carry "(W)". A check looking only at the league name
+ * was throwing away these 24 correct matches.
  *
- * Acik yazilmis ekler (women / u21 / reserve ...) ve kadin takimlarinin
- * standart "(W)" isareti toplanir. Tek harfli DIGER token'lar (tenisteki
- * "Recek D" gibi isim bas harfleri) niteleyici SAYILMAZ.
+ * Explicitly written affixes (women / u21 / reserve ...) and the standard
+ * "(W)" marker of women's teams are collected. OTHER single letter tokens
+ * (name initials such as tennis's "Recek D") do NOT count as qualifiers.
  */
 export function matchTeamQualifiers(match) {
   const quals = new Set();
@@ -315,11 +318,11 @@ export function matchTeamQualifiers(match) {
   return quals;
 }
 
-/** Geriye donuk uyumlu sade skor (eski `teamSimilarity` imzasi). */
+/** The plain backwards compatible score (the old `teamSimilarity` signature). */
 export const teamSimilarity = (a, b, options) =>
   compareTeams(a, b, options).score;
 
-/** Test/teshis icin normalize cache'ini temizler. */
+/** Clears the normalisation cache, for tests/diagnostics. */
 export const clearTeamCache = () => normalizeCache.clear();
 
 export { CITY_ABBREVIATIONS };

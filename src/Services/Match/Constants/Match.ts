@@ -1,12 +1,13 @@
 /**
- * Uygulama ici normalized spor degerleri.
+ * The normalised in-app sport values.
  *
- * Bu liste, fetcher katalogundaki (Fetchers/Sports/catalog.js) `id`
- * alanlariyla BIREBIR ayni olmak zorundadir; katalog tek kaynak, burasi
- * onun TypeScript tarafindaki yansimasi. Uyumu `catalog.test.js` dogruluyor.
+ * This list must be EXACTLY the same as the `id` fields in the fetcher
+ * catalog (Fetchers/Sports/catalog.js); the catalog is the single source and
+ * this is its TypeScript side reflection. `catalog.test.js` verifies they
+ * agree.
  *
- * Ilk dort deger eski surumden degismedi (veritabaninda kayitli maclar
- * bunlari kullaniyor).
+ * The first four values are unchanged from the old version (the matches
+ * stored in the database use them).
  */
 enum EMatchSport {
   FOOTBALL = "FOOTBALL",

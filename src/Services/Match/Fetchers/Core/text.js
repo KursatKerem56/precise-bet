@@ -1,9 +1,9 @@
 /**
- * HTML/metin yardimcilari.
+ * HTML/text helpers.
  *
- * `decodeHtmlEntities`, `stripTags`, `parseAttributes` betist fetcher'indan
- * cikarildi; `foldName` ise spor/lig adlarini siteler arasi karsilastirmak
- * icin ortak bir normalize bicimi saglar.
+ * `decodeHtmlEntities`, `stripTags` and `parseAttributes` were extracted from
+ * the betist fetcher; `foldName` provides a shared normalisation format for
+ * comparing sport/league names across sites.
  */
 
 const NAMED_ENTITIES = {
@@ -22,8 +22,8 @@ function decodeHtmlEntities(value) {
     )
     .replace(/&#(\d+);/g, (_, num) => String.fromCodePoint(Number(num)))
     .replace(/&(quot|apos|amp|lt|gt|nbsp);/g, (_, name) =>
-      // &amp; en sonda cozulmeli, yoksa "&amp;lt;" once "&lt;" olup sonra
-      // "<" olurdu. Tek gecisli replace bu sirayi zaten garanti ediyor.
+      // &amp; must be decoded last, otherwise "&amp;lt;" would first become
+      // "&lt;" and then "<". A single-pass replace already guarantees that order.
       Object.prototype.hasOwnProperty.call(NAMED_ENTITIES, name)
         ? NAMED_ENTITIES[name]
         : `&${name};`
@@ -39,7 +39,7 @@ function stripTags(value) {
   );
 }
 
-/** Bir acilis etiketindeki nitelikleri sozluge cevirir. */
+/** Converts the attributes of an opening tag into a dictionary. */
 function parseAttributes(tag) {
   const attrs = {};
 
@@ -55,21 +55,23 @@ function parseAttributes(tag) {
 }
 
 /**
- * Spor/kategori adlarini siteler arasi eslestirmek icin ortak bicime indirger.
+ * Reduces sport/category names to a shared form so they can be matched across
+ * sites.
  *
- * Uc site ayni sporu uc farkli sekilde yaziyor:
+ * The three sites spell the same sport in three different ways:
  *   betist "Amerikan Futbolu" / virusbet "AmericanFootball" / mavibet "Am. Football"
  *
- * Bu yuzden: camelCase ayrilir, Turkce harfler katlanir, aksanlar atilir,
- * noktalama bosluga cevrilir. Ucu de "amerikan futbolu" / "american football"
- * / "am football" bicimine iner ve catalog'daki alias listesinden eslesir.
+ * So: camelCase is split, Turkish letters are folded, accents are dropped and
+ * punctuation becomes whitespace. All three collapse to "amerikan futbolu" /
+ * "american football" / "am football" and match through the alias list in the
+ * catalog.
  */
 function foldName(value) {
   return String(value ?? "")
-    // "AmericanFootball" -> "American Football" (aksi halde tek kelime kalirdi)
+    // "AmericanFootball" -> "American Football" (otherwise it stays one word)
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    // "Formula1" -> "Formula 1": virusbet rakami bitisik yaziyor, digerleri
-    // ayirarak. Bu olmadan "Formula1" ile "Formula 1" eslesmiyordu.
+    // "Formula1" -> "Formula 1": virusbet writes the digit attached, the
+    // others keep it separate. Without this "Formula1" never matched "Formula 1".
     .replace(/([A-Za-z])(\d)/g, "$1 $2")
     .toLowerCase()
     .replace(/ı/g, "i")

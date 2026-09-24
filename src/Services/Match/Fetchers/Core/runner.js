@@ -1,12 +1,13 @@
 /**
- * Fetcher'lari saran ortak kabuk.
+ * The shared shell wrapping the fetchers.
  *
- * Uc fetcher'in da ana fonksiyonunun SONU birebir ayniydi: sirala, dosyaya
- * yaz, spor basina ozet bas, hic mac yoksa uyar. Burasi o kabuk.
+ * The END of all three fetchers' main function was identical: sort, write to
+ * file, print a per-sport summary, warn when there are no matches. This is
+ * that shell.
  *
- * Ayrica "kismi basarisizlik" politikasi burada tek yerde tanimli: bir spor
- * patlarsa digerleri yazilmaya devam eder, ama sonuc TAMAMEN bossa mevcut
- * dosyanin uzerine yazilmaz.
+ * The "partial failure" policy also lives here, in one place: if one sport
+ * blows up the others are still written, but when the result is COMPLETELY
+ * empty the existing file is left untouched.
  */
 
 import fs from "node:fs/promises";
@@ -43,11 +44,11 @@ async function runFetcher({
   try {
     await collect({ output, logger });
   } catch (error) {
-    // Fetch'in ortasinda patlasak bile o ana kadar toplananlari
-    // degerlendirebilmek icin hatayi burada tutup asagida karar veriyoruz.
+    // Even if we blow up mid-fetch we still want to use whatever was
+    // collected so far, so the error is held here and acted on below.
     failure = error;
 
-    logger.error(`${site} cekimi yarida kesildi: ${error.message}`);
+    logger.error(`${site} fetch was interrupted: ${error.message}`);
   }
 
   const data = output.toSorted();
@@ -57,18 +58,19 @@ async function runFetcher({
   for (const line of output.summaryLines()) logger.info(line);
 
   logger.info(
-    `toplam ${output.total} mac / ${elapsed} sn` +
-      (output.stats.duplicate ? `, ${output.stats.duplicate} tekrar` : "") +
-      (output.stats.skipped ? `, ${output.stats.skipped} atlanan` : "") +
-      (output.stats.filtered ? `, ${output.stats.filtered} filtrelenen` : "")
+    `total ${output.total} matches / ${elapsed} s` +
+      (output.stats.duplicate ? `, ${output.stats.duplicate} duplicate` : "") +
+      (output.stats.skipped ? `, ${output.stats.skipped} skipped` : "") +
+      (output.stats.filtered ? `, ${output.stats.filtered} filtered` : "")
   );
 
   if (output.total === 0) {
-    // Onemli: BOS sonucu dosyaya yazmak, calisan son veriyi de yok eder.
-    // Gecici bir kesintinin kalici veri kaybina donusmesini engelliyoruz.
+    // Important: writing an EMPTY result to the file destroys the last
+    // working data too. This keeps a temporary outage from turning into
+    // permanent data loss.
     logger.error(
-      `hic mac bulunamadi; ${outputFile} DEGISTIRILMEDI ` +
-        "(site numarasi degismis veya baglanti engellenmis olabilir)."
+      `no matches found; ${outputFile} was NOT MODIFIED ` +
+        "(the site number may have changed or the connection may be blocked)."
     );
 
     if (failure) throw failure;
@@ -83,7 +85,7 @@ async function runFetcher({
       "utf8"
     );
 
-    logger.info(`JSON yazildi: ${outputFile}`);
+    logger.info(`JSON written: ${outputFile}`);
   }
 
   return { data, output, written: write, elapsedMs: Date.now() - startedAt };

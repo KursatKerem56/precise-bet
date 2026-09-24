@@ -1,10 +1,10 @@
 /**
- * METIN NORMALIZASYONU
+ * TEXT NORMALISATION
  *
- * Ayni ad her karsilastirmada yeniden normalize edilmesin diye butun
- * donusumler cache'li. Gercek veride ~5000 mac / ~9000 farkli takim adi
- * var ama aday daraltma sonrasi ayni ad yuzlerce kez karsiya cikiyor;
- * cache bu tekrarlari tek hesaba indiriyor.
+ * Every conversion is cached so the same name is not normalised again on
+ * every comparison. Real data holds ~5000 matches / ~9000 distinct team
+ * names, but after candidate narrowing the same name comes up hundreds of
+ * times; the cache collapses those repeats into a single computation.
  */
 
 import { GENERIC_TOKENS, TEAM_QUALIFIERS } from "./config.js";
@@ -25,18 +25,18 @@ const TR_MAP = {
   Ü: "u",
 };
 
-/** Tekrarlanan donusumler icin basit hafiza. Girdi kumesi sinirli
- * (site basina birkac bin ad) oldugu icin sinirsiz buyume riski yok. */
+/** A simple memo for repeated conversions. The input set is bounded (a few
+ * thousand names per site), so there is no risk of unbounded growth. */
 const makeCache = () => new Map();
 
 const foldCache = makeCache();
 
 /**
- * Kucuk harfe cevirir, Turkce karakterleri katlar, diger aksanlari
- * sadelestirir, noktalamayi atar, bosluklari teke indirir.
+ * Lowercases, folds Turkish characters, simplifies the other accents, drops
+ * punctuation and collapses whitespace.
  *
- * Ayrica "&" -> " and " (Texas A&M Aggies <-> Texas AM Aggies) ve
- * kesme/tire varyasyonlari burada tekillestirilir.
+ * The "&" handling (Texas A&M Aggies <-> Texas AM Aggies) and the
+ * apostrophe/dash variants are unified here as well.
  */
 export function foldText(text) {
   if (!text) return "";
@@ -48,8 +48,8 @@ export function foldText(text) {
   let t = key.trim().toLowerCase();
   t = t.replace(/[çÇğĞıIİöÖşŞüÜ]/g, (ch) => TR_MAP[ch] ?? ch);
   t = t.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
-  // "A&M" -> "AM" (Texas A&M Aggies <-> Texas AM Aggies). Bosluklu "&"
-  // zaten cift bosluga donusup asagida teke iniyor.
+  // "A&M" -> "AM" (Texas A&M Aggies <-> Texas AM Aggies). A spaced "&"
+  // turns into a double space and is collapsed below anyway.
   t = t.replace(/&/g, "");
   t = t.replace(/[.\-'’`]/g, " ");
   t = t.replace(/[^a-z0-9\s]/g, " ");
@@ -59,15 +59,15 @@ export function foldText(text) {
   return t;
 }
 
-/** Bosluga gore ayirir; bos token birakmaz. */
+/** Splits on whitespace; leaves no empty token. */
 export const tokenize = (folded) => folded.split(" ").filter(Boolean);
 
 /**
- * TURKCE SEHIR/ULKE EXONIMLERI (token seviyesinde)
+ * TURKISH CITY/COUNTRY EXONYMS (at the token level)
  *
- * betist bir kismi Turkce yaziyor: "Bayern Münih", "Spartak Moskova",
- * "CSKA Sofya", "Sparta Prag". Bunlari tek tek takim alias'i yapmak yerine
- * TOKEN olarak cevirmek daha genel: tek kayit butun kulupleri kapsiyor.
+ * betist writes some of them in Turkish: "Bayern Münih", "Spartak Moskova",
+ * "CSKA Sofya", "Sparta Prag". Translating them as TOKENS is more general
+ * than adding one team alias each: a single entry covers every club.
  */
 const EXONYM_TOKENS = new Map(
   Object.entries({
@@ -91,30 +91,30 @@ const EXONYM_TOKENS = new Map(
     roma: "rome",
     torino: "turin",
     napoli: "naples",
-    // Sadece "Saint/Sankt" -> "st". "Santa"/"Sao" BILINCLI olarak disarida:
-    // bunlar ayri adlar ve katlanirsa farkli kulupler birbirine karisir.
+    // Only "Saint/Sankt" -> "st". "Santa"/"Sao" are DELIBERATELY left out:
+    // they are separate names and folding them would confuse different clubs.
     saint: "st",
     sankt: "st",
   })
 );
 
-/** Bir token'i bilinen exonim karsiligina cevirir. */
+/** Converts a token into its known exonym equivalent. */
 export const foldExonym = (token) => EXONYM_TOKENS.get(token) ?? token;
 
 /**
- * Sezon bilgisi ("2026", "2026/2027", "2026-27") foldText'ten ONCE
- * temizlenir, cunku "/" sonradan bosluga donusup "27" gibi artik birakir.
+ * Season information ("2026", "2026/2027", "2026-27") is stripped BEFORE
+ * foldText, because "/" later becomes whitespace and leaves debris like "27".
  */
 const SEASON_RE = /\b(19|20)\d{2}([/-](19|20)?\d{2})?\b/g;
 
 export const stripSeason = (name) => String(name ?? "").replace(SEASON_RE, " ");
 
 /**
- * Bir adi "cekirdek ad" ve "niteleyiciler" olarak ayirir.
+ * Splits a name into a "core name" and "qualifiers".
  *
- * Sondaki tek harf ("... B") sadece KARSI TARAFTA tek harfli token YOKSA
- * niteleyici sayilir. Aksi halde tenisteki "Recek D" / "D. Recek" bicimini
- * yanlislikla farkli takim sanardik.
+ * A trailing single letter ("... B") only counts as a qualifier when the
+ * OTHER SIDE has NO single letter token. Otherwise the tennis style "Recek
+ * D" / "D. Recek" would wrongly look like two different teams.
  */
 export function splitQualifiers(folded, otherFolded, ignore = null) {
   const tokens = tokenize(folded);
@@ -129,9 +129,9 @@ export function splitQualifiers(folded, otherFolded, ignore = null) {
   tokens.forEach((token, index) => {
     if (TEAM_QUALIFIERS.has(token)) {
       const canon = normalizeQualifier(token);
-      // Ligin kendisi zaten bu kategoriyi bildiriyorsa (ornegin kadinlar
-      // ligi) takim adindaki isaret gereksiz tekrardir; bir site yazip
-      // digeri yazmayinca farkli takim sanilmamali.
+      // If the league itself already reports this category (a women's
+      // league, say), the marker in the team name is redundant; one site
+      // writing it and another not must not look like different teams.
       if (!ignore?.has(canon)) quals.add(canon);
       return;
     }
@@ -144,9 +144,9 @@ export function splitQualifiers(folded, otherFolded, ignore = null) {
       token.length === 1 &&
       tokens.length > 1
     ) {
-      // "(W)" kadin takimlarinin standart isareti; "Wom"/"Women" ile ayni
-      // seyi soyluyor. Ayni anahtara indirgenmezse "India A (W)" ile
-      // "India A (Wom)" farkli takim sanilirdi.
+      // "(W)" is the standard marker for women's teams; it says the same
+      // thing as "Wom"/"Women". Without collapsing them onto one key,
+      // "India A (W)" and "India A (Wom)" would look like different teams.
       const canon = token === "w" ? "women" : token;
       if (!ignore?.has(canon)) quals.add(canon);
       return;
@@ -158,8 +158,8 @@ export function splitQualifiers(folded, otherFolded, ignore = null) {
   return { core: core.join(" ") || folded, quals };
 }
 
-/** Ayni niteleyicinin farkli yazimlarini tek anahtara indirger:
- * "women" / "kadin" / "femenino" hepsi ayni seyi soyluyor. */
+/** Reduces different spellings of the same qualifier onto one key:
+ * "women" / "kadin" / "femenino" all say the same thing. */
 const QUALIFIER_CANON = new Map(
   Object.entries({
     womens: "women",
@@ -188,13 +188,13 @@ const QUALIFIER_CANON = new Map(
 export const normalizeQualifier = (token) =>
   QUALIFIER_CANON.get(token) ?? token;
 
-/** Iki niteleyici kumesi ayni mi? */
+/** Are the two qualifier sets the same? */
 export function sameQualifiers(a, b) {
   if (a.size !== b.size) return false;
   for (const q of a) if (!b.has(q)) return false;
   return true;
 }
 
-/** Jenerik kulup eklerini ("fc", "sc", "hc" ...) atar. */
+/** Drops generic club affixes ("fc", "sc", "hc" ...). */
 export const stripGeneric = (tokens) =>
   tokens.filter((t) => !GENERIC_TOKENS.has(t));

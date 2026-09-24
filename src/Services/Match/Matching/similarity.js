@@ -1,14 +1,14 @@
 /**
- * BULANIK (FUZZY) KARSILASTIRMA
+ * FUZZY COMPARISON
  *
- * Pipeline'in EN PAHALI ve EN SON adimi. Buraya gelen aday sayisi
- * candidates.js tarafindan zaten ~%4'e indirilmis oluyor.
+ * The MOST EXPENSIVE and LAST step of the pipeline. By the time candidates
+ * reach here, candidates.js has already cut their number to ~4%.
  */
 
 import { tokenize } from "./text.js";
 import { WEAK_TOKENS } from "./config.js";
 
-/** Levenshtein (duzenleme) mesafesi - saf JS, tek satir buffer. */
+/** Levenshtein (edit) distance - plain JS, single row buffer. */
 function levenshtein(a, b) {
   const m = a.length;
   const n = b.length;
@@ -35,8 +35,9 @@ function charRatio(a, b) {
   const maxLen = Math.max(a.length, b.length);
   if (maxLen === 0) return 100;
 
-  // Uzunluk farki tek basina esigi imkansiz kiliyorsa Levenshtein'i hic
-  // calistirma: |len(a)-len(b)| zaten mesafenin alt siniri.
+  // If the length difference alone makes the threshold impossible, do not
+  // run Levenshtein at all: |len(a)-len(b)| is already a lower bound on the
+  // distance.
   const lower = Math.abs(a.length - b.length);
   if ((1 - lower / maxLen) * 100 <= 0) return 0;
 
@@ -49,11 +50,12 @@ const isPrefixAbbrev = (short, long) =>
   short.length >= 1 && short.length < long.length && long.startsWith(short);
 
 /**
- * Kelime sirasina duyarsiz ortusme orani.
+ * Word-order insensitive overlap ratio.
  * "Ferro, Fiona" ~ "Fiona Ferro", "Recek D / Siniakov D" ~ "D. Recek / D. Siniakov"
  *
- * Zayif kelimeler ("City", "United", "Real") YARIM puan alir: "Manchester
- * City" ile "Leicester City" sirf "City" ortak diye yakin cikmasin.
+ * Weak words ("City", "United", "Real") score HALF a point, so that
+ * "Manchester City" and "Leicester City" do not look close just because they
+ * share "City".
  */
 function tokenOverlapRatio(a, b) {
   const ta = tokenize(a);
@@ -64,8 +66,9 @@ function tokenOverlapRatio(a, b) {
   let score = 0;
 
   for (const x of ta) {
-    // Once birebir eslesme aranir; kisaltmaya gore onceliklidir. Boylece
-    // ayni harfle baslayan iki kelime birbirine yanlis atanmaz.
+    // An exact match is looked for first; it takes priority over an
+    // abbreviation. That keeps two words starting with the same letter from
+    // being paired up wrongly.
     let exact = -1;
     for (let j = 0; j < tb.length; j++) {
       if (!used[j] && x === tb[j]) {
@@ -89,13 +92,13 @@ function tokenOverlapRatio(a, b) {
     }
   }
 
-  // Paydada zayif kelimeler YARIM sayilir; eslesen token'lar ise TAM.
-  // Boylece:
-  //   - "E. Braunschweig" ~ "Eintracht Braunschweig": ikisi de eslesti,
-  //     payda 2 -> %100 (zayif token esleseni cezalandirmaz)
-  //   - "Manchester City" ~ "Leicester City": yalnizca "city" esleserek
-  //     1 puan, payda max(1.5, 1.5) -> %66 (zayif kelime tek basina
-  //     yakinlik uretmez)
+  // In the denominator weak words count as HALF, while matched tokens count
+  // in FULL. So:
+  //   - "E. Braunschweig" ~ "Eintracht Braunschweig": both matched, the
+  //     denominator is 2 -> 100% (a weak token does not punish a match)
+  //   - "Manchester City" ~ "Leicester City": only "city" matches for 1
+  //     point, denominator max(1.5, 1.5) -> 66% (a weak word alone does not
+  //     produce closeness)
   const weigh = (tokens) => {
     let total = 0;
     for (const t of tokens) total += WEAK_TOKENS.has(t) ? 0.5 : 1;
@@ -107,19 +110,19 @@ function tokenOverlapRatio(a, b) {
 }
 
 /**
- * AKRONIM ESLESMESI  ("QPR" ~ "Queens Park Rangers")
+ * ACRONYM MATCHING  ("QPR" ~ "Queens Park Rangers")
  *
- * DIKKAT - bu fonksiyon eskiden ciddi bir yanlis eslesme kaynagiydi:
- * herhangi bir 2 harfli token, karsi tarafin bas harfleriyle ayni olunca
- * %100 veriyordu. Gercek veride sunlar %100 eslesmisti:
+ * CAREFUL - this function used to be a serious source of wrong matches: any
+ * 2 letter token scored 100% as soon as it equalled the other side's
+ * initials. In real data these matched at 100%:
  *
- *   "HC Kosice"        <-> "HK Poprad"        ("hc" -> h,k bas harfleri)
- *   "CE Gramadense RS" <-> "Criciuma EC"      ("ce" -> c,e bas harfleri)
+ *   "HC Kosice"        <-> "HK Poprad"        ("hc" -> initials h,k)
+ *   "CE Gramadense RS" <-> "Criciuma EC"      ("ce" -> initials c,e)
  *
- * Ikisi de tamamen farkli kuluplerdi. Bu yuzden kural siklastirildi:
- * KISA TARAF TEK TOKEN OLMALI ve UZUN TARAFIN TUM token'larinin bas
- * harflerini kapsamali. Boylece "QPR"/"IPK"/"KTP"/"TOGB" gibi gercek
- * akronimler korunur, yukaridaki iki felaket elenir.
+ * Both were completely different clubs. The rule was therefore tightened:
+ * THE SHORT SIDE MUST BE A SINGLE TOKEN and must cover the initials of ALL
+ * the long side's tokens. That preserves genuine acronyms such as
+ * "QPR"/"IPK"/"KTP"/"TOGB" while eliminating the two disasters above.
  */
 function acronymRatio(a, b) {
   const ta = tokenize(a);
@@ -138,8 +141,8 @@ function acronymRatio(a, b) {
   return Math.max(dir(ta, tb), dir(tb, ta));
 }
 
-/** Tekrarlanan skor hesaplarini sakla. Ayni ad cifti aday havuzunda
- * defalarca karsiya cikiyor. */
+/** Memoise repeated score computations. The same pair of names comes up
+ * again and again in the candidate pool. */
 const ratioCache = new Map();
 const RATIO_CACHE_LIMIT = 200_000;
 
@@ -158,13 +161,13 @@ export function similarityRatio(a, b) {
     acronymRatio(a, b)
   );
 
-  // Sinirsiz buyumeyi engelle; pratikte bu sinira ulasilmiyor.
+  // Prevent unbounded growth; in practice this limit is never reached.
   if (ratioCache.size < RATIO_CACHE_LIMIT) ratioCache.set(key, value);
 
   return value;
 }
 
-/** Test/teshis icin cache'i temizler. */
+/** Clears the cache, for tests/diagnostics. */
 export const clearSimilarityCache = () => ratioCache.clear();
 
 export { levenshtein, charRatio, tokenOverlapRatio, acronymRatio, tokenSort };

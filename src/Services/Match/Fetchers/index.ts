@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * Fetcher'larin dis yuzu.
+ * The public face of the fetchers.
  *
- * Mevcut `*MatchFetcherMain(siteUrl)` imzalari AYNEN korunuyor -- cagiran
- * kodun (Match.service.ts) degismesi gerekmiyor.
+ * The existing `*MatchFetcherMain(siteUrl)` signatures are kept EXACTLY as
+ * they were -- the calling code (Match.service.ts) does not have to change.
  *
- * Ustune, siteye gore dallanmayi tek yerde toplayan generic bir giris
- * ekleniyor. Eskiden bu dallanma Match.service.ts icinde elle yazilmis bir
- * switch'ti; yeni bir site eklemek orayi da degistirmeyi gerektiriyordu.
+ * On top of that there is a generic entry point that gathers the per-site
+ * branching in one place. That branching used to be a hand written switch
+ * inside Match.service.ts, so adding a new site meant editing there too.
  */
 
 import { virusBetMatchFetcherMain } from "./virusbet-match-fetcher.js";
@@ -18,23 +18,23 @@ import { mavibetMatchFetcherMain } from "./mavibet-match-fetcher.js";
 import { EPanelSite } from "@Panel/Constants";
 
 interface IFetchOptions {
-  /** Yalnizca bu sporlar (key veya id). Verilmezse MATCH_SPORTS, o da yoksa hepsi. */
+  /** Only these sports (key or id). Falls back to MATCH_SPORTS, then to all. */
   sports?: string;
 
-  /** Tarih penceresi; cekim sonrasi uygulanir. */
+  /** Date window; applied after fetching. */
   dateFilter?: { dates?: string[]; from?: string; to?: string };
 
-  /** false -> JSON dosyasina yazma, yalnizca veriyi dondur. */
+  /** false -> do not write the JSON file, just return the data. */
   write?: boolean;
 
-  /** Varsayilan cikti dosyasini gecersiz kil. */
+  /** Override the default output file. */
   outputFile?: string;
 }
 
 type Fetcher = (siteUrl: string, options?: IFetchOptions) => Promise<any>;
 
 /**
- * Site -> fetcher eslemesi. Yeni bir site eklemek = buraya bir satir.
+ * Site -> fetcher mapping. Adding a new site = one line here.
  */
 const FETCHERS: Record<EPanelSite, Fetcher> = {
   [EPanelSite.VIRUS_BET]: virusBetMatchFetcherMain,
@@ -46,10 +46,10 @@ const isSupportedSite = (site: string): site is EPanelSite =>
   Object.prototype.hasOwnProperty.call(FETCHERS, site);
 
 /**
- * Bir sitenin maclarini ceker.
+ * Fetches the matches of one site.
  *
- * @throws Desteklenmeyen site icin -- sessizce hicbir sey yapmaktansa
- *         acik hata vermek, yanlis yapilandirmayi gorunur kilar.
+ * @throws For an unsupported site -- failing loudly rather than silently
+ *         doing nothing keeps misconfiguration visible.
  */
 const fetchSiteMatches = async (
   site: string,
@@ -57,7 +57,7 @@ const fetchSiteMatches = async (
   options: IFetchOptions = {}
 ) => {
   if (!isSupportedSite(site)) {
-    throw new Error(`Desteklenmeyen site: ${site}`);
+    throw new Error(`Unsupported site: ${site}`);
   }
 
   return FETCHERS[site](siteUrl, options);

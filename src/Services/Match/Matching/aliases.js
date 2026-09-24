@@ -1,16 +1,16 @@
 /**
- * ALIAS VERITABANI YUKLEYICI
+ * ALIAS DATABASE LOADER
  *
- * team_aliases.json ve league_aliases.json MODUL YUKLENIRKEN BIR KEZ
- * okunur ve Map indeksine cevrilir. Her karsilastirmada diskten okuma ya da
- * dizi taramasi YOK:
+ * team_aliases.json and league_aliases.json are read ONCE WHEN THE MODULE
+ * LOADS and turned into Map indexes. There is NO disk read or array scan per
+ * comparison:
  *
  *   normalizedAlias                      -> canonicalTeamId     (O(1))
  *   sport|country|normalizedLeagueAlias  -> canonicalLeagueId   (O(1))
  *
- * Alias eslesmesi bulanik eslesmeden daha guvenilir kabul edildigi icin bu
- * dosyalar OTOMATIK GUNCELLENMEZ; bulanik eslestiricinin onerileri
- * unresolved.js uzerinden ayri bir "suggestions" ciktisina dusurulur.
+ * Because an alias match is treated as more reliable than a fuzzy one, these
+ * files are NEVER UPDATED AUTOMATICALLY; what the fuzzy matcher proposes
+ * goes into a separate "suggestions" output via unresolved.js.
  */
 
 import { readFileSync } from "node:fs";
@@ -21,21 +21,21 @@ import { foldText } from "./text.js";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
-/** Bozuk/eksik alias dosyasi butun karsilastirmayi dusurmemeli:
- * alias'siz calismak (sadece bulanik eslestirme) hic calismamaktan iyidir. */
+/** A broken/missing alias file must not take the whole comparison down:
+ * running without aliases (fuzzy matching only) beats not running at all. */
 function loadJson(fileName, fallback) {
   try {
     return JSON.parse(readFileSync(join(HERE, fileName), "utf8"));
   } catch (error) {
     console.warn(
-      `[MATCHING] ${fileName} okunamadi, alias'siz devam ediliyor: ${error.message}`
+      `[MATCHING] could not read ${fileName}, continuing without aliases: ${error.message}`
     );
     return fallback;
   }
 }
 
 /* =========================================================================
- * TAKIM ALIAS INDEKSI
+ * TEAM ALIAS INDEX
  * ====================================================================== */
 
 const teamData = loadJson("team_aliases.json", { teams: {} });
@@ -47,7 +47,7 @@ const teamByAlias = new Map();
 const teamById = new Map();
 
 for (const [id, entry] of Object.entries(teamData.teams ?? {})) {
-  // "_comment" gibi aciklama anahtarlari kayit degildir.
+  // Documentation keys such as "_comment" are not records.
   if (id.startsWith("_") || !entry || typeof entry !== "object") continue;
 
   const canonical = entry.canonical ?? id;
@@ -56,9 +56,10 @@ for (const [id, entry] of Object.entries(teamData.teams ?? {})) {
 
   const names = new Set([canonical, ...(entry.aliases ?? [])]);
 
-  // Source'a ozel yazimlar (bkz. league_aliases.json'daki ayni yapi).
-  // Uc sitenin gercek verisinde su an source'a ozel kurala ihtiyac YOK --
-  // ayni varyant birden fazla sitede geciyor -- ama semada destekleniyor.
+  // Source specific spellings (see the same structure in
+  // league_aliases.json). The real data of the three sites currently needs
+  // NO source specific rule -- the same variant shows up on more than one
+  // site -- but the schema supports it.
   for (const list of Object.values(entry.sources ?? {})) {
     for (const name of list ?? []) names.add(name);
   }
@@ -70,7 +71,7 @@ for (const [id, entry] of Object.entries(teamData.teams ?? {})) {
     const clash = teamByAlias.get(key);
     if (clash && clash.id !== id) {
       console.warn(
-        `[MATCHING] takim alias catismasi: "${name}" hem ${clash.id} hem ${id}`
+        `[MATCHING] team alias clash: "${name}" is both ${clash.id} and ${id}`
       );
       continue;
     }
@@ -79,14 +80,14 @@ for (const [id, entry] of Object.entries(teamData.teams ?? {})) {
   }
 }
 
-/** Normalize edilmis bir adi kanonik takim kaydina cevirir; yoksa null. */
+/** Converts a normalised name into a canonical team record; null if absent. */
 export const resolveTeamAlias = (foldedName) =>
   teamByAlias.get(foldedName) ?? null;
 
 export const getTeamById = (id) => teamById.get(id) ?? null;
 
 /* =========================================================================
- * LIG ALIAS INDEKSI
+ * LEAGUE ALIAS INDEX
  * ====================================================================== */
 
 const leagueData = loadJson("league_aliases.json", {
@@ -95,7 +96,7 @@ const leagueData = loadJson("league_aliases.json", {
   leagues: {},
 });
 
-/** foldText(ulke yazimi) -> kanonik ulke adi */
+/** foldText(country spelling) -> canonical country name */
 const countryByAlias = new Map();
 
 for (const [canonical, aliases] of Object.entries(leagueData.countries ?? {})) {
@@ -105,18 +106,18 @@ for (const [canonical, aliases] of Object.entries(leagueData.countries ?? {})) {
   }
 }
 
-/** Ulke DEGIL, bolge kovasi olan anahtarlar. */
+/** Keys that are a region bucket, NOT a country. */
 const regionKeys = new Set(
   (leagueData.regions ?? []).map((r) => foldText(r)).filter(Boolean)
 );
 
 /**
- * Ulke adini tekillestirir.
+ * Canonicalises a country name.
  *
- * `known` = bu deger alias tablosunda TANIDIGIMIZ bir ulke mi? Ulke farki
- * ancak IKI TARAF da taninan bir ulkeyse KATI kisit olarak kullanilir.
- * Aksi halde betist'in ulke yerine koydugu "Rugby Union" / "ATP" gibi
- * degerler gercek eslesmeleri yanlislikla elerdi.
+ * `known` = is this value a country we RECOGNISE in the alias table? A
+ * country mismatch is only used as a HARD constraint when BOTH sides are
+ * recognised. Otherwise values betist puts in place of the country, such as
+ * "Rugby Union" / "ATP", would wrongly eliminate genuine matches.
  *
  * @returns {{ country: string|null, isRegion: boolean, known: boolean }}
  */
@@ -136,22 +137,23 @@ export function resolveCountry(raw) {
   };
 }
 
-/** "sport|country|leagueAlias" -> lig kaydi */
+/** "sport|country|leagueAlias" -> league record */
 const leagueByKey = new Map();
 
-/** id -> lig kaydi */
+/** id -> league record */
 const leagueById = new Map();
 
-/** Ulkesiz (yalnizca sport + ad) gerileme indeksi: ad -> lig kayitlari */
+/** Country-free fallback index (sport + name only): name -> league records */
 const leagueByNameOnly = new Map();
 
 const leagueKey = (sportKey, country, foldedName) =>
   `${sportKey ?? "*"}|${foldText(country ?? "") || "*"}|${foldedName}`;
 
 /**
- * Lig kayitlarini indeksler. `sport` alani katalog alias'i olarak yazilir
- * ("football"), burada katalog anahtarina ("FUTBOL") cevrilir -- boylece
- * JSON okunakli kalirken kod tek bir spor temsili kullanir.
+ * Indexes the league records. The `sport` field is written as a catalog
+ * alias ("football") and converted here into the catalog key ("FUTBOL") --
+ * so the JSON stays readable while the code uses a single representation of
+ * a sport.
  */
 export function buildLeagueIndex(resolveSportKey) {
   leagueByKey.clear();
@@ -181,12 +183,12 @@ export function buildLeagueIndex(resolveSportKey) {
       const folded = foldText(name);
       if (!folded) continue;
 
-      // Ulkeli anahtar: ayni adli farkli ulke ligleri ("Premier League" -
-      // England / Russia / Wales) birbirine KARISMAZ.
+      // The key with country: leagues of different countries sharing a name
+      // ("Premier League" - England / Russia / Wales) are NEVER conflated.
       const withCountry = leagueKey(sportKey, record.country, folded);
       if (!leagueByKey.has(withCountry)) leagueByKey.set(withCountry, record);
 
-      // Ulke bilgisi olmayan kayitlar icin sport+ad anahtari.
+      // A sport+name key for records that carry no country.
       if (!record.country) {
         const withoutCountry = leagueKey(sportKey, null, folded);
         if (!leagueByKey.has(withoutCountry))
@@ -203,11 +205,11 @@ export function buildLeagueIndex(resolveSportKey) {
 }
 
 /**
- * Lig adini kanonik kayda cozer.
+ * Resolves a league name to its canonical record.
  *
- * @param {string} sportKey    katalog spor anahtari (FUTBOL ...)
- * @param {string|null} country kanonik ulke adi (yoksa null)
- * @param {string} foldedName  normalize edilmis lig adi
+ * @param {string} sportKey    the catalog sport key (FUTBOL ...)
+ * @param {string|null} country the canonical country name (null if absent)
+ * @param {string} foldedName  the normalised league name
  * @returns {{ record: object, confident: boolean }|null}
  */
 export function resolveLeagueAlias(sportKey, country, foldedName) {
@@ -216,20 +218,23 @@ export function resolveLeagueAlias(sportKey, country, foldedName) {
   const exact = leagueByKey.get(leagueKey(sportKey, country, foldedName));
   if (exact) return { record: exact, confident: true };
 
-  // Ulkesiz gerileme: TEK aday varsa kabul, ama guven DUSUK isaretlenir.
-  // Birden fazla aday varsa ("Premier League" bircok ulkede) karar VERMEYIZ.
+  // Country-free fallback: accepted when there is exactly ONE candidate,
+  // but marked as LOW confidence. With more than one candidate ("Premier
+  // League" exists in many countries) we do NOT decide.
   const candidates = leagueByNameOnly.get(`${sportKey ?? "*"}|${foldedName}`);
   if (!candidates || candidates.length !== 1) return null;
 
   const [candidate] = candidates;
 
-  // KRITIK: sorgunun ULKESI varsa ve aday BASKA bir ulkenin ligiyse
-  // gerileme YAPILMAZ. Aksi halde "Belarus - Premier League" adi tek
-  // eslesen kayda, yani INGILTERE Premier League'ine cozulurdu ve iki
-  // ayri ulkenin ligi ayni kanonik id'yi paylasirdi.
+  // CRITICAL: when the query HAS a country and the candidate belongs to a
+  // DIFFERENT one, the fallback is NOT applied. Otherwise the name "Belarus
+  // - Premier League" would resolve to the single matching record, that is
+  // to ENGLAND's Premier League, and two different countries' leagues would
+  // share one canonical id.
   //
-  // Ulkesi olmayan adaylar (UEFA Champions League gibi kitasel
-  // turnuvalar) bu kisitin disinda; onlarin zaten ulkesi yok.
+  // Candidates without a country (continental tournaments such as the UEFA
+  // Champions League) are outside this constraint; they have no country to
+  // begin with.
   if (country && candidate.country && candidate.country !== country) {
     return null;
   }
@@ -239,7 +244,7 @@ export function resolveLeagueAlias(sportKey, country, foldedName) {
 
 export const getLeagueById = (id) => leagueById.get(id) ?? null;
 
-/** Oneri uretmek icin kanonik adlarin listesi (unresolved.js kullanir). */
+/** The canonical name list used to build suggestions (used by unresolved.js). */
 export const listLeagueRecords = () => [...leagueById.values()];
 export const listTeamRecords = () => [...teamById.values()];
 

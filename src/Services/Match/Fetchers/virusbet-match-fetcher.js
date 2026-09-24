@@ -1,33 +1,35 @@
 /**
- * VIRUSBET MAC CEKICI
+ * VIRUSBET MATCH FETCHER
  *
- * Cikti:  virus_bet-matches.json  (betist ile birebir ayni yapi)
+ * Output:  virus_bet-matches.json  (the exact same shape as betist)
  *
  * ---------------------------------------------------------------------------
- * PROTOKOL
+ * PROTOCOL
  *
- * Virusbet, BetConstruct "swarm" altyapisini kullaniyor. Veri duz HTTP ile
- * degil, tek bir WebSocket uzerinden JSON komutlariyla geliyor:
+ * Virusbet runs on the BetConstruct "swarm" backend. The data does not come
+ * over plain HTTP but as JSON commands over a single WebSocket:
  *
  *   wss://eu-swarm-newm.virusbettr{N}.com/   (Origin: https://www.virusbettr{N}.com)
  *
- *   1. {"command":"request_session","params":{...}}   (giris GEREKMIYOR)
+ *   1. {"command":"request_session","params":{...}}   (NO login required)
  *   2. {"command":"get","params":{"source":"betting","what":{...},"where":{...}}}
  *      -> data.data.sport[id].region[id].competition[id].game[id]
  *
  * ---------------------------------------------------------------------------
- * ESKI SURUME GORE NE DEGISTI
+ * WHAT CHANGED VERSUS THE OLD VERSION
  *
- *   - Spor listesi SABIT DEGIL. Eskiden dort sport_id koda gomuluydu; swarm
- *     zaten tum spor agacini veriyor. Artik tek sorguyla 50+ spor kesfediliyor
- *     ve katalogla eslestiriliyor.
- *   - Lig listesi icin SPOR BASINA ayri sorgu atiliyordu (N istek). Artik
- *     TEK sorgu tum sporlarin lig agacini + mac sayilarini getiriyor (~56 KB).
- *   - Lig gruplari sirayla degil, tek baglanti uzerinde SINIRLI es
- *     zamanlilikla cekiliyor (swarm es zamanli rid destekliyor).
- *   - Baglanti koparsa otomatik yeniden baglanip devam ediliyor; eskiden
- *     bekleyen tum istekler reddedilir ve site tamamen bos donerdi.
- *   - RFC 6455 istemcisi Core/ws.js'e tasindi (mavibet ile ortak).
+ *   - The sport list is NOT HARDCODED. Four sport_ids used to be baked into
+ *     the code; swarm already serves the whole sport tree. Now a single query
+ *     discovers 50+ sports and matches them against the catalog.
+ *   - The league list took a separate query PER SPORT (N requests). Now ONE
+ *     query brings the league tree of every sport plus the match counts
+ *     (~56 KB).
+ *   - League groups are fetched with BOUNDED concurrency over one connection
+ *     instead of serially (swarm supports concurrent rids).
+ *   - If the connection drops it reconnects automatically and carries on;
+ *     previously every pending request was rejected and the site returned
+ *     completely empty.
+ *   - The RFC 6455 client moved to Core/ws.js (shared with mavibet).
  */
 
 import crypto from "node:crypto";
@@ -60,7 +62,7 @@ const CALL_TIMEOUT_MS = Number(process.env.VIRUSBET_CALL_TIMEOUT_MS || 30000);
 
 const RETRY_ATTEMPTS = Number(process.env.VIRUSBET_RETRY_ATTEMPTS || 3);
 
-// EC2'de IPv6 rotasi/DNS tercihi WebSocket baglantisini bozabiliyor.
+// On EC2 the IPv6 route/DNS preference can break the WebSocket connection.
 const IP_FAMILY = Number(process.env.VIRUSBET_IP_FAMILY || 4);
 
 const LANGUAGE = "en";
@@ -68,13 +70,13 @@ const LANGUAGE = "en";
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36";
 
-/** Mac oncesi (prematch) gorunen oyunlar. */
+/** Games visible before the match starts (prematch). */
 const PREMATCH_GAME_FILTER = {
   "@or": [{ visible_in_prematch: 1 }, { type: { "@in": [0, 2] } }],
 };
 
 /* =========================================================================
- * SWARM ISTEMCISI
+ * SWARM CLIENT
  * ====================================================================== */
 
 class SwarmClient {
@@ -88,7 +90,7 @@ class SwarmClient {
     this.sessionId = null;
     this.closedByUs = false;
 
-    /** Ayni anda yalnizca bir yeniden baglanma denemesi olsun. */
+    /** Only one reconnect attempt may be in flight at a time. */
     this.reconnecting = null;
 
     this.stats = { calls: 0, retries: 0, reconnects: 0 };
@@ -103,8 +105,8 @@ class SwarmClient {
       origin: this.origin,
       userAgent: USER_AGENT,
       family: IP_FAMILY,
-      // permessage-deflate KASITLI olarak teklif edilmiyor: swarm sikistirmadan
-      // da calisiyor ve boylece cozme katmanina hic girmiyoruz.
+      // permessage-deflate is DELIBERATELY not offered: swarm works fine
+      // uncompressed, which keeps us out of the decoding layer entirely.
       permessageDeflate: false,
       handshakeTimeoutMs: CALL_TIMEOUT_MS,
       logger: this.logger,
@@ -116,13 +118,13 @@ class SwarmClient {
       try {
         message = JSON.parse(text);
       } catch {
-        // Bozuk JSON tum akisi durdurmamali.
+        // Malformed JSON must not stop the whole stream.
         return;
       }
 
       const rid = message?.rid;
 
-      // rid'siz mesajlar abonelik push'lari; kullanmiyoruz.
+      // Messages without a rid are subscription pushes; we do not use them.
       if (!rid) return;
 
       const pending = this.pending.get(rid);
@@ -134,7 +136,7 @@ class SwarmClient {
       if (message.code !== 0) {
         pending.reject(
           new Error(
-            `swarm hata code=${message.code} msg=${JSON.stringify(message.msg ?? message.data ?? "")}`
+            `swarm error code=${message.code} msg=${JSON.stringify(message.msg ?? message.data ?? "")}`
           )
         );
 
@@ -145,10 +147,10 @@ class SwarmClient {
     });
 
     this.ws.onClose(() => {
-      // Bekleyen istekleri "gecici" isaretleyerek reddet ki retry katmani
-      // bunlari yeniden denemeye deger gorsun.
+      // Reject the pending requests marked as "transient" so the retry
+      // layer considers them worth another attempt.
       for (const [, pending] of this.pending) {
-        const error = new Error("Baglanti kapandi.");
+        const error = new Error("Connection closed.");
         error.retryable = true;
         pending.reject(error);
       }
@@ -159,25 +161,25 @@ class SwarmClient {
     await this.requestSession();
   }
 
-  /** Kopmus baglantiyi tek seferlik yeniden kurar. */
+  /** Re-establishes a dropped connection, once. */
   async reconnect() {
-    if (this.closedByUs) throw new Error("Istemci kapatildi.");
+    if (this.closedByUs) throw new Error("The client was closed.");
 
     if (!this.reconnecting) {
       this.reconnecting = (async () => {
         this.stats.reconnects++;
 
-        this.logger.warn("baglanti koptu, yeniden baglaniliyor...");
+        this.logger.warn("connection dropped, reconnecting...");
 
         try {
           this.ws?.close();
         } catch {
-          /* zaten kapali */
+          /* already closed */
         }
 
         await this.connect();
 
-        this.logger.info("yeniden baglanildi.");
+        this.logger.info("reconnected.");
       })().finally(() => {
         this.reconnecting = null;
       });
@@ -193,7 +195,7 @@ class SwarmClient {
       const timer = setTimeout(() => {
         this.pending.delete(rid);
 
-        const error = new Error(`"${command}" istegi zaman asimina ugradi.`);
+        const error = new Error(`the "${command}" request timed out.`);
         error.retryable = true;
         reject(error);
       }, CALL_TIMEOUT_MS);
@@ -221,7 +223,7 @@ class SwarmClient {
     });
   }
 
-  /** Retry + gerekirse yeniden baglanma ile komut gonderir. */
+  /** Sends a command with retry and, if needed, a reconnect. */
   async send(command, params) {
     this.stats.calls++;
 
@@ -241,7 +243,7 @@ class SwarmClient {
           this.stats.retries++;
 
           this.logger.warn(
-            `${command} basarisiz (${attempt}/${attempts}): ${error.message}`
+            `${command} failed (${attempt}/${attempts}): ${error.message}`
           );
         },
       }
@@ -261,8 +263,8 @@ class SwarmClient {
   }
 
   /**
-   * "get" sorgusu. Yanit abonelik olup olmamasina gore iki sekilde
-   * gelebiliyor: { subid, data: {...} } ya da dogrudan agac.
+   * A "get" query. Depending on whether it is a subscription, the response
+   * arrives in one of two shapes: { subid, data: {...} } or the tree itself.
    */
   async get(what, where) {
     const params = { source: "betting", what, subscribe: false };
@@ -281,15 +283,15 @@ class SwarmClient {
 }
 
 /* =========================================================================
- * VERI CEKME
+ * DATA FETCHING
  * ====================================================================== */
 
 /**
- * TEK sorguda tum sporlarin lig agacini ve mac sayilarini getirir.
+ * Fetches the league tree and match counts of every sport in ONE query.
  *
- * Eskiden bu is spor basina ayri bir sorguydu. Tum agac ~56 KB; dort ayri
- * sorgu atmak yerine bir kere istemek hem daha az istek hem daha az
- * toplam bayt, ve ayrica spor kesfini bedavaya getiriyor.
+ * This used to be a separate query per sport. The whole tree is ~56 KB;
+ * asking for it once instead of issuing four separate queries means fewer
+ * requests and fewer total bytes, and it makes sport discovery free.
  */
 async function fetchSportTree(client) {
   const tree = await client.get(
@@ -313,7 +315,7 @@ async function fetchSportTree(client) {
       for (const competition of Object.values(region?.competition ?? {})) {
         if (competition?.id == null) continue;
 
-        // Maci olmayan ligi sorgulamaya gerek yok.
+        // No need to query a league that has no matches.
         if (Number(competition.game ?? 0) <= 0) continue;
 
         competitions.push(competition.id);
@@ -331,7 +333,7 @@ async function fetchSportTree(client) {
   return sports;
 }
 
-/** Verilen lig id'leri icin maclari ceker. */
+/** Fetches the matches for the given league ids. */
 async function fetchGamesForCompetitions(client, sportId, competitionIds) {
   const tree = await client.get(
     {
@@ -376,7 +378,7 @@ async function fetchGamesForCompetitions(client, sportId, competitionIds) {
 }
 
 /* =========================================================================
- * ANA AKIS
+ * MAIN FLOW
  * ====================================================================== */
 
 /**
@@ -389,10 +391,10 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
   const found = String(siteUrl).match(/virusbettr(\d+)\.com/);
 
   if (!found) {
-    // Eski davranis: taninmayan URL sessizce atlanirdi. Artik sebebi
-    // yaziliyor, ama yine de digerlerini durdurmuyoruz.
+    // Old behaviour: an unrecognised URL was skipped silently. The reason
+    // is now logged, but the others still are not stopped.
     logger.error(
-      `site URL'si taninmadi (virusbettr{N}.com bekleniyordu): ${siteUrl}`
+      `site URL not recognised (expected virusbettr{N}.com): ${siteUrl}`
     );
 
     return null;
@@ -425,7 +427,7 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
 
         await client.connect();
 
-        logger.info(`oturum acildi (sid=${client.sessionId}).`);
+        logger.info(`session opened (sid=${client.sessionId}).`);
 
         const discovered = await fetchSportTree(client);
 
@@ -434,8 +436,9 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
         const unmapped = [];
 
         for (const entry of discovered) {
-          // Once alias ("AmericanFootball") sonra ad ("American Football")
-          // deneniyor; ikisi de katalogdaki alias listesine normalize olur.
+          // The alias ("AmericanFootball") is tried first, then the name
+          // ("American Football"); both normalise onto the catalog's alias
+          // list.
           const sport = resolveSport(entry.alias, entry.name);
 
           if (!sport) {
@@ -451,11 +454,11 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
         }
 
         if (unmapped.length) {
-          logger.debug(`katalogda olmayan spor atlandi: ${unmapped.join(", ")}`);
+          logger.debug(`skipped sports missing from the catalog: ${unmapped.join(", ")}`);
         }
 
-        // Tum sporlarin lig gruplari tek is kuyrugunda: kucuk sporlar
-        // worker'lari bos birakmasin.
+        // The league groups of all sports share one work queue, so small
+        // sports do not leave the workers idle.
         const tasks = [];
 
         for (const target of targets) {
@@ -465,8 +468,8 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
         }
 
         logger.info(
-          `${discovered.length} spor kesfedildi, ${targets.length} hedef, ` +
-            `${tasks.length} lig grubu (es zamanli: ${CONCURRENCY})`
+          `discovered ${discovered.length} sports, ${targets.length} targeted, ` +
+            `${tasks.length} league groups (concurrency: ${CONCURRENCY})`
         );
 
         const results = await mapWithConcurrency(
@@ -492,7 +495,7 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
           if (result.status === "rejected") {
             failed++;
 
-            logger.warn(`lig grubu alinamadi: ${result.reason.message}`);
+            logger.warn(`could not fetch league group: ${result.reason.message}`);
 
             continue;
           }
@@ -502,7 +505,7 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
           for (const row of rows) {
             const game = row.game;
 
-            // "OUTRIGHT" kayitlari (sampiyon kim olur vb.) mac degildir.
+            // "OUTRIGHT" records (who wins the title and so on) are not matches.
             if (game?.show_type === "OUTRIGHT") continue;
 
             const { date, time } = formatEpochSeconds(
@@ -524,12 +527,12 @@ async function virusBetMatchFetcherMain(siteUrl, options = {}) {
         }
 
         if (failed) {
-          logger.warn(`${tasks.length} gruptan ${failed} tanesi alinamadi.`);
+          logger.warn(`${failed} of ${tasks.length} groups could not be fetched.`);
         }
 
         logger.info(
-          `${client.stats.calls} sorgu, ${client.stats.retries} tekrar, ` +
-            `${client.stats.reconnects} yeniden baglanma`
+          `${client.stats.calls} queries, ${client.stats.retries} retries, ` +
+            `${client.stats.reconnects} reconnects`
         );
       },
     });

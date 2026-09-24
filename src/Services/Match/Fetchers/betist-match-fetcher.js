@@ -1,28 +1,29 @@
 /**
- * BETIST MAC CEKICI
+ * BETIST MATCH FETCHER
  *
- * Cikti:  betist-matches.json
+ * Output:  betist-matches.json
  *   { "FUTBOL": { "Ulke - Lig": { "2026-09-18": [
  *       { eventId, leagueId, home, away, time } ] } }, ... }
  *
  * ---------------------------------------------------------------------------
- * PROTOKOL
+ * PROTOCOL
  *
- * Duz HTTPS. Iki tur istek var:
- *   1. GET /home.php   -> spor + lig menusu (HTML)
+ * Plain HTTPS. There are two kinds of request:
+ *   1. GET /home.php   -> the sport + league menu (HTML)
  *   2. GET /getdata.php?sec=ASIAN_LAYOUT&subsec=REQUEST_GET_SCHEME_EVENTS
- *      &league_id[]=...  -> o liglerin maclari (HTML icinde rev="{json}")
+ *      &league_id[]=...  -> the matches of those leagues (rev="{json}" in HTML)
  *
  * ---------------------------------------------------------------------------
- * ESKI SURUME GORE NE DEGISTI
+ * WHAT CHANGED VERSUS THE OLD VERSION
  *
- *   - Spor listesi ARTIK SABIT DEGIL. home.php menusu zaten tum sporlari
- *     iceriyordu; eskiden dordu haric hepsi atiliyordu. Artik menudeki her
- *     spor katalogla eslestiriliyor -> EK ISTEK OLMADAN 26 spor.
- *   - Lig gruplari sirayla degil, SINIRLI es zamanlilikla cekiliyor.
- *   - Ham `https.get` yerine keep-alive havuzlu HttpClient (TLS el sikismasi
- *     istek basina degil, baglanti basina).
- *   - 429/5xx icin exponential backoff'lu retry.
+ *   - The sport list is NO LONGER HARDCODED. The home.php menu already
+ *     contained every sport; previously all but four were thrown away. Now
+ *     every sport in the menu is matched against the catalog -> 26 sports
+ *     WITHOUT ANY EXTRA REQUEST.
+ *   - League groups are fetched with BOUNDED concurrency instead of serially.
+ *   - HttpClient with a keep-alive pool instead of a raw `https.get` (one TLS
+ *     handshake per connection, not per request).
+ *   - Retry with exponential backoff for 429/5xx.
  */
 
 import { HttpClient } from "./Core/http.js";
@@ -40,12 +41,12 @@ const OUTPUT_FILE = process.env.BETIST_OUTPUT || "betist-matches.json";
 const CHUNK_SIZE = Number(process.env.BETIST_CHUNK_SIZE || 10);
 
 /**
- * Es zamanli istek sayisi. 3 bilincli bir secim: seri calismaya gore
- * belirgin hizlanma sagliyor ama siteyi dovmuyor.
+ * Number of concurrent requests. 3 is a deliberate choice: clearly faster
+ * than running serially without hammering the site.
  */
 const CONCURRENCY = Number(process.env.BETIST_CONCURRENCY || 3);
 
-/** Istekler arasi asgari aralik (rate limit dostu olmak icin). */
+/** Minimum gap between requests (to stay rate limit friendly). */
 const REQUEST_DELAY_MS = Number(process.env.BETIST_REQUEST_DELAY_MS || 150);
 
 const REQUEST_TIMEOUT_MS = Number(process.env.BETIST_TIMEOUT_MS || 25000);
@@ -57,12 +58,12 @@ const RETRY_ATTEMPTS = Number(process.env.BETIST_RETRY_ATTEMPTS || 3);
  * ====================================================================== */
 
 /**
- * home.php menusunden sporlari ve her sporun lig id'lerini cikarir.
+ * Extracts the sports and each sport's league ids from the home.php menu.
  *
- * Menu duz bir <i> listesi: spor isaretcileri (class="b-check sport") ve lig
- * isaretcileri (class="b-check stage") ic ice DEGIL, arka arkaya geliyor.
- * Bu yuzden once spor isaretcilerinin konumlari bulunuyor, sonra iki spor
- * arasinda kalan blok o sporun ligleri sayiliyor.
+ * The menu is a flat <i> list: the sport markers (class="b-check sport") and
+ * the league markers (class="b-check stage") are NOT nested, they follow one
+ * another. So the positions of the sport markers are found first, then the
+ * block between two sports is taken as that sport's leagues.
  */
 function parseSportMenu(html) {
   const markers = [];
@@ -139,8 +140,9 @@ function parseSportMenu(html) {
 }
 
 /**
- * Yanit HTML'indeki rev="{...}" niteliklerinden mac kayitlarini cikarir.
- * rev her zaman mac JSON'u degildir; parse edilemeyen sessizce atlanir.
+ * Extracts match records from the rev="{...}" attributes in the response
+ * HTML. rev does not always carry match JSON; whatever fails to parse is
+ * skipped silently.
  */
 function parseEventRecords(html) {
   const events = new Map();
@@ -163,7 +165,7 @@ function parseEventRecords(html) {
 
       if (!events.has(key)) events.set(key, obj);
     } catch {
-      // rev niteligi her zaman event JSON'u tasimiyor.
+      // The rev attribute does not always carry event JSON.
     }
   }
 
@@ -202,15 +204,15 @@ function buildEventsUrl(baseUrl, leagueIds, layoutSchemaCode) {
 }
 
 /* =========================================================================
- * KESIF
+ * DISCOVERY
  * ====================================================================== */
 
 /**
- * Menudeki sporlari katalogla eslestirir.
+ * Matches the sports in the menu against the catalog.
  *
- * Tanimadigimiz sporlar (e-spor, politika vb.) ATLANIR ve tek bir satirda
- * raporlanir. Uydurma bir anahtarla ciktiya sizmalari, siteler arasi
- * karsilastirmayi bozardi.
+ * Sports we do not know (esports, politics and so on) are SKIPPED and
+ * reported in a single line. Letting them leak into the output under a made
+ * up key would break the cross-site comparison.
  */
 function selectSports(menu, enabledKeys, logger) {
   const targets = new Map();
@@ -228,14 +230,14 @@ function selectSports(menu, enabledKeys, logger) {
     if (enabledKeys && !enabledKeys.has(sport.key)) continue;
 
     if (!item.layoutSchemaCode) {
-      logger.warn(`${sport.key}: layout_schema_code yok, atlaniyor.`);
+      logger.warn(`${sport.key}: no layout_schema_code, skipping.`);
       continue;
     }
 
     if (!item.leagueIds.length) continue;
 
-    // Ayni katalog anahtarina birden fazla menu girdisi dusebilir
-    // (orn. "Rugby" ve "Ragbi" -> RAGBI). Ikisi de cekilir, cikti birlesir.
+    // Several menu entries can map to the same catalog key (e.g. "Rugby"
+    // and "Ragbi" -> RAGBI). Both are fetched and the output is merged.
     const list = targets.get(sport.key) ?? [];
 
     list.push({ ...item, sportKey: sport.key });
@@ -244,14 +246,14 @@ function selectSports(menu, enabledKeys, logger) {
   }
 
   if (unmapped.length) {
-    logger.debug(`katalogda olmayan spor atlandi: ${unmapped.join(", ")}`);
+    logger.debug(`skipped sports missing from the catalog: ${unmapped.join(", ")}`);
   }
 
   return targets;
 }
 
 /* =========================================================================
- * ANA AKIS
+ * MAIN FLOW
  * ====================================================================== */
 
 /**
@@ -263,7 +265,7 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
 
   const site = new URL(siteUrl);
 
-  // Veri, ana alan adinda degil "bet." alt alan adinda duruyor.
+  // The data lives on the "bet." subdomain, not on the main domain.
   const baseUrl = `${site.protocol}//bet.${site.hostname}`;
 
   const enabledKeys = resolveEnabledSportKeys(options.sports);
@@ -297,20 +299,20 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
 
         if (!menu.length) {
           throw new Error(
-            "Spor menusu bulunamadi. Site HTML yapisi degismis olabilir."
+            "Sport menu not found. The site's HTML structure may have changed."
           );
         }
 
         const targets = selectSports(menu, enabledKeys, logger);
 
         logger.info(
-          `menude ${menu.length} spor, ${targets.size} tanesi hedefleniyor`
+          `${menu.length} sports in the menu, ${targets.size} of them targeted`
         );
 
-        // Tum sporlarin lig gruplari TEK bir is kuyruguna aliniyor.
-        // Spor spor ilerlemek yerine boyle yapmanin sebebi: kucuk sporlarda
-        // (1-2 grup) es zamanlilik bos kalirdi; tek kuyrukta worker'lar
-        // bastan sona dolu calisiyor.
+        // The league groups of all sports go into ONE work queue. The reason
+        // for not walking sport by sport: on small sports (1-2 groups) the
+        // concurrency would sit idle; with a single queue the workers stay
+        // busy from start to finish.
         const tasks = [];
 
         for (const [sportKey, entries] of targets) {
@@ -321,7 +323,7 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
           }
         }
 
-        logger.info(`${tasks.length} lig grubu cekilecek (es zamanli: ${CONCURRENCY})`);
+        logger.info(`fetching ${tasks.length} league groups (concurrency: ${CONCURRENCY})`);
 
         const results = await mapWithConcurrency(
           tasks,
@@ -346,10 +348,10 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
 
         for (const result of results) {
           if (result.status === "rejected") {
-            // Tek bir grubun patlamasi digerlerini durdurmaz.
+            // One group blowing up does not stop the others.
             failed++;
 
-            logger.warn(`lig grubu alinamadi: ${result.reason.message.split("\n")[0]}`);
+            logger.warn(`could not fetch league group: ${result.reason.message.split("\n")[0]}`);
 
             continue;
           }
@@ -357,7 +359,7 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
           const { task, events } = result.value;
 
           for (const event of events) {
-            // Yanit bazen istenmeyen sporun maclarini da tasiyor.
+            // The response sometimes carries matches of an unwanted sport too.
             if (String(event.sport_id) !== String(task.entry.sportId)) continue;
 
             const { date, time } = parseLocalDateTime(event.event_start_time);
@@ -378,11 +380,11 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
         }
 
         if (failed) {
-          logger.warn(`${tasks.length} gruptan ${failed} tanesi alinamadi.`);
+          logger.warn(`${failed} of ${tasks.length} groups could not be fetched.`);
         }
 
         logger.info(
-          `${http.stats.requests} istek, ${http.stats.retries} tekrar, ` +
+          `${http.stats.requests} requests, ${http.stats.retries} retries, ` +
             `${(http.stats.bytes / 1024 / 1024).toFixed(1)} MB`
         );
       },

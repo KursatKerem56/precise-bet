@@ -1,17 +1,17 @@
 /**
- * MAC KARSILASTIRMASI VE GUVEN SKORU
+ * MATCH COMPARISON AND CONFIDENCE SCORE
  *
- * Katmanlardan gelen sinyaller KORU KORUNE ortalanmaz. Ayrim su:
+ * The signals from the layers are not averaged blindly. The distinction is:
  *
- *   HARD CONSTRAINT (dogrudan eler)      SOFT SIGNAL (skoru etkiler)
+ *   HARD CONSTRAINT (eliminates)         SOFT SIGNAL (moves the score)
  *   --------------------------------     ----------------------------
- *   farkli spor                          bulanik takim benzerligi
- *   guvenilir farkli kanonik lig         eksik ulke bilgisi
- *   uyumsuz takim niteleyicisi           kucuk saat farki
- *   uyumsuz lig niteleyicisi             lig kisaltmasi
- *   imkansiz tarih/saat farki            noktalama farklari
+ *   a different sport                    fuzzy team similarity
+ *   a reliably different canonical league  missing country information
+ *   mismatched team qualifiers           a small time difference
+ *   mismatched league qualifiers         a league abbreviation
+ *   an impossible date/time gap          punctuation differences
  *
- * Takim benzerligi yuksek diye FARKLI LIGLERDEKI maclar eslestirilmez.
+ * A high team similarity never matches games from DIFFERENT LEAGUES.
  */
 
 import { compareTeams, matchTeamQualifiers } from "./team.js";
@@ -19,7 +19,7 @@ import { compareLeagues } from "./league.js";
 import { compareMatchTimes } from "./datetime.js";
 import { MATCH_CONFIG, LEAGUE_QUALIFIER_CLASS } from "./config.js";
 
-/** Iki ligin bildirdigi niteleyici SINIFLARININ birlesimi. */
+/** The union of the qualifier CLASSES declared by two leagues. */
 function leagueDeclaredClasses(...leagues) {
   const classes = new Set();
 
@@ -40,10 +40,10 @@ export const MATCH_RESULT = {
 };
 
 /**
- * Iki maci karsilastirir.
+ * Compares two matches.
  *
- * Pipeline sirasi bilincli: en ucuz ve en kesin elemeler once yapilir,
- * pahali bulanik karsilastirma en sona birakilir.
+ * The pipeline order is deliberate: the cheapest and most certain
+ * eliminations run first and the expensive fuzzy comparison is left last.
  *
  * @returns {{
  *   ok: boolean, decision: string, confidence: number,
@@ -65,13 +65,13 @@ export function compareMatches(a, b, options = {}) {
     reason,
   });
 
-  // --- 1) SPOR (hard) ---------------------------------------------------
+  // --- 1) SPORT (hard) --------------------------------------------------
   if (a.sport !== b.sport) return reject("sport-mismatch");
 
-  // --- 2) LIG (hard reject + soft skor) --------------------------------
-  // Lig niteleyicisi TAKIM niteleyicileriyle birlikte degerlendirilir;
-  // bir site "NWSL, Women" derken digeri sadece "NWSL" deyip kadin
-  // isaretini takim adina koyabiliyor.
+  // --- 2) LEAGUE (hard reject + soft score) ----------------------------
+  // The league qualifier is evaluated together with the TEAM qualifiers;
+  // one site may say "NWSL, Women" while another says just "NWSL" and puts
+  // the women's marker in the team name.
   const league = compareLeagues(a.leagueInfo, b.leagueInfo, {
     sport: a.sport,
     teamQualifiersA: matchTeamQualifiers(a),
@@ -86,17 +86,17 @@ export function compareMatches(a, b, options = {}) {
     return reject("league-below-threshold");
   }
 
-  // --- 3) TARIH / SAAT (hard) ------------------------------------------
-  // Farkli gunlerdeki iki kayit ancak makul bir gece yarisi kaymasiyla
-  // aciklanabiliyorsa ayni mac olabilir.
+  // --- 3) DATE / TIME (hard) -------------------------------------------
+  // Two records on different days can only be the same match when a
+  // reasonable midnight shift explains the gap.
   const time = compareMatchTimes(a, b, options);
   if (!time.plausible) return reject("implausible-time-gap");
 
-  // --- 4) TAKIM (hard niteleyici + soft bulanik) ------------------------
-  // Lig zaten bir kategori bildiriyorsa (kadinlar ligi, U19 ligi) o
-  // kategori takim adinda ARANMAZ: bir site "Charlton Athletic" derken
-  // digeri "Charlton Athletic (Wom)" diyor ama ikisi de ayni kadinlar
-  // ligindeler, yani isaret gereksiz tekrar.
+  // --- 4) TEAM (hard qualifiers + soft fuzzy) --------------------------
+  // When the league already declares a category (a women's league, a U19
+  // league), that category is NOT looked for in the team name: one site
+  // says "Charlton Athletic" while another says "Charlton Athletic (Wom)",
+  // but both are in the same women's league, so the marker is redundant.
   const ignoreQualifiers = leagueDeclaredClasses(a.leagueInfo, b.leagueInfo);
   const teamOptions = { sport: a.sport, ignoreQualifiers };
 
@@ -112,9 +112,9 @@ export function compareMatches(a, b, options = {}) {
   let ok = straightOk;
   let stages = [homeHome.stage, awayAway.stage];
 
-  // Ters (ev/deplasman yer degistirmis) siralama YALNIZCA duz siralama
-  // tutmayinca denenir. Gercek veride 2068 eslesmenin sadece 1'i ters
-  // sirali; her cift icin bastan iki kat is yapmak gereksizdi.
+  // The flipped (home/away swapped) ordering is tried ONLY when the
+  // straight one does not hold. In real data only 1 of 2068 matches is
+  // flipped; doing twice the work for every pair up front was pointless.
   if (!straightOk) {
     const homeAway = compareTeams(a.home, b.away, teamOptions);
     const awayHome = compareTeams(a.away, b.home, teamOptions);
@@ -140,9 +140,10 @@ export function compareMatches(a, b, options = {}) {
     };
   }
 
-  // --- 5) Lig adi tamamen farkliysa takim skoru cok yuksek olmali -------
-  // (Bu kontrol eskiden DEFAULTS'ta tanimsiz iki alana bakiyordu ve
-  // sessizce HIC calismiyordu.)
+  // --- 5) If the league names differ entirely, the team score must be very
+  //        high ---------------------------------------------------------
+  // (This check used to read two fields that were undefined in DEFAULTS and
+  // silently never ran.)
   const lowLeague = options.lowLeagueScore ?? MATCH_CONFIG.lowLeagueScore;
   const teamWhenLow =
     options.teamScoreWhenLeagueLow ?? MATCH_CONFIG.teamScoreWhenLeagueLow;
@@ -156,7 +157,7 @@ export function compareMatches(a, b, options = {}) {
     };
   }
 
-  // --- 6) Guven skoru ---------------------------------------------------
+  // --- 6) Confidence score ---------------------------------------------
   const confidence = calculateMatchConfidence({
     teamScore,
     teamStages: stages,
@@ -181,10 +182,11 @@ export function compareMatches(a, b, options = {}) {
 }
 
 /**
- * Katman sinyallerini tek bir 0-1 guven skoruna indirger.
+ * Reduces the layer signals to a single 0-1 confidence score.
  *
- * Takim eslesmesi belirleyici agirliktadir; lig ve saat DESTEKLEYICI
- * sinyallerdir (eksikligi cezalandirilir ama tek basina karar vermez).
+ * The team match carries the decisive weight; the league and the time are
+ * SUPPORTING signals (their absence is penalised but never decides on its
+ * own).
  */
 export function calculateMatchConfidence({
   teamScore,
@@ -192,14 +194,14 @@ export function calculateMatchConfidence({
   league,
   time,
 }) {
-  // Takim: 0-100 -> 0-1, esik altini zaten elenmis kabul ediyoruz.
+  // Team: 0-100 -> 0-1; anything below the threshold is already eliminated.
   let confidence = teamScore / 100;
 
-  // Deterministik cozum (birebir ya da alias) bulaniktan daha guvenilir.
+  // A deterministic resolution (exact or alias) is more reliable than fuzzy.
   const deterministic = teamStages.every((s) => s === "exact" || s === "alias");
   if (deterministic) confidence = Math.min(1, confidence + 0.03);
 
-  // Lig sinyali
+  // The league signal
   if (league.stage === "alias" || league.stage === "exact-with-country") {
     confidence = Math.min(1, confidence + 0.05);
   } else if (league.stage === "exact") {
@@ -208,13 +210,13 @@ export function calculateMatchConfidence({
     confidence -= 0.08;
   }
 
-  // Saat sinyali: uyumlu saat guveni artirir, buyuk fark azaltir.
+  // The time signal: a matching time raises confidence, a large gap lowers it.
   if (time?.comparable) {
     const diff = Math.abs(time.diffMinutes);
     if (diff <= 5) confidence = Math.min(1, confidence + 0.04);
     else if (diff > 180) confidence -= 0.05;
   } else {
-    // Saat yoksa ayirt edici bir sinyal eksik demektir.
+    // No time means one distinguishing signal is missing.
     confidence -= 0.03;
   }
 

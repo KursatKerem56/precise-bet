@@ -1,16 +1,17 @@
 /**
- * ORTAK HTTPS ISTEMCISI
+ * SHARED HTTPS CLIENT
  *
- * Eski betist fetcher'i her istegi ciplak `https.get` ile atiyordu. Bunun
- * uc somut maliyeti vardi:
+ * The old betist fetcher issued every request with a bare `https.get`. That
+ * had three concrete costs:
  *
- *   1. Agent verilmedigi icin her istek YENI TLS el sikismasi yapiyordu.
- *      Ayni hosta 23 istek = 23 handshake.
- *   2. HTTP 429 / 403 / 5xx ile 200 arasinda ayrim yoktu; hepsi ayni duz
- *      Error'a doner, yeniden denenmezdi.
- *   3. Yanit boyutu sinirsizdi; beklenmedik dev bir yanit heap'i sisirirdi.
+ *   1. With no agent, every request performed a NEW TLS handshake.
+ *      23 requests to the same host = 23 handshakes.
+ *   2. There was no distinction between HTTP 429 / 403 / 5xx and 200; they
+ *      all became the same plain Error and were never retried.
+ *   3. The response size was unbounded; an unexpectedly huge response would
+ *      blow up the heap.
  *
- * Burasi ucunu de cozer ve cookie jar + redirect takibini korur.
+ * This solves all three while keeping the cookie jar and redirect following.
  */
 
 import https from "node:https";
@@ -37,7 +38,7 @@ class HttpError extends Error {
   }
 }
 
-/** "Retry-After" hem saniye hem HTTP-date olabilir; ikisini de kabul et. */
+/** "Retry-After" may be seconds or an HTTP-date; accept both. */
 function parseRetryAfter(value) {
   if (!value) return undefined;
 
@@ -68,13 +69,13 @@ class HttpClient {
 
     this.timeoutMs = options.timeoutMs ?? 25000;
 
-    // Tek bir istegin harcayabilecegi mutlak ust sinir (redirect basina).
+    // Absolute upper bound a single request may spend (per redirect).
     this.hardTimeoutMs = options.hardTimeoutMs ?? this.timeoutMs * 3;
 
     this.maxRedirects = options.maxRedirects ?? 5;
 
-    // 32 MB. Bu siteler en fazla birkac yuz KB donuyor; bundan buyugu
-    // "bir seyler ters gitti" demektir, sessizce yutmak yerine hata verelim.
+    // 32 MB. These sites return a few hundred KB at most; anything larger
+    // means "something went wrong", so fail instead of swallowing it.
     this.maxBodyBytes = options.maxBodyBytes ?? 32 * 1024 * 1024;
 
     this.retryOptions = {
@@ -88,7 +89,7 @@ class HttpClient {
 
     this.logger = options.logger ?? null;
 
-    // Baglantilari yeniden kullanan havuz. Asil kazanc burada.
+    // The pool that reuses connections. This is where the real win is.
     this.agent = new https.Agent({
       keepAlive: true,
       keepAliveMsecs: 15000,
@@ -126,7 +127,7 @@ class HttpClient {
       .join("; ");
   }
 
-  /** Tek deneme; retry sarmalayicisi `get` icinde. */
+  /** A single attempt; the retry wrapper lives in `get`. */
   #once(url, extraHeaders, redirectCount) {
     return new Promise((resolve, reject) => {
       const cookies = this.cookieHeader();
@@ -150,7 +151,7 @@ class HttpClient {
 
             if (redirectCount >= this.maxRedirects) {
               reject(
-                new HttpError("Cok fazla redirect.", {
+                new HttpError("Too many redirects.", {
                   statusCode: status,
                   retryable: false,
                 })
@@ -177,15 +178,15 @@ class HttpClient {
           response.on("data", (chunk) => {
             size += chunk.length;
 
-            // Yanit beklenenden buyukse baglantiyi kes; tamamini bellege
-            // almayi beklemek OOM'a giden en kisa yol.
+            // If the response is larger than expected, cut the connection;
+            // waiting to buffer all of it is the shortest path to OOM.
             if (size > this.maxBodyBytes) {
               aborted = true;
               request.destroy();
 
               reject(
                 new HttpError(
-                  `Yanit govdesi cok buyuk (>${this.maxBodyBytes} bayt).`,
+                  `Response body is too large (>${this.maxBodyBytes} bytes).`,
                   { statusCode: status, retryable: false }
                 )
               );
@@ -204,8 +205,9 @@ class HttpClient {
             this.stats.bytes += size;
 
             if (status < 200 || status >= 300) {
-              // 429 ve 5xx gecici; 4xx (429 haric) kalici. Kalici hatayi
-              // yeniden denemek hem bosuna hem de rate limit'i kotulestirir.
+              // 429 and 5xx are transient; 4xx (except 429) is permanent.
+              // Retrying a permanent error is both useless and makes the
+              // rate limiting worse.
               const retryable =
                 status === 408 || status === 429 || status >= 500;
 
@@ -235,34 +237,34 @@ class HttpClient {
       );
 
       request.on("error", (error) => {
-        // Soket seviyesi hatalari neredeyse her zaman gecicidir.
+        // Socket level errors are transient almost every time.
         error.retryable = true;
         reject(error);
       });
 
-      // `setTimeout` yalnizca "hic veri akmiyor" durumunu yakalar.
+      // `setTimeout` only catches the "no data is flowing at all" case.
       request.setTimeout(this.timeoutMs, () => {
         request.destroy(
-          new HttpError("Istek zaman asimina ugradi (bosta bekleme).", {
+          new HttpError("Request timed out (idle wait).", {
             retryable: true,
           })
         );
       });
 
-      // ...ama saniyede birkac bayt damlatan bir yanit bu kontrolu sonsuza
-      // kadar tazeler. Bu yuzden ayrica MUTLAK bir son tarih gerekiyor;
-      // aksi halde tek bir yavas istek fetch turunu kilitleyebilir.
+      // ...but a response dripping a few bytes per second refreshes that
+      // check forever. So an ABSOLUTE deadline is needed as well; otherwise
+      // a single slow request can lock up the whole fetch round.
       const deadline = setTimeout(() => {
         request.destroy(
           new HttpError(
-            `Istek toplam sureyi asti (${this.hardTimeoutMs} ms).`,
+            `Request exceeded its total time budget (${this.hardTimeoutMs} ms).`,
             { retryable: true }
           )
         );
       }, this.hardTimeoutMs);
 
-      // Sonuc ne olursa olsun zamanlayici temizlensin, yoksa process
-      // gereksiz yere ayakta kalir.
+      // Whatever the outcome, clear the timer, otherwise the process stays
+      // alive for no reason.
       const clear = () => clearTimeout(deadline);
 
       request.on("close", clear);
@@ -290,7 +292,7 @@ class HttpClient {
           this.stats.retries++;
 
           this.logger?.warn(
-            `istek basarisiz (${attempt}/${attempts}), ${delay} ms sonra tekrar: ` +
+            `request failed (${attempt}/${attempts}), retrying in ${delay} ms: ` +
               `${error.message.split("\n")[0]}`
           );
         },
@@ -298,7 +300,7 @@ class HttpClient {
     );
   }
 
-  /** Keep-alive soketlerini birak; process'in asili kalmasini onler. */
+  /** Release the keep-alive sockets; keeps the process from hanging. */
   close() {
     this.agent.destroy();
   }

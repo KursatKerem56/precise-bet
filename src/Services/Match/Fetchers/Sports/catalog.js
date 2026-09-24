@@ -1,48 +1,48 @@
 /**
- * MERKEZI SPOR KATALOGU
+ * CENTRAL SPORT CATALOG
  *
- * Eskiden spor bilgisi bes ayri yerde, birbirinden habersiz duruyordu:
+ * Sport information used to live in five separate places, none of them aware
+ * of the others:
  *   - betist    : canonicalSportName() + TARGET_ORDER
- *   - virusbet  : SPORTS[] (sportId sabitleri) + TARGET_ORDER
- *   - mavibet   : SPORTS[] (sportId + tree sabitleri) + TARGET_ORDER
+ *   - virusbet  : SPORTS[] (sportId constants) + TARGET_ORDER
+ *   - mavibet   : SPORTS[] (sportId + tree constants) + TARGET_ORDER
  *   - compare-match-times.js : SPORT_CANON + SPORT_ORDER
- *   - Match.service.ts       : ic ice ternary
+ *   - Match.service.ts       : a nested ternary
  *
- * Yeni bir spor eklemek bu bes yeri birden degistirmeyi gerektiriyordu ve
- * Match.service.ts'teki ternary bilinmeyen her sporu sessizce TENNIS'e
- * yaziyordu.
+ * Adding a new sport meant changing all five, and the ternary in
+ * Match.service.ts silently mapped every unknown sport to TENNIS.
  *
- * Artik tek kaynak burasi. Bir spor eklemek = asagiya bir satir eklemek.
+ * This is now the single source. Adding a sport = adding one line below.
  *
  * ---------------------------------------------------------------------------
- * SITE ID'LERI NEDEN BURADA YOK
+ * WHY THE SITE IDS ARE NOT HERE
  *
- * Ucu de spor id'sini ZATEN cektikleri veriden bildiriyor:
- *   betist   -> home.php menusunde  (check__{id} + sport-name)
- *   virusbet -> swarm sport agacinda (id + alias + name)
- *   mavibet  -> disciplinesV2 dump'inda (id + name)
+ * All three ALREADY report the sport id in the data we fetch:
+ *   betist   -> in the home.php menu   (check__{id} + sport-name)
+ *   virusbet -> in the swarm sport tree (id + alias + name)
+ *   mavibet  -> in the disciplinesV2 dump (id + name)
  *
- * Yani id'leri sabit yazmak gereksiz ve kirilgan olurdu (site id degistirince
- * sessizce yanlis spor cekilir). Bunun yerine site ADI bildiriyor, biz
- * `aliases` uzerinden normalize ediyoruz. Id sabiti YOK.
+ * So hardcoding the ids would be unnecessary and brittle (when a site
+ * changes an id, the wrong sport is fetched silently). Instead the site
+ * reports a NAME and we normalise it through `aliases`. No id constants.
  *
- * `key`  -> JSON ciktisindaki ust duzey anahtar (geriye donuk uyumluluk)
- * `id`   -> uygulama ici normalized deger (EMatchSport ile ayni)
+ * `key`  -> the top level key in the JSON output (backwards compatibility)
+ * `id`   -> the normalised in-app value (same as EMatchSport)
  */
 
 import { foldName } from "../Core/text.js";
 
 /**
- * Not: LEGACY_KEYS'teki dort spor cikti JSON'unda HER ZAMAN bulunur (bos
- * olsa bile), cunku mevcut tuketiciler bu dort anahtarin varligina guveniyor.
+ * Note: the four sports in LEGACY_KEYS are ALWAYS present in the output JSON
+ * (even when empty), because existing consumers rely on those four keys.
  */
 const LEGACY_KEYS = ["FUTBOL", "BASKETBOL", "VOLEYBOL", "TENIS"];
 
 /**
  * @type {Array<{ key: string, id: string, aliases: string[] }>}
  *
- * Siralama onemli: cikti ve raporlar bu sirayi kullanir. Ilk dort, eski
- * TARGET_ORDER ile birebir ayni.
+ * The order matters: the output and the reports use it. The first four are
+ * identical to the old TARGET_ORDER.
  */
 const SPORTS = [
   { key: "FUTBOL", id: "FOOTBALL", aliases: ["futbol", "soccer", "football"] },
@@ -63,7 +63,7 @@ const SPORTS = [
   {
     key: "AMERIKAN_FUTBOLU",
     id: "AMERICAN_FOOTBALL",
-    // mavibet bunu "Am. Football" diye kisaltiyor.
+    // mavibet abbreviates this as "Am. Football".
     aliases: ["amerikan futbolu", "american football", "am football"],
   },
   { key: "BEYZBOL", id: "BASEBALL", aliases: ["beyzbol", "baseball"] },
@@ -71,9 +71,10 @@ const SPORTS = [
   {
     key: "RAGBI",
     id: "RUGBY",
-    // Union/League ayrimi kasitli olarak TEK anahtarda birlestirildi: betist
-    // "Rugby"/"Ragbi" derken virusbet ve mavibet "Rugby Union"/"Rugby League"
-    // diyor. Ayirsaydik ayni mac siteler arasinda hic eslesemezdi.
+    // The Union/League split is deliberately merged into ONE key: betist
+    // says "Rugby"/"Ragbi" while virusbet and mavibet say "Rugby Union"/
+    // "Rugby League". Keeping them apart would mean the same match could
+    // never match across sites.
     aliases: ["rugby", "ragbi", "rugby union", "rugby league"],
   },
   { key: "KRIKET", id: "CRICKET", aliases: ["kriket", "cricket"] },
@@ -150,36 +151,36 @@ const SPORTS = [
   },
 ];
 
-// --- Indeksler (modul yuklenirken bir kez kurulur) ---------------------------
+// --- Indexes (built once when the module is loaded) -------------------------
 
-/** foldName(alias) -> spor kaydi */
+/** foldName(alias) -> sport record */
 const byAlias = new Map();
 
-/** key -> spor kaydi */
+/** key -> sport record */
 const byKey = new Map();
 
-/** id -> spor kaydi */
+/** id -> sport record */
 const byId = new Map();
 
 for (const sport of SPORTS) {
   byKey.set(sport.key, sport);
   byId.set(sport.id, sport);
 
-  // Anahtarin ve id'nin kendisi de gecerli birer alias'tir; boylece
-  // MATCH_SPORTS=FUTBOL ve MATCH_SPORTS=FOOTBALL ikisi de calisir.
+  // The key and the id are valid aliases themselves, so both
+  // MATCH_SPORTS=FUTBOL and MATCH_SPORTS=FOOTBALL work.
   for (const alias of [...sport.aliases, sport.key, sport.id]) {
     byAlias.set(foldName(alias), sport);
   }
 }
 
-/** Ciktida ve raporlarda kullanilan sira. */
+/** The order used in the output and in the reports. */
 const SPORT_ORDER = SPORTS.map((sport) => sport.key);
 
 /**
- * Sitenin bildirdigi spor adini katalog kaydina cevirir.
- * Tanimadigimiz bir spor icin `null` doner -- UYDURMAZ.
+ * Converts the sport name reported by a site into a catalog record.
+ * Returns `null` for a sport we do not know -- it never GUESSES.
  *
- * @param {...(string|null|undefined)} names Denenecek adlar (ad, alias, kisa ad)
+ * @param {...(string|null|undefined)} names Names to try (name, alias, short name)
  */
 function resolveSport(...names) {
   for (const name of names) {
@@ -198,16 +199,16 @@ const getSportByKey = (key) => byKey.get(String(key)) ?? null;
 const getSportById = (id) => byId.get(String(id)) ?? null;
 
 /**
- * Cekilecek sporlari belirler.
+ * Determines which sports to fetch.
  *
- * `MATCH_SPORTS` bos ise katalogdaki TUM sporlar hedeftir; sitede olmayan
- * spor zaten kesfedilmedigi icin bosuna istek atilmaz. Kisitlamak isteyen
- * ortam degiskeni verir, orn:
+ * When `MATCH_SPORTS` is empty, ALL sports in the catalog are targets; a
+ * sport a site does not have is never discovered, so no request is wasted on
+ * it. To restrict the set, provide the environment variable, e.g.:
  *
- *     MATCH_SPORTS=FUTBOL,BASKETBOL,VOLEYBOL,TENIS   (eski davranis)
+ *     MATCH_SPORTS=FUTBOL,BASKETBOL,VOLEYBOL,TENIS   (the old behaviour)
  *
  * @param {string} [raw]
- * @returns {Set<string>|null} izin verilen key kumesi; null = hepsi
+ * @returns {Set<string>|null} the set of allowed keys; null = all of them
  */
 function resolveEnabledSportKeys(raw = process.env.MATCH_SPORTS) {
   const value = String(raw ?? "").trim();

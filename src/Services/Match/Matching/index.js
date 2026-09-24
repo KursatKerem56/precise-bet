@@ -1,6 +1,6 @@
 /**
- * Eslestirme modullerinin tek giris noktasi.
- * compare-match-times.js buradan import eder.
+ * The single entry point of the matching modules.
+ * compare-match-times.js imports from here.
  */
 
 export {

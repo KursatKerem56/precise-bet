@@ -1,11 +1,12 @@
 /**
- * ORTAK CIKTI MODELI
+ * SHARED OUTPUT MODEL
  *
- * Uc fetcher da `addEventsToOutput` + `sortOutput` ciftini neredeyse birebir
- * kopyalamisti (~60 satir x 3). Burasi o ortak kismi tutar; site'a ozgu olan
- * tek sey, ham kayittan bu alanlari nasil cikardigindir.
+ * All three fetchers had copied the `addEventsToOutput` + `sortOutput` pair
+ * almost verbatim (~60 lines x 3). This holds that shared part; the only
+ * site specific thing is how each one extracts these fields from a raw
+ * record.
  *
- * Cikti sekli DEGISMEDI:
+ * The output shape is UNCHANGED:
  *
  *   { "FUTBOL": { "Ulke - Lig": { "2026-09-18": [
  *       { eventId, leagueId, home, away, time } ] } }, ... }
@@ -16,7 +17,7 @@ import { LEGACY_KEYS, SPORT_ORDER } from "../Sports/catalog.js";
 const collator = new Intl.Collator("tr");
 
 /**
- * Maçları toplayan, tekilleştiren ve sıralayan biriktirici.
+ * Accumulator that collects, deduplicates and sorts matches.
  */
 class MatchOutput {
   /**
@@ -27,27 +28,29 @@ class MatchOutput {
 
     this.dateFilter = options.dateFilter ?? null;
 
-    /** @type {Map<string, Map<string, Map<string, object[]>>>} sport -> lig -> tarih -> maçlar */
+    /** @type {Map<string, Map<string, Map<string, object[]>>>} sport -> league -> date -> matches */
     this.bySport = new Map();
 
-    /** Spor ici tekillestirme: ayni mac birden fazla kaynaktan gelebiliyor. */
+    /** Dedup within a sport: the same match can arrive from several sources. */
     this.seenEventIds = new Map();
 
     this.stats = { added: 0, duplicate: 0, skipped: 0, filtered: 0 };
   }
 
   /**
-   * Tek bir maçı ekler. Eksik/bozuk kayit TUM fetch'i durdurmaz; sayaca
-   * yazilip atlanir, boylece kismi bozukluk gorunur ama olumcul olmaz.
+   * Adds a single match. A missing/broken record does not stop the WHOLE
+   * fetch; it is counted and skipped, so partial corruption stays visible
+   * without being fatal.
    *
-   * @returns {boolean} eklendiyse true
+   * @returns {boolean} true when it was added
    */
   add(sportKey, event) {
     const home = String(event?.home ?? "").trim();
     const away = String(event?.away ?? "").trim();
     const date = String(event?.date ?? "").trim();
 
-    // Iki taraf yoksa bu bir mac degil (outright, "sampiyon kim olur" vb.).
+    // Without both sides this is not a match (outrights, "who wins the
+    // title" and so on).
     if (!sportKey || !home || !away || !date) {
       this.stats.skipped++;
       return false;
@@ -121,7 +124,7 @@ class MatchOutput {
     return true;
   }
 
-  /** Bir spordaki toplam maç sayisi. */
+  /** Total number of matches in one sport. */
   countFor(sportKey) {
     let total = 0;
 
@@ -137,12 +140,12 @@ class MatchOutput {
   }
 
   /**
-   * Sirali, duz JSON nesnesi uretir.
+   * Produces a sorted, plain JSON object.
    *
-   * LEGACY_KEYS her zaman bulunur (bos olsa bile): mevcut tuketiciler
-   * (compare-match-times, Match.service, panel UI) bu dort anahtarin
-   * varligina guveniyor. Yeni sporlar bunlarin ardina, katalog sirasiyla
-   * eklenir; boylece cikti yalnizca GENISLER, bozulmaz.
+   * LEGACY_KEYS are always present (even when empty): existing consumers
+   * (compare-match-times, Match.service, the panel UI) rely on those four
+   * keys existing. New sports are appended after them in catalog order, so
+   * the output only GROWS instead of breaking.
    */
   toSorted() {
     const keys = [
@@ -150,8 +153,8 @@ class MatchOutput {
       ...SPORT_ORDER.filter(
         (key) => !LEGACY_KEYS.includes(key) && this.bySport.has(key)
       ),
-      // Katalogda olmayan bir anahtar buraya normalde hic gelmez; yine de
-      // sessizce kaybolmasin diye sona ekleniyor.
+      // A key that is not in the catalog should never reach here; it is
+      // still appended at the end so nothing disappears silently.
       ...[...this.bySport.keys()].filter((key) => !SPORT_ORDER.includes(key)),
     ];
 
@@ -191,13 +194,13 @@ class MatchOutput {
     return sorted;
   }
 
-  /** Log icin "SPOR: n lig / m mac" satirlari. */
+  /** "SPORT: n leagues / m matches" lines for the log. */
   summaryLines() {
     const lines = [];
 
     for (const [sportKey, leagues] of this.bySport) {
       lines.push(
-        `${sportKey}: ${leagues.size} lig / ${this.countFor(sportKey)} mac`
+        `${sportKey}: ${leagues.size} leagues / ${this.countFor(sportKey)} matches`
       );
     }
 
@@ -206,8 +209,8 @@ class MatchOutput {
 }
 
 /**
- * `--tarih 2026-09-18` benzeri bir filtre icin yardimci.
- * Hicbir sinir verilmezse null doner (filtre yok).
+ * Helper for a filter such as `--tarih 2026-09-18`.
+ * Returns null when no bound is given at all (no filtering).
  */
 function createDateFilter({ dates, from, to } = {}) {
   const allowed = dates?.length ? new Set(dates) : null;

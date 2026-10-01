@@ -28,7 +28,11 @@
 
 import { HttpClient } from "./Core/http.js";
 import { createLogger } from "./Core/logger.js";
-import { createRateLimiter, chunkArray, mapWithConcurrency } from "./Core/async.js";
+import {
+  createRateLimiter,
+  chunkArray,
+  mapWithConcurrency,
+} from "./Core/async.js";
 import { decodeHtmlEntities, stripTags, parseAttributes } from "./Core/text.js";
 import { parseLocalDateTime } from "./Core/time.js";
 import { runFetcher } from "./Core/runner.js";
@@ -102,7 +106,8 @@ function parseSportMenu(html) {
   }
 
   return markers.map((sport, index) => {
-    const end = index + 1 < markers.length ? markers[index + 1].start : html.length;
+    const end =
+      index + 1 < markers.length ? markers[index + 1].start : html.length;
 
     const block = html.slice(sport.start, end);
 
@@ -246,7 +251,9 @@ function selectSports(menu, enabledKeys, logger) {
   }
 
   if (unmapped.length) {
-    logger.debug(`skipped sports missing from the catalog: ${unmapped.join(", ")}`);
+    logger.debug(
+      `skipped sports missing from the catalog: ${unmapped.join(", ")}`
+    );
   }
 
   return targets;
@@ -323,7 +330,9 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
           }
         }
 
-        logger.info(`fetching ${tasks.length} league groups (concurrency: ${CONCURRENCY})`);
+        logger.info(
+          `fetching ${tasks.length} league groups (concurrency: ${CONCURRENCY})`
+        );
 
         const results = await mapWithConcurrency(
           tasks,
@@ -351,7 +360,9 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
             // One group blowing up does not stop the others.
             failed++;
 
-            logger.warn(`could not fetch league group: ${result.reason.message.split("\n")[0]}`);
+            logger.warn(
+              `could not fetch league group: ${result.reason.message.split("\n")[0]}`
+            );
 
             continue;
           }
@@ -380,7 +391,9 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
         }
 
         if (failed) {
-          logger.warn(`${failed} of ${tasks.length} groups could not be fetched.`);
+          logger.warn(
+            `${failed} of ${tasks.length} groups could not be fetched.`
+          );
         }
 
         logger.info(
@@ -394,4 +407,9 @@ async function betistMatchFetcherMain(siteUrl, options = {}) {
   }
 }
 
-export { betistMatchFetcherMain, parseSportMenu, parseEventRecords, splitParticipants };
+export {
+  betistMatchFetcherMain,
+  parseSportMenu,
+  parseEventRecords,
+  splitParticipants,
+};

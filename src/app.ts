@@ -17,9 +17,10 @@ import config from "@Config/Environment";
 import { errorMiddleware } from "@Middlewares/Error";
 import setRealUserIP from "@Middlewares/IP";
 
+import { updateFetcherStatus } from "@Panel";
+
 import logger from "@Utils/Logger";
 import { setupErrorHandling } from "@Utils/Error";
-import { initMatchFetchers } from "@Match";
 
 const limiter = rateLimit({
   windowMs: 1 * 30 * 1000,
@@ -82,9 +83,7 @@ httpServer.listen(PORT, async () => {
 
   await setupErrorHandling();
 
-  setTimeout(async () => {
-    // await initMatchFetchers();
-  }, 1000);
+  await updateFetcherStatus("idle");
 
   logger.info(`Server listening on port ${chalk.green(PORT)}`);
 });

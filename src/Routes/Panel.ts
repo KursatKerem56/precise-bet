@@ -8,6 +8,7 @@ import {
   getMatches,
   getComparedMatches,
   updateFetcherStatus,
+  getFetcherStatus,
   saveMatchTimesDiff,
 } from "@Controllers/Panel";
 
@@ -22,6 +23,8 @@ router.get("/matches", isAuth, getMatches);
 router.get("/compared-matches", isAuth, getComparedMatches);
 
 router.post("/fetcher-status", isAuth, updateFetcherStatus);
+
+router.get("/fetcher-status", isAuth, getFetcherStatus);
 
 router.post("/match-times-diff", isAuth, saveMatchTimesDiff);
 

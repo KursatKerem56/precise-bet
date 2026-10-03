@@ -5,6 +5,11 @@ import {
   getComparedMatches as _getComparedMatches,
 } from "@Match";
 
+import {
+  updateFetcherStatus as _updateFetcherStatus,
+  getFetcherStatus as _getFetcherStatus,
+} from "@Panel/Redis";
+
 import { PanelSite } from "@Panel/Models";
 
 import { EPanelSite } from "@Panel/Constants";
@@ -54,7 +59,11 @@ const saveMatchTimesDiff = async (fileRaw: string) => {
 };
 
 const updateFetcherStatus = async (status: string) => {
-  console.log("Updating fetcher status to:", status);
+  return await _updateFetcherStatus(status);
+};
+
+const getFetcherStatus = async () => {
+  return await _getFetcherStatus();
 };
 
 export {
@@ -65,4 +74,5 @@ export {
   getComparedMatches,
   updateFetcherStatus,
   saveMatchTimesDiff,
+  getFetcherStatus,
 };

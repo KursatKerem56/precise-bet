@@ -6,6 +6,7 @@ import {
   getMatches as _getMatches,
   getComparedMatches as _getComparedMatches,
   updateFetcherStatus as _updateFetcherStatus,
+  getFetcherStatus as _getFetcherStatus,
   saveMatchTimesDiff as _saveMatchTimesDiff,
 } from "@Panel";
 
@@ -42,6 +43,12 @@ const updateFetcherStatus = asyncErrorHandler(
   }
 );
 
+const getFetcherStatus = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    res.json(await _getFetcherStatus());
+  }
+);
+
 const saveMatchTimesDiff = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { fileRaw } = req.body;
@@ -58,5 +65,6 @@ export {
   getMatches,
   getComparedMatches,
   updateFetcherStatus,
+  getFetcherStatus,
   saveMatchTimesDiff,
 };

@@ -5,6 +5,7 @@ import {
   saveSiteLink as _saveSiteLink,
   getMatches as _getMatches,
   getComparedMatches as _getComparedMatches,
+  updateFetcherStatus as _updateFetcherStatus,
   saveMatchTimesDiff as _saveMatchTimesDiff,
 } from "@Panel";
 
@@ -31,6 +32,16 @@ const getComparedMatches = asyncErrorHandler(
   }
 );
 
+const updateFetcherStatus = asyncErrorHandler(
+  async (req: Request, res: Response) => {
+    const { status } = req.body;
+
+    if (!status) throw new AppError("MISSING_PARAMETERS");
+
+    res.json(await _updateFetcherStatus(status));
+  }
+);
+
 const saveMatchTimesDiff = asyncErrorHandler(
   async (req: Request, res: Response) => {
     const { fileRaw } = req.body;
@@ -46,5 +57,6 @@ export {
   saveSiteLink,
   getMatches,
   getComparedMatches,
+  updateFetcherStatus,
   saveMatchTimesDiff,
 };

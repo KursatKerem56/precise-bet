@@ -7,6 +7,7 @@ import {
   saveSiteLink,
   getMatches,
   getComparedMatches,
+  updateFetcherStatus,
   saveMatchTimesDiff,
 } from "@Controllers/Panel";
 
@@ -19,6 +20,8 @@ router.post("/save-site-link", isAuth, saveSiteLink);
 router.get("/matches", isAuth, getMatches);
 
 router.get("/compared-matches", isAuth, getComparedMatches);
+
+router.post("/fetcher-status", isAuth, updateFetcherStatus);
 
 router.post("/match-times-diff", isAuth, saveMatchTimesDiff);
 

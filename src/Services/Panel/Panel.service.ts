@@ -53,11 +53,16 @@ const saveMatchTimesDiff = async (fileRaw: string) => {
   return "Match times diff saved successfully";
 };
 
+const updateFetcherStatus = async (status: string) => {
+  console.log("Updating fetcher status to:", status);
+};
+
 export {
   getSiteLinks,
   saveSiteLink,
   getSites,
   getMatches,
   getComparedMatches,
+  updateFetcherStatus,
   saveMatchTimesDiff,
 };

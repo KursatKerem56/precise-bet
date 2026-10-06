@@ -15,6 +15,7 @@ import { PanelSite } from "@Panel/Models";
 import { EPanelSite } from "@Panel/Constants";
 
 import { AppError } from "@Utils/Error";
+import { logger } from "@Utils/Logger";
 
 const getSiteLinks = async () => {
   return await PanelSite.find({}, { _id: 0, site: 1, link: 1 });
@@ -51,9 +52,13 @@ const getComparedMatches = async () => {
 };
 
 const saveMatchTimesDiff = async (fileRaw: string) => {
+  logger.info("Saving match times diff to file...");
+
   const jsonFilePath = `./match-times-diff.json`;
 
   await fs.writeFile(jsonFilePath, fileRaw, "utf-8");
+
+  logger.info("Match times diff saved to file successfully");
 
   return "Match times diff saved successfully";
 };

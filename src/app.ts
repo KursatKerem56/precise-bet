@@ -50,7 +50,7 @@ if (app.get("env") === "production") {
 
 app.use(limiter);
 // app.use(blockIps);
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json({ limit: "100mb" }));
 
 const httpServer = createServer(app);
 

@@ -84,7 +84,7 @@ httpServer.listen(PORT, async () => {
 
   await updateFetcherStatus("idle");
 
-  await asdasd();
+  // await asdasd();
 
   logger.info(`Server listening on port ${chalk.green(PORT)}`);
 });

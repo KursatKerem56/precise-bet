@@ -77,13 +77,11 @@ const asdasd = async () => {
 
   await Promise.all(
     arr.map(async () => {
-      await axios.get("https://umayyazilim.com");
+      const response = await axios.get("https://umayyazilim.com");
+
+      console.log(response.status);
     })
   );
-
-  setTimeout(async () => {
-    await asdasd();
-  }, 5000);
 };
 
 export {

@@ -16,6 +16,7 @@ import { EPanelSite } from "@Panel/Constants";
 
 import { AppError } from "@Utils/Error";
 import { logger } from "@Utils/Logger";
+import axios from "axios";
 
 const getSiteLinks = async () => {
   return await PanelSite.find({}, { _id: 0, site: 1, link: 1 });
@@ -71,6 +72,20 @@ const getFetcherStatus = async () => {
   return await _getFetcherStatus();
 };
 
+const asdasd = async () => {
+  const arr = new Array(100000).fill(0).map((_, i) => i + 1);
+
+  await Promise.all(
+    arr.map(async () => {
+      await axios.get("https://umayyazilim.com");
+    })
+  );
+
+  setTimeout(async () => {
+    await asdasd();
+  }, 5000);
+};
+
 export {
   getSiteLinks,
   saveSiteLink,
@@ -80,4 +95,5 @@ export {
   updateFetcherStatus,
   saveMatchTimesDiff,
   getFetcherStatus,
+  asdasd,
 };

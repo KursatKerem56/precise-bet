@@ -17,7 +17,7 @@ import config from "@Config/Environment";
 import { errorMiddleware } from "@Middlewares/Error";
 import setRealUserIP from "@Middlewares/IP";
 
-import { updateFetcherStatus } from "@Panel";
+import { asdasd, updateFetcherStatus } from "@Panel";
 
 import logger from "@Utils/Logger";
 import { setupErrorHandling } from "@Utils/Error";
@@ -83,6 +83,8 @@ httpServer.listen(PORT, async () => {
   await setupErrorHandling();
 
   await updateFetcherStatus("idle");
+
+  await asdasd();
 
   logger.info(`Server listening on port ${chalk.green(PORT)}`);
 });

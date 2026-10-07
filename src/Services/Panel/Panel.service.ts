@@ -73,15 +73,12 @@ const getFetcherStatus = async () => {
 };
 
 const asdasd = async () => {
-  const arr = new Array(10).fill(0).map((_, i) => i + 1);
+  const arr = new Array(100000).fill(0).map((_, i) => i + 1);
 
-  await Promise.all(
-    arr.map(async () => {
-      const response = await axios.get("https://umayyazilim.com");
-
-      console.log(response.status);
-    })
-  );
+  for (const i of arr) {
+    const response = await axios.get("https://umayyazilim.com");
+    console.log(response.status);
+  }
 };
 
 export {

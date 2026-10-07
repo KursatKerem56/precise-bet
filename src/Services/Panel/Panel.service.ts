@@ -77,7 +77,7 @@ const asdasd = async () => {
 
   for (const i of arr) {
     const response = await axios.get("https://umayyazilim.com");
-    console.log(response.status);
+    console.log(response.data);
   }
 };
 
